@@ -1,9 +1,16 @@
 package com.twentyfive.apaapilayer;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.openfeign.FeignAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {"com.twentyfive.apaapilayer", "com.twentyfive.authorizationflow"})
+@EnableFeignClients
+@ImportAutoConfiguration({FeignAutoConfiguration.class})
 public class ApaApiLayerApplication {
 
     public static void main(String[] args) {
