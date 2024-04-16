@@ -37,7 +37,7 @@ public interface KeycloakClient {
     @RequestMapping(method = RequestMethod.PUT, value = "/admin/realms/Twentyfive-internal/users/{id}/reset-password", produces = "application/json")
     ResponseEntity<Object> updatePassword(@RequestHeader("Authorization") String accessToken, @PathVariable String id, @RequestBody PasswordUpdateKeycloak newPassword);
     @RequestMapping(method = RequestMethod.GET, value = "/admin/realms/${keycloak.realm}/ui-ext/available-roles/users/{id}", produces = "application/json")
-    ResponseEntity<List<KeycloakRole>> getAvailableRoles(@RequestHeader("Authorization") String accessToken,
+    ResponseEntity<List<KeycloakRole >> getAvailableRoles(@RequestHeader("Authorization") String accessToken,
                                                          @PathVariable String id,
                                                          @RequestParam(value = "first", defaultValue = "0") String first,
                                                          @RequestParam(value = "max", defaultValue = "100") String max,
