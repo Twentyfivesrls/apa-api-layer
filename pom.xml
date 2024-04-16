@@ -58,6 +58,13 @@
             <version>4.1.0</version>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub Twentyfivesrls Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/Twentyfivesrls/*</url>
+        </repository>
+    </repositories>
 
     <build>
         <finalName>apa-api-layer</finalName>
