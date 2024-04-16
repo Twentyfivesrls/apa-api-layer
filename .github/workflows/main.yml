@@ -50,7 +50,7 @@ jobs:
 
 
       - name: Move build to server with rsync
-        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./target/subscription.war ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/actions/dist_tomcat/subscription
+        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./target/{{ secrets.SSH_PROJECT_NAME }}.war ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/actions/dist_tomcat/${{ secrets.SSH_PROJECT_NAME }}
 
       - name: Move data inside Tomcat Container
         uses: appleboy/ssh-action@master
@@ -60,5 +60,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /actions/dist_tomcat/subscription
+            cd /actions/dist_tomcat/${{ secrets.SSH_PROJECT_NAME }}
             docker cp ./ ${{ secrets.SSH_CONTAINER }}:/usr/local/tomcat/webapps
