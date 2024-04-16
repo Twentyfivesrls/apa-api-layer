@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.twentyfive</groupId>
             <artifactId>twentyfive-adapters</artifactId>
-            <version>0.0.70</version>
+            <version>0.0.73</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
