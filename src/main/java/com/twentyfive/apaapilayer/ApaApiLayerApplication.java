@@ -8,6 +8,7 @@ import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {"com.twentyfive.apaapilayer", "com.twentyfive.authorizationflow"})
 @EnableFeignClients
 @ImportAutoConfiguration({FeignAutoConfiguration.class})
 public class ApaApiLayerApplication {
