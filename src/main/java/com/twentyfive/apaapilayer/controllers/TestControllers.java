@@ -22,6 +22,7 @@ public class TestControllers {
     public void categoryTesting (){
         CategoryAPA ctapa =new CategoryAPA();
         ctapa.setName("cazzi");
+        ctapa.setEnabled(false);
         categoryRepository.save(ctapa);
 
 
