@@ -1,11 +1,10 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
-import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
-import com.twentyfive.apaapilayer.repositories.OrderRepository;
+import com.twentyfive.apaapilayer.repositories.ActiveOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,30 +13,25 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final OrderRepository orderRepository;
+    private final ActiveOrderRepository orderRepository;
 
-    private final OrderService orderService;
+    private final ActiveOrderService orderService;
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository,OrderRepository orderRepository,OrderService orderService) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService) {
         this.customerRepository = customerRepository;
-        this.orderRepository = orderRepository;
-        this.orderService = orderService;
+        this.orderRepository = activeOrderRepository;
+        this.orderService = activeOrderService;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
