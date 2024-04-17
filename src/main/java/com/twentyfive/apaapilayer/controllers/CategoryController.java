@@ -21,13 +21,13 @@ public class CategoryController {
     }
 
     @GetMapping("/getById/{id}")
-    public CategoryAPA getOrderById(@PathVariable String id) {
-        return categoryService.getById(id);
+    public ResponseEntity<CategoryAPA> getOrderById(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.getById(id));
     }
 
     @PostMapping("/save")
-    public void saveOrder(@RequestBody CategoryAPA c) {
-        categoryService.save(c);
+    public ResponseEntity<CategoryAPA> saveOrder(@RequestBody CategoryAPA c) {
+        return ResponseEntity.ok().body(categoryService.save(c));
     }
 
 
