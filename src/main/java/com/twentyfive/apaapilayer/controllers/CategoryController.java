@@ -30,5 +30,10 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.save(c));
     }
 
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> disableById(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.disableById(id));
+    }
+
 
 }
