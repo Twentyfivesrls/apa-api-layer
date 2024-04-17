@@ -3,8 +3,10 @@ on:
   push:
     branches:
       - master
+
 jobs:
   build-and-deploy:
+    # if: ${{ false }} # this record is to be used to disable the deploy job and use only the sonar-gate job
     runs-on: ubuntu-latest
     steps:
 
@@ -16,9 +18,7 @@ jobs:
 
       - uses: s4u/maven-settings-action@v2.8.0
         with:
-          servers: '[{"id": "github", "username": "${{secrets.SSH_USERNAME}}", "password": "${{secrets.SSH_PASSWORD}}"}]'
-
-
+          servers: '[{"id": "github", "username": "${{secrets.SSH_USERNAME}}", "password": "${{secrets.SSH_GITHUB_TOKEN}}"}]'
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots clean package -DskipTests
@@ -32,7 +32,7 @@ jobs:
       - name: Adding Known Hosts
         run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }}  >> ~/.ssh/known_hosts
 
-      - name: Create folders
+      - name: Create dist_tomcat folder
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -48,9 +48,8 @@ jobs:
             mkdir -p ${{ secrets.SSH_PROJECT_NAME }}
             cd ${{ secrets.SSH_PROJECT_NAME }}
 
-
       - name: Move build to server with rsync
-        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./target/{{ secrets.SSH_PROJECT_NAME }}.war ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/actions/dist_tomcat/${{ secrets.SSH_PROJECT_NAME }}
+        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./target/${{ secrets.SSH_PROJECT_NAME }}.war ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/actions/dist_tomcat/${{ secrets.SSH_PROJECT_NAME }}
 
       - name: Move data inside Tomcat Container
         uses: appleboy/ssh-action@master
