@@ -1,7 +1,13 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.models.CategoryAPA;
+import com.twentyfive.apaapilayer.models.IngredientAPA;
+import com.twentyfive.apaapilayer.models.ProductKgAPA;
+import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
+import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
+import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -11,10 +17,13 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductWeightedRepository productWeightedRepository;
+    private final ProductKgRepository productKgRepository;
+    private final IngredientRepository ingredientRepository;
 
 
     public List<CategoryAPA> getEnabledCategories(List<String> types) {
-        return categoryRepository.findByTypeInAndEnabledTrue(types);
+        return categoryRepository.findAllByTypeInAndEnabledTrue(types);
     }
 
     public CategoryAPA getById(String id){
@@ -22,18 +31,41 @@ public class CategoryService {
     }
 
     public CategoryAPA save(CategoryAPA c){
+        activateById(c.getName());
         return categoryRepository.save(c);
     }
 
-    public boolean deleteById(String id){
+    public boolean disableById(String id){
         CategoryAPA c = categoryRepository.findById(id).orElse(null);
-        c.setEnabled(false);
-        if(c.getType().equals("Ingredienti")){
-            //TODO
-            //disabilita tutti gli ingredienti
+        if(c!=null) {
+            c.setEnabled(false);
+            categoryRepository.save(c);
+            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByCategoryId(id);
+            for (ProductKgAPA p : prodottiAlKg) {
+                p.setActive(false);
+                productKgRepository.save(p);
+            }
+            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByCategoryId(id);
+            for (ProductWeightedAPA p : prodottiWeighted) {
+                p.setActive(false);
+                productWeightedRepository.save(p);
+            }
+            List<IngredientAPA> ingredienti = ingredientRepository.findAllByCategoryId(id);
+            for (IngredientAPA i : ingredienti) {
+                i.setActive(false);
+                ingredientRepository.save(i);
+            }
+            return true;
         }
-        //disabilita torte
         return false;
+    }
+
+    private void activateById(String cName){
+        CategoryAPA category = categoryRepository.findByName(cName);
+        if(category!=null){
+            category.setEnabled(true);
+
+        }
     }
 
 }
