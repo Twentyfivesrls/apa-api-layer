@@ -36,7 +36,7 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAllOrders(Pageable pageable) {
+    public Page<OrderAPADTO> getAll(Pageable pageable) {
         // Fetching paginated orders from the database
         return activeOrderRepository.findAll(pageable)
                 .map(this::convertToOrderAPADTO); // Convert Entity to DTO
@@ -57,7 +57,7 @@ public class ActiveOrderService {
         return dto;
     }
 
-    public OrderDetailsAPADTO getOrderDetailsById(String id) {
+    public OrderDetailsAPADTO getDetailsById(String id) {
         Optional<OrderAPA> orderOptional = activeOrderRepository.findById(id);
         if (orderOptional.isPresent()) {
             return convertToOrderDetailsAPADTO(orderOptional.get());
@@ -79,7 +79,7 @@ public class ActiveOrderService {
         return dto;
     }
 
-    public boolean deleteOrderById(String id) {
+    public boolean deleteById(String id) {
         if (activeOrderRepository.existsById(id)) {
             activeOrderRepository.deleteById(id);
             return true; // Restituisce true se l'ordine è stato trovato e cancellato
@@ -88,14 +88,14 @@ public class ActiveOrderService {
         }
     }
 
-    public Page<OrderAPADTO> getOrdersByCustomerId(String customerId, Pageable pageable) {
+    public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
         // Supponendo che il repository abbia il metodo findOrdersByCustomerId
         return activeOrderRepository.findOrdersByCustomerId(customerId, pageable)
                 .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
     }
 
     @Transactional
-    public OrderAPADTO completeOrder(String id) {
+    public OrderAPADTO complete(String id) {
         OrderAPA order = activeOrderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
@@ -140,7 +140,7 @@ public class ActiveOrderService {
     }
 
     @Transactional
-    public boolean cancelOrder(String id) {
+    public boolean cancel(String id) {
         OrderAPA order = activeOrderRepository.findById(id)
                 .orElse(null); // Trova l'ordine o restituisce null se non esiste
 
