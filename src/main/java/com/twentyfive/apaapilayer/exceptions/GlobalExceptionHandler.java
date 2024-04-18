@@ -21,6 +21,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(OrderRestoringNotAllowedException.class)
+    public ResponseEntity<ApiError> handleRestoringNotAllowedException (OrderRestoringNotAllowedException oex){
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, oex.getMessage());
+        return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
+
     @Data
     @AllArgsConstructor
     public static class ApiError {
