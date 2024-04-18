@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderAPA;

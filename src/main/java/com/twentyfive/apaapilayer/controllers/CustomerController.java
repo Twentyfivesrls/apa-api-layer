@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.CustomerService;
@@ -23,10 +24,10 @@ public class CustomerController {
     }
 
     @GetMapping("/getAll")
-    public ResponseEntity<Page<CustomerAPA>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
+    public ResponseEntity<Page<CustomerDTO>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
                                                     @RequestParam(value = "size", defaultValue = "10") int size) {
-        Page<CustomerAPA> customers = customerService.getAll(page, size);
-        return ResponseEntity.ok(customers);
+        Page<CustomerDTO> customerDTOs = customerService.getAll(page, size).map(customerAPA -> new CustomerDTO(customerAPA));
+        return ResponseEntity.ok(customerDTOs);
     }
 
     // Get a single customer by ID with added infos
@@ -41,20 +42,20 @@ public class CustomerController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<CustomerAPA> saveCustomer(@RequestBody CustomerAPA customer) {
+    public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA savedCustomer = customerService.saveCustomer(customer);
-            return ResponseEntity.ok(savedCustomer);
+            CustomerAPA savedCustomer = customerService.saveCustomer(customer.toNewCustomerAPA());
+            return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
 
     @PostMapping("/update")
-    public ResponseEntity<CustomerAPA> updateCustomer(@RequestBody CustomerAPA customer) {
+    public ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA updatedCustomer = customerService.updateCustomer(customer);
-            return ResponseEntity.ok(updatedCustomer);
+            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toNewCustomerAPA());
+            return ResponseEntity.ok(new CustomerDTO(updatedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
