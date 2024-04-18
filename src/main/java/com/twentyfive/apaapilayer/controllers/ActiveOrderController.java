@@ -20,10 +20,10 @@ public class ActiveOrderController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrderAPADTO>> getAllOrders(
+    public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        Page<OrderAPADTO> orders = activeOrderService.getAllOrders(PageRequest.of(page, size));
+        Page<OrderAPADTO> orders = activeOrderService.getAll(PageRequest.of(page, size));
         if (!orders.isEmpty()) {
             return new ResponseEntity<>(orders, HttpStatus.OK);
         } else {
@@ -33,7 +33,7 @@ public class ActiveOrderController {
 
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
-        OrderDetailsAPADTO orderDetails = activeOrderService.getOrderDetailsById(id);
+        OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
         if (orderDetails != null) {
             return ResponseEntity.ok(orderDetails);
         } else {
@@ -46,7 +46,7 @@ public class ActiveOrderController {
     @DeleteMapping("/delate/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable String id) {
         try {
-            boolean deleted = activeOrderService.deleteOrderById(id);
+            boolean deleted = activeOrderService.deleteById(id);
             if (deleted) {
                 return ResponseEntity.ok().build(); // Restituisce 200 OK se l'ordine è stato cancellato
             } else {
@@ -63,7 +63,7 @@ public class ActiveOrderController {
             @PathVariable String customerId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        Page<OrderAPADTO> orders = activeOrderService.getOrdersByCustomerId(customerId, PageRequest.of(page, size));
+        Page<OrderAPADTO> orders = activeOrderService.getByCustomerId(customerId, PageRequest.of(page, size));
         if (!orders.isEmpty()) {
             return ResponseEntity.ok(orders);
         } else {
@@ -75,7 +75,7 @@ public class ActiveOrderController {
     @PostMapping("/complete/{id}")
     public ResponseEntity<OrderAPADTO> completeOrder(@PathVariable String id) {
         try {
-            OrderAPADTO updatedOrder = activeOrderService.completeOrder(id);
+            OrderAPADTO updatedOrder = activeOrderService.complete(id);
             if (updatedOrder != null) {
                 return ResponseEntity.ok(updatedOrder);
             } else {
@@ -89,7 +89,7 @@ public class ActiveOrderController {
     @PostMapping("/cancel/{id}")
     public ResponseEntity<Boolean> cancelOrder(@PathVariable String id) {
         try {
-            boolean result = activeOrderService.cancelOrder(id);
+            boolean result = activeOrderService.cancel(id);
             if (result) {
                 return ResponseEntity.ok(true); // Restituisce true se l'ordine è stato annullato correttamente
             } else {
