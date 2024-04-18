@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
@@ -208,6 +209,102 @@ public class CustomerService {
         }
         return total;
     }
+
+
+    public CartDTO getCartById(String customerId) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
+        if (customer != null && customer.getCart() != null) {
+            return new CartDTO(customer);
+        }
+        return null; // o potresti voler lanciare un'eccezione personalizzata
+    }
+
+
+    @Transactional
+    public CartDTO addToCart(String customerId, CartDTO cartDto) {
+        CustomerAPA customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
+        Cart cart = customer.getCart();
+        if (cart == null) {//se cart non era stato inizializzato
+            cart = new Cart();
+            customer.setCart(cart);
+        }
+        cart.getProductsByWeight().addAll(cartDto.getProductsByWeight());
+        cart.getBundles().addAll(cartDto.getBundles());
+        customerRepository.save(customer);
+        return new CartDTO(customer);
+    }
+
+    @Transactional
+    public CartDTO removeFromCart(String customerId, int position) {
+        CustomerAPA customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
+        Cart cart = customer.getCart();
+        if (cart != null && position >= 0) {
+            if (position < cart.getProductsByWeight().size()) {
+                // Rimuove il prodotto in base alla posizione
+                cart.getProductsByWeight().remove(position);
+            } else {
+                // Calcola l'indice effettivo dei bundle se la posizione è oltre la dimensione della lista dei prodotti
+                int bundleIndex = position - cart.getProductsByWeight().size();
+                if (bundleIndex < cart.getBundles().size()) {
+                    cart.getBundles().remove(bundleIndex);
+                } else {
+                    // Lancia un'eccezione se l'indice è fuori dai limiti per i bundle
+                    throw new IndexOutOfBoundsException("Position out of bounds for bundles");
+                }
+            }
+            customerRepository.save(customer);
+            return new CartDTO(customer);
+        }
+        throw new IllegalStateException("No cart available for this customer or invalid position");
+    }
+
+
+
+    @Transactional
+    public boolean clearCart(String customerId) {
+        CustomerAPA customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
+        if (customer.getCart() != null) {
+            customer.getCart().getProductsByWeight().clear();
+            customer.getCart().getBundles().clear();
+            customerRepository.save(customer);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        Cart cart = customer.getCart();
+        if (cart == null) {
+            cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
+            customer.setCart(cart);
+        }
+        System.out.println(cart);
+        cart.getProductsByWeight().add(product);
+        customerRepository.save(customer);
+        return new CartDTO(customer);
+    }
+
+    @Transactional
+    public CartDTO addToCartBundle(String customerId, BundleInPurchase bundle) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        Cart cart = customer.getCart();
+        if (cart == null) {
+            cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
+            customer.setCart(cart);
+        }
+        cart.getBundles().add(bundle);
+        customerRepository.save(customer);
+        return new CartDTO(customer);
+    }
+
+
+
+
 
 
 

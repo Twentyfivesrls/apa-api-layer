@@ -44,7 +44,9 @@ public class CustomerController {
     @PostMapping("/save")
     public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA savedCustomer = customerService.saveCustomer(customer.toNewCustomerAPA());
+            CustomerAPA newUser=customer.toCustomerAPA();
+            newUser.setId(null);
+            CustomerAPA savedCustomer = customerService.saveCustomer(newUser);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
@@ -54,7 +56,7 @@ public class CustomerController {
     @PostMapping("/update")
     public ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toNewCustomerAPA());
+            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toCustomerAPA());
             return ResponseEntity.ok(new CustomerDTO(updatedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
@@ -68,45 +70,6 @@ public class CustomerController {
             return ResponseEntity.ok(true);  // Restituisce true se la cancellazione è avvenuta con successo
         } else {
             return ResponseEntity.notFound().build();  // Restituisce 404 se il cliente non è stato trovato
-        }
-    }
-
-
-    @PostMapping("/buy-single/{id}")
-    public ResponseEntity<Boolean> buySingle(@PathVariable String id, @RequestBody String position) {
-        try {
-            int positionIndex = Integer.parseInt(position); // Assumi che 'position' sia un indice passato come stringa
-            boolean result = customerService.buySingleItem(id, positionIndex);
-            return ResponseEntity.ok(result);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(false); // In caso di formato non valido
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
-        }
-    }
-
-    @PostMapping("/buy-multiple/{id}")
-    public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody List<String> positions) {
-        try {
-            List<Integer> positionIndexes = positions.stream()
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList()); // Converti la lista di stringhe in interi
-            boolean result = customerService.buyMultipleItems(id, positionIndexes);
-            return ResponseEntity.ok(result);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(false); // In caso di formato non valido
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
-        }
-    }
-
-    @PostMapping("/buy-all/{id}")
-    public ResponseEntity<Boolean> buyAll(@PathVariable String id) {
-        try {
-            boolean result = customerService.buyAllItems(id);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Gestisci eccezioni in modo generico
         }
     }
 
