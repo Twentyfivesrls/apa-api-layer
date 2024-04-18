@@ -17,7 +17,7 @@ public class ProductWeightedController {
     private final ProductWeightedService productWeightedService;
 
     @GetMapping("/getAll")
-    public ResponseEntity<Page<ProductWeightedAPADTO>> findByIdCategory(String idCategory, int page, int size) {
+    public ResponseEntity<Page<ProductWeightedAPADTO>> findByIdCategory(@RequestParam("idCategory")String idCategory,@RequestParam(value = "page", defaultValue ="0") int page,@RequestParam(value = "size", defaultValue ="5") int size) {
         return ResponseEntity.ok().body(productWeightedService.findByIdCategory(idCategory,page,size));
     }
 
