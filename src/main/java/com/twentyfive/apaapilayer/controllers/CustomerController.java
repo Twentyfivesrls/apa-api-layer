@@ -44,7 +44,9 @@ public class CustomerController {
     @PostMapping("/save")
     public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA savedCustomer = customerService.saveCustomer(customer.toNewCustomerAPA());
+            CustomerAPA newUser=customer.toCustomerAPA();
+            newUser.setId(null);
+            CustomerAPA savedCustomer = customerService.saveCustomer(newUser);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
@@ -54,7 +56,7 @@ public class CustomerController {
     @PostMapping("/update")
     public ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customer) {
         try {
-            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toNewCustomerAPA());
+            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toCustomerAPA());
             return ResponseEntity.ok(new CustomerDTO(updatedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico

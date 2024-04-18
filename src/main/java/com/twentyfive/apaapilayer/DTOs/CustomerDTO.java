@@ -28,7 +28,7 @@ public class CustomerDTO {
         this.enabled=capa.isEnabled();
     }
 
-    public CustomerAPA toNewCustomerAPA (){
+    public CustomerAPA toCustomerAPA (){
         CustomerAPA capa= new CustomerAPA();
         capa.setId(this.getId());
         capa.setName(this.getFirstName());
