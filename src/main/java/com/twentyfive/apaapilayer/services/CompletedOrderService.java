@@ -1,25 +1,27 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
 import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
 import com.twentyfive.apaapilayer.exceptions.OrderRestoringNotAllowedException;
-import com.twentyfive.apaapilayer.models.CompletedOrderAPA;
-import com.twentyfive.apaapilayer.models.CustomerAPA;
-import com.twentyfive.apaapilayer.models.OrderAPA;
-import com.twentyfive.apaapilayer.repositories.ActiveOrderRepository;
-import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
-import com.twentyfive.apaapilayer.repositories.CustomerRepository;
+import com.twentyfive.apaapilayer.models.*;
+import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CompletedOrderService {
@@ -27,11 +29,17 @@ public class CompletedOrderService {
     private final ActiveOrderRepository activeOrderRepository;
     private final CustomerRepository customerRepository;
 
+    private final ProductKgRepository productKgRepository;
+
+    private final TrayRepository trayRepository;
+
     @Autowired
-    public CompletedOrderService(CompletedOrderRepository completedOrderRepository,CustomerRepository customerRepository,ActiveOrderRepository activeOrderRepository) {
+    public CompletedOrderService(CompletedOrderRepository completedOrderRepository,CustomerRepository customerRepository,ActiveOrderRepository activeOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository) {
         this.completedOrderRepository= completedOrderRepository;
         this.customerRepository=customerRepository;
         this.activeOrderRepository=activeOrderRepository;
+        this.productKgRepository=productKgRepository;
+        this.trayRepository=trayRepository;
     }
 
     public Page<OrderAPADTO> getAll(Pageable pageable) {
@@ -68,11 +76,38 @@ public class CompletedOrderService {
 
         OrderDetailsAPADTO dto = new OrderDetailsAPADTO();
         dto.setId(order.getId());
-        dto.setProducts(order.getProductsInPurchase()); // Assumi che esista un getter che restituisca i prodotti
-        dto.setBundles(order.getBundlesInPurchase()); // Assumi che esista un getter che restituisca i bundle
+        List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
+                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
+
+        dto.setProducts(productDTOs);
+
+        List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
+                .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
+        dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
+        // Assumi che esista un getter che restituisca i bundle
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
         return dto;
+    }
+
+    private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
+        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getProductId());
+        String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
+        return new ProductInPurchaseDTO(productInPurchase, name);
+    }
+
+    private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
+        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getBundleId());
+        String name = bun.map(Tray::getName).orElse("no registered product");
+
+        List<ProductInPurchase> pieces= bundleInPurchase.getWeightedProducts();
+        List<ProductInPurchaseDTO> piecesDTOs= pieces.stream()
+                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
+
+        return new BundleInPurchaseDTO(bundleInPurchase, name,piecesDTOs);
     }
 
     public OrderAPADTO restoreOrder(String id) {

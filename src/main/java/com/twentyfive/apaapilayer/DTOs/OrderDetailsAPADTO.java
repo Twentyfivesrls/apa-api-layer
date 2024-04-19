@@ -13,8 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderDetailsAPADTO {
     private String id;
-    private List<ProductInPurchase> products;
-    private List<BundleInPurchase> bundles;
+    private List<ProductInPurchaseDTO> products;
+    private List<BundleInPurchaseDTO> bundles;
     private String email;
     private String phoneNumber;
 }
