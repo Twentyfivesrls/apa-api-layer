@@ -33,6 +33,7 @@ public class ActiveOrderController {
 
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
+
         OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
         if (orderDetails != null) {
             return ResponseEntity.ok(orderDetails);
@@ -41,19 +42,14 @@ public class ActiveOrderController {
         }
     }
 
-    // Presumi che ci sia un endpoint separato per la creazione di ordini attraverso i processi di acquisto.
 
-    @DeleteMapping("/delate/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable String id) {
-        try {
-            boolean deleted = activeOrderService.deleteById(id);
-            if (deleted) {
-                return ResponseEntity.ok().build(); // Restituisce 200 OK se l'ordine è stato cancellato
-            } else {
-                return ResponseEntity.notFound().build(); // Restituisce 404 Not Found se l'ordine non esiste
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Restituisce 500 Internal Server Error in caso di eccezioni
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteById(@PathVariable String id) {
+        boolean deleted = activeOrderService.deleteById(id);
+        if (deleted) {
+            return ResponseEntity.ok("l'ordine con id "+id+" è stato eliminato"); // Restituisce 200 OK se l'ordine è stato cancellato
+        } else {
+            return ResponseEntity.notFound().build(); // Restituisce 404 Not Found se l'ordine non esiste
         }
     }
 
