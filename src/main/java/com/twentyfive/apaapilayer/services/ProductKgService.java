@@ -28,6 +28,7 @@ public class ProductKgService {
 
     private ProductKgAPADTO productsKgToDTO(ProductKgAPA product){
         ProductKgAPADTO dto = new ProductKgAPADTO();
+        dto.setEnable(product.isActive());
         dto.setId(product.getId());
         dto.setNome(product.getName());
         dto.setImageUrl(product.getImageUrl());
@@ -94,9 +95,20 @@ public class ProductKgService {
     public boolean activateById(String id){
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         if(productKgAPA!=null){
-            productKgAPA.setActive(true);
-            productKgRepository.save(productKgAPA);
-            return true;
+            List<String> idIngredienti = productKgAPA.getIngredientIds();
+            List<IngredientAPA> ingredientiDisattivati = new ArrayList<>();
+            for(String idIngrediente: idIngredienti){
+                IngredientAPA ingrediente = ingredientRepository.findById(idIngrediente).orElse(null);
+                if(ingrediente!=null && !ingrediente.isActive())
+                    ingredientiDisattivati.add(ingrediente);
+            }
+            if(ingredientiDisattivati.isEmpty()) {
+                productKgAPA.setActive(true);
+                productKgRepository.save(productKgAPA);
+                return true;
+            }
+            else
+                return false;
         }
         return false;
     }

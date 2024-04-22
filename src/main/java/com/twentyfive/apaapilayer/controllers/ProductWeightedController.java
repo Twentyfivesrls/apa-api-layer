@@ -36,7 +36,7 @@ public class ProductWeightedController {
         return ResponseEntity.ok().body(productWeightedService.disableById(id));
     }
 
-    @PutMapping("/activeById/{id}")
+    @PutMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id) {
         return ResponseEntity.ok().body(productWeightedService.activateById(id));
     }

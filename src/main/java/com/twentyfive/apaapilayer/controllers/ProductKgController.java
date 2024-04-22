@@ -36,7 +36,7 @@ public class ProductKgController {
         return ResponseEntity.ok().body(productkgService.disableById(id));
     }
 
-    @PutMapping("/activeById/{id}")
+    @PutMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id) {
         return ResponseEntity.ok().body(productkgService.activateById(id));
     }

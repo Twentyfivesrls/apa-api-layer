@@ -28,6 +28,7 @@ public class ProductWeightedService {
 
     private ProductWeightedAPADTO productsWeightedToDTO(ProductWeightedAPA product){
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
+        dto.setEnable(product.isActive());
         dto.setId(product.getId());
         dto.setNome(product.getName());
         dto.setImageUrl(product.getImageUrl());
@@ -94,9 +95,20 @@ public class ProductWeightedService {
     public boolean activateById(String id){
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         if(productWeightedAPA!=null){
-            productWeightedAPA.setActive(true);
-            productWeightedRepository.save(productWeightedAPA);
-            return true;
+            List<String> idIngredienti = productWeightedAPA.getIngredientIds();
+            List<IngredientAPA> ingredientiDisattivati = new ArrayList<>();
+            for(String idIngrediente: idIngredienti){
+                IngredientAPA ingrediente = ingredientRepository.findById(idIngrediente).orElse(null);
+                if(ingrediente!=null && !ingrediente.isActive())
+                    ingredientiDisattivati.add(ingrediente);
+            }
+            if(ingredientiDisattivati.isEmpty()) {
+                productWeightedAPA.setActive(true);
+                productWeightedRepository.save(productWeightedAPA);
+                return true;
+            }
+            else
+                return false;
         }
         return false;
     }
