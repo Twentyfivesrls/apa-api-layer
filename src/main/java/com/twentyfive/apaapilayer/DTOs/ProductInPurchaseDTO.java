@@ -26,14 +26,14 @@ public class ProductInPurchaseDTO {
 
 
     public ProductInPurchaseDTO(ProductInPurchase product, String name) {
-        this.id = product.getProductId();
+        this.id = product.getItemId();
         this.name = name;
         this.weight = product.getWeight();
         this.quantity = product.getQuantity();
         this.shape = product.getShape();
         this.customization = product.getCustomization();
         this.chocolateChips = product.isChocolateChips();
-        this.text = product.getText();
+        this.text = product.getNotes();
         this.attachment = product.getAttachment();
         this.deliveryDate = product.getDeliveryDate();
         this.totalPrice = product.getTotalPrice();

@@ -93,13 +93,13 @@ public class CompletedOrderService {
     }
 
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
-        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getProductId());
+        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getItemId());
         String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
         return new ProductInPurchaseDTO(productInPurchase, name);
     }
 
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
-        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getBundleId());
+        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getItemId());
         String name = bun.map(Tray::getName).orElse("no registered product");
 
         List<ProductInPurchase> pieces= bundleInPurchase.getWeightedProducts();
