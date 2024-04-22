@@ -1,17 +1,24 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.DTOs.BuyInfosDTO;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.CustomerService;
+import jakarta.ws.rs.HeaderParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -61,9 +68,9 @@ public class CartController {
 
 
     @PostMapping("/remove-from-cart/{idCustomer}")
-    public ResponseEntity<CartDTO> removeFromCart(@PathVariable String idCustomer, @RequestBody Integer position) {
+    public ResponseEntity<CartDTO> removeFromCart(@PathVariable String idCustomer, @RequestBody List<Integer> positions) {
         try {
-            CartDTO updatedCart = customerService.removeFromCart(idCustomer, position);
+            CartDTO updatedCart = customerService.removeFromCart(idCustomer, positions);
             return ResponseEntity.ok(updatedCart);
         } catch (IndexOutOfBoundsException e) {
             return ResponseEntity.badRequest().body(null); // Elemento non trovato all'indice specificato
@@ -83,13 +90,31 @@ public class CartController {
         }
     }
 
+    @GetMapping("/minimum-pickup-dateTime/{id}")
+    public ResponseEntity<Map<LocalDate, List<LocalTime>>> obtainMinimumPickupDateTime(
+            @PathVariable String id, @RequestBody List<Integer> positions) {
+
+        try {
+            Map<LocalDate, List<LocalTime>> availablePickupTimes =
+                    customerService.getAvailablePickupTimes(id, positions);
+
+            if (!availablePickupTimes.isEmpty()) {
+                return ResponseEntity.ok(availablePickupTimes);
+            } else {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (Exception e) {
+            // Log the exception
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
 
     @PostMapping("/buy-single/{id}")
-    public ResponseEntity<Boolean> buySingle(@PathVariable String id, @RequestBody Integer position) {
+    public ResponseEntity<Boolean> buySingle(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         try {
-            int positionIndex = position; // Assumi che 'position' sia un indice passato come stringa
-            boolean result = customerService.buySingleItem(id, positionIndex);
+            boolean result = customerService.buySingleItem(id, buyInfos.getPositions().get(0),buyInfos.getSelectedPickupDateTime());
             return ResponseEntity.ok(result);
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(false); // In caso di formato non valido
@@ -99,10 +124,10 @@ public class CartController {
     }
 
     @PostMapping("/buy-multiple/{id}")
-    public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody List<Integer> positions) {
+    public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         try {
             // Converti la lista di stringhe in interi
-            boolean result = customerService.buyMultipleItems(id, positions);
+            boolean result = customerService.buyMultipleItems(id, buyInfos.getPositions(), buyInfos.getSelectedPickupDateTime());
             return ResponseEntity.ok(result);
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(false); // In caso di formato non valido
@@ -112,9 +137,9 @@ public class CartController {
     }
 
     @PostMapping("/buy-all/{id}")
-    public ResponseEntity<Boolean> buyAll(@PathVariable String id) {
+    public ResponseEntity<Boolean> buyAll(@PathVariable String id,@RequestBody BuyInfosDTO buyInfos) {
         try {
-            boolean result = customerService.buyAllItems(id);
+            boolean result = customerService.buyAllItems(id, buyInfos.getSelectedPickupDateTime());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build(); // Gestisci eccezioni in modo generico

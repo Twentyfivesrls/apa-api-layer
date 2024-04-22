@@ -4,11 +4,9 @@ import com.twentyfive.apaapilayer.models.CustomerAPA;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 
 import java.util.List;
-
 
 @Data
 @AllArgsConstructor
@@ -16,14 +14,10 @@ import java.util.List;
 public class CartDTO {
 
     private String customerId;
-    private List<ProductInPurchase> productsByWeight;
-    private List<BundleInPurchase> bundles;
+    private List<ItemInPurchase> purchases;
 
-
-    public CartDTO (CustomerAPA capa){
-        this.customerId=capa.getId();
-        this.productsByWeight=capa.getCart().getProductsByWeight();
-        this.bundles=capa.getCart().getBundles();
+    public CartDTO(CustomerAPA capa) {
+        this.customerId = capa.getId();
+        this.purchases = capa.getCart().getPurchases();
     }
-
 }

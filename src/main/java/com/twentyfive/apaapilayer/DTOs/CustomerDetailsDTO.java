@@ -17,4 +17,6 @@ public class CustomerDetailsDTO {
     private String phoneNumber;       // Phone number of the customer
     private String orderCount;           // Number of orders the customer has made
     private String totalSpent;        // Total amount spent by the customer
+    private boolean enabled;
+    private String note;
 }

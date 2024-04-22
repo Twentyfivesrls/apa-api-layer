@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
@@ -14,11 +15,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -41,27 +47,31 @@ public class CustomerService {
     }
 
     public CustomerDetailsDTO getById(String customerId) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
-        if (customer != null) {
-            List<OrderAPA> orders = orderRepository.findByCustomerId(customerId);
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
 
-            // Calcola il totale speso e il numero di ordini
-            String totalSpent = String.format("%.2f", orders.stream()
-                    .mapToDouble(OrderAPA::getTotalPrice)
-                    .sum());
-            String orderCount = String.valueOf(orders.size());
 
-            return new CustomerDetailsDTO(
-                    customer.getId(),
-                    customer.getName(),
-                    customer.getSurname(),
-                    customer.getEmail(),
-                    customer.getPhoneNumber(),
-                    orderCount,
-                    totalSpent
+        List<OrderAPA> orders = orderRepository.findByCustomerId(customerId);
+
+        // Calcola il totale speso e il numero di ordini
+        String totalSpent = String.format("%.2f", orders.stream()
+                .mapToDouble(OrderAPA::getTotalPrice)
+                .sum());
+        String orderCount = String.valueOf(orders.size());
+
+        return new CustomerDetailsDTO(
+                customer.getId(),
+                customer.getName(),
+                customer.getSurname(),
+                customer.getEmail(),
+                customer.getPhoneNumber(),
+                orderCount,
+                totalSpent,
+                customer.isEnabled(),
+                customer.getNote()
             );
-        }
-        return null;
+
+
     }
 
     public CustomerAPA saveCustomer(CustomerAPA customer) {
@@ -91,95 +101,52 @@ public class CustomerService {
             return !stillExists;
         } else {
             // Se il cliente non esiste, restituisci false indicando che non c'era nulla da eliminare
-            return false;
+            throw new InvalidCustomerIdException();
         }
     }
 
     @Transactional
-    public boolean buySingleItem(String customerId, int positionId) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
-        if (customer == null || customer.getCart() == null) {
-            return false;
-        }
+    public boolean buySingleItem(String customerId, int positionId, LocalDateTime selectedPickupDateTime) {
+
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
 
         Cart cart = customer.getCart();
-        List<ProductInPurchase> products = cart.getProductsByWeight();
-        List<BundleInPurchase> bundles = cart.getBundles();
+        List<ItemInPurchase> items = cart.getPurchases();
 
-        if (positionId < products.size()) {
-            // L'indice si riferisce a un ProductInPurchase
-            ProductInPurchase product = products.remove(positionId);  // Rimuove il prodotto dal carrello
-            if (product != null) {
-                OrderAPA order = createOrderFromProducts(customer, List.of(product), new ArrayList<>());
-                orderService.createOrder(order);
-                customerRepository.save(customer);
-                return true;
-            }
-        } else {
-            // L'indice si riferisce a un BundleInPurchase
-            int bundleIndex = positionId - products.size();
-            if (bundleIndex < bundles.size()) {
-                BundleInPurchase bundle = bundles.remove(bundleIndex);  // Rimuove il bundle dal carrello
-                if (bundle != null) {
-
-                    OrderAPA order = createOrderFromProducts(customer, new ArrayList<>(),List.of(bundle));
-                    orderService.createOrder(order);
-                    customerRepository.save(customer);
-                    return true;
-                }
-            }
+        if (positionId < 0 || positionId >= items.size()) {
+            throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
         }
-        return false;
-    }
 
-
-    @Transactional
-    public boolean buyMultipleItems(String customerId, List<Integer> positionIds) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
-        if (customer == null || customer.getCart() == null) {
+        ItemInPurchase item = items.remove(positionId);
+        if (item == null) {
             return false;
         }
 
-        List<ProductInPurchase> selectedProducts = new ArrayList<>();
-        List<BundleInPurchase> selectedBundles = new ArrayList<>();
+        OrderAPA order = createOrderFromItems(customer, Collections.singletonList(item), selectedPickupDateTime);
+
+        orderService.createOrder(order);
+        customerRepository.save(customer);//salvo il nuovo carrello, tolto l'elemento comprato
+        return true;
+    }
+
+    @Transactional
+    public boolean buyMultipleItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
+
         Cart cart = customer.getCart();
+        List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positionIds);
 
-        for (int positionId : positionIds) {
-            if (positionId < cart.getProductsByWeight().size()) {
-                selectedProducts.add(cart.getProductsByWeight().remove(positionId));
-            } else {
-                int bundleIndex = positionId - cart.getProductsByWeight().size();
-                if (bundleIndex < cart.getBundles().size()) {
-                    selectedBundles.add(cart.getBundles().remove(bundleIndex));
-                }
+        for(Integer positionId: positionIds)
+            if (positionId < 0 || positionId >= selectedItems.size()) {
+                throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
             }
-        }
 
-        if (!selectedProducts.isEmpty() || !selectedBundles.isEmpty()) {
-            OrderAPA order = createOrderFromProducts(customer, selectedProducts, selectedBundles);
+        if (!selectedItems.isEmpty()) {
+            OrderAPA order = createOrderFromItems(customer, selectedItems, selectedPickupDateTime);
             orderService.createOrder(order);
-            customerRepository.save(customer);
-            return true;
-        }
-        return false;
-    }
-
-    @Transactional
-    public boolean buyAllItems(String customerId) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
-        if (customer == null || customer.getCart() == null) {
-            return false;
-        }
-
-        List<ProductInPurchase> allProducts = new ArrayList<>(customer.getCart().getProductsByWeight());
-        List<BundleInPurchase> allBundles = new ArrayList<>(customer.getCart().getBundles());
-
-        customer.getCart().getProductsByWeight().clear();
-        customer.getCart().getBundles().clear();
-
-        if (!allProducts.isEmpty() || !allBundles.isEmpty()) {
-            OrderAPA order = createOrderFromProducts(customer, allProducts, allBundles);
-            orderService.createOrder(order);
+            cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
             customerRepository.save(customer);
             return true;
         }
@@ -187,88 +154,92 @@ public class CustomerService {
     }
 
 
-    private OrderAPA createOrderFromProducts(CustomerAPA customer, List<ProductInPurchase> products, List<BundleInPurchase> bundles) {
+    @Transactional
+    public boolean buyAllItems(String customerId, LocalDateTime selectedPickupDateTime) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
+
+
+        Cart cart = customer.getCart();
+
+        if (cart == null || cart.getPurchases().isEmpty()) {
+            return false;
+        }
+
+        List<ItemInPurchase> allItems = new ArrayList<>(cart.getPurchases());
+        cart.clearCart(); // Rimuove tutti gli articoli dal carrello
+
+        OrderAPA order = createOrderFromItems(customer, allItems, selectedPickupDateTime);
+        orderService.createOrder(order);
+        customerRepository.save(customer);
+        return true;
+    }
+
+    private OrderAPA createOrderFromItems(CustomerAPA customer, List<ItemInPurchase> items, LocalDateTime selectedPickupDateTime) {
         OrderAPA order = new OrderAPA();
         order.setCustomerId(customer.getId());
+        order.setPickupDate(selectedPickupDateTime.toLocalDate());
+        order.setPickupTime(selectedPickupDateTime.toLocalTime());
+        order.setStatus(OrderStatus.RICEVUTO);
+
+        List<ProductInPurchase> products = new ArrayList<>();
+        List<BundleInPurchase> bundles = new ArrayList<>();
+
+        for (ItemInPurchase item : items) {
+            if (item instanceof ProductInPurchase) {
+                products.add((ProductInPurchase) item);
+            } else if (item instanceof BundleInPurchase) {
+                bundles.add((BundleInPurchase) item);
+            }
+        }
+
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
-        //order.setPickupDate(LocalDate.now());
-        //order.setPickupTime(LocalTime.now());
-        order.setTotalPrice(calculateTotalPrice(products, bundles));
-        order.setStatus(OrderStatus.RICEVUTO);
+        order.setTotalPrice(calculateTotalPrice(items));
+
         return order;
     }
 
-    private double calculateTotalPrice(List<ProductInPurchase> products, List<BundleInPurchase> bundles) {
+    private double calculateTotalPrice(List<ItemInPurchase> items) {
         double total = 0;
-        if (products != null) {
-            total += products.stream().mapToDouble(ProductInPurchase::getTotalPrice).sum();
-        }
-        if (bundles != null) {
-            total += bundles.stream().mapToDouble(BundleInPurchase::getTotalPrice).sum();
+        for (ItemInPurchase item : items) {
+            total += item.getTotalPrice();
         }
         return total;
     }
 
-
     public CartDTO getCartById(String customerId) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElse(null);
-        if (customer != null && customer.getCart() != null) {
-            return new CartDTO(customer);
-        }
-        return null; // o potresti voler lanciare un'eccezione personalizzata
-    }
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
 
-
-    @Transactional
-    public CartDTO addToCart(String customerId, CartDTO cartDto) {
-        CustomerAPA customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
-        Cart cart = customer.getCart();
-        if (cart == null) {//se cart non era stato inizializzato
-            cart = new Cart();
-            customer.setCart(cart);
-        }
-        cart.getProductsByWeight().addAll(cartDto.getProductsByWeight());
-        cart.getBundles().addAll(cartDto.getBundles());
-        customerRepository.save(customer);
         return new CartDTO(customer);
     }
 
+
     @Transactional
-    public CartDTO removeFromCart(String customerId, int position) {
-        CustomerAPA customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
-        Cart cart = customer.getCart();
-        if (cart != null && position >= 0) {
-            if (position < cart.getProductsByWeight().size()) {
-                // Rimuove il prodotto in base alla posizione
-                cart.getProductsByWeight().remove(position);
-            } else {
-                // Calcola l'indice effettivo dei bundle se la posizione è oltre la dimensione della lista dei prodotti
-                int bundleIndex = position - cart.getProductsByWeight().size();
-                if (bundleIndex < cart.getBundles().size()) {
-                    cart.getBundles().remove(bundleIndex);
-                } else {
-                    // Lancia un'eccezione se l'indice è fuori dai limiti per i bundle
-                    throw new IndexOutOfBoundsException("Position out of bounds for bundles");
-                }
-            }
+    public CartDTO removeFromCart(String customerId, List<Integer> positions) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        if (customer.getCart()==null) customer.setCart(new Cart());
+        else {
+            Cart cart=customer.getCart();
+            cart.removeItemsAtPositions(positions);
             customerRepository.save(customer);
             return new CartDTO(customer);
         }
-        throw new IllegalStateException("No cart available for this customer or invalid position");
+        throw new IllegalStateException("No cart available for this customer or invalid positions");
     }
+
 
 
 
     @Transactional
     public boolean clearCart(String customerId) {
-        CustomerAPA customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found with id: " + customerId));
-        if (customer.getCart() != null) {
-            customer.getCart().getProductsByWeight().clear();
-            customer.getCart().getBundles().clear();
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        Cart cart= customer.getCart();
+        if(cart==null)
+            customer.setCart(new Cart());
+        else {
+            customer.getCart().clearCart();
             customerRepository.save(customer);
             return true;
         }
@@ -277,14 +248,14 @@ public class CustomerService {
 
     @Transactional
     public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
         if (cart == null) {
             cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
             customer.setCart(cart);
         }
         System.out.println(cart);
-        cart.getProductsByWeight().add(product);
+        cart.getPurchases().add(product);
         customerRepository.save(customer);
         return new CartDTO(customer);
     }
@@ -297,10 +268,60 @@ public class CustomerService {
             cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
             customer.setCart(cart);
         }
-        cart.getBundles().add(bundle);
+        cart.getPurchases().add(bundle);
         customerRepository.save(customer);
         return new CartDTO(customer);
     }
+
+
+
+    public Map<LocalDate, List<LocalTime>> getAvailablePickupTimes(String customerId, List<Integer> positions) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        Cart cart = customer.getCart();
+        if (cart == null) {
+            throw new IllegalStateException("Customer does not have a cart.");
+        }
+
+        List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
+        List<Map<LocalDate, List<LocalTime>>> allItemsTimes = new ArrayList<>();
+
+        // Map phase: Retrieve available times for each item
+        for (ItemInPurchase item : items) {
+            Map<LocalDate, List<LocalTime>> availableTimes = calculateAvailableTimes(item);
+            allItemsTimes.add(availableTimes);
+        }
+
+        // Reduce phase: Intersect all times
+        Map<LocalDate, List<LocalTime>> commonAvailableTimes = new HashMap<>();
+        if (!allItemsTimes.isEmpty()) {
+            commonAvailableTimes.putAll(allItemsTimes.get(0)); // Start with the first item's times
+
+            // Intersect with the rest
+            for (Map<LocalDate, List<LocalTime>> itemTimes : allItemsTimes.subList(1, allItemsTimes.size())) {
+                commonAvailableTimes.keySet().retainAll(itemTimes.keySet()); // Keep only dates present in both maps
+                for (LocalDate date : commonAvailableTimes.keySet()) {
+                    commonAvailableTimes.get(date).retainAll(itemTimes.getOrDefault(date, Collections.emptyList())); // Intersect the times
+                }
+            }
+        }
+
+        return commonAvailableTimes;
+    }
+
+    private Map<LocalDate, List<LocalTime>> calculateAvailableTimes(ItemInPurchase item) {
+        Map<LocalDate, List<LocalTime>> availableTimes = new HashMap<>();
+        LocalDate today = LocalDate.now();
+        LocalTime[] possibleTimes = { LocalTime.of(9, 0), LocalTime.of(12, 0), LocalTime.of(15, 0), LocalTime.of(18, 0) }; // Possible pickup times
+
+        for (int i = 0; i < 30; i++) { // Simulate availability for the next 30 days
+            LocalDate date = today.plusDays(i);
+            availableTimes.put(date, new ArrayList<>(List.of(possibleTimes))); // Assume all times are available
+        }
+
+        return availableTimes;
+    }
+
+
 
 
 
