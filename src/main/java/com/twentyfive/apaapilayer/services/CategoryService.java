@@ -10,6 +10,8 @@ import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
 import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -30,42 +32,31 @@ public class CategoryService {
         return categoryRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public CategoryAPA save(CategoryAPA c){
-        activateById(c.getName());
         return categoryRepository.save(c);
     }
 
+    @Transactional
     public boolean disableById(String id){
         CategoryAPA c = categoryRepository.findById(id).orElse(null);
         if(c!=null) {
             c.setEnabled(false);
             categoryRepository.save(c);
-            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByCategoryId(id);
-            for (ProductKgAPA p : prodottiAlKg) {
-                p.setActive(false);
-                productKgRepository.save(p);
-            }
-            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByCategoryId(id);
-            for (ProductWeightedAPA p : prodottiWeighted) {
-                p.setActive(false);
-                productWeightedRepository.save(p);
-            }
-            List<IngredientAPA> ingredienti = ingredientRepository.findAllByCategoryId(id);
-            for (IngredientAPA i : ingredienti) {
-                i.setActive(false);
-                ingredientRepository.save(i);
-            }
             return true;
         }
         return false;
     }
 
-    private void activateById(String cName){
-        CategoryAPA category = categoryRepository.findByName(cName);
-        if(category!=null){
-            category.setEnabled(true);
-
+    @Transactional
+    public boolean activateById(String id){
+        CategoryAPA c = categoryRepository.findById(id).orElse(null);
+        if(c!=null){
+            c.setEnabled(true);
+            categoryRepository.save(c);
+            return true;
         }
+        return false;
     }
 
 }

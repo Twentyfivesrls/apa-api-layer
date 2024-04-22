@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
@@ -73,10 +74,12 @@ public class ProductWeightedService {
         return productsWeightedToDTO(productWeightedAPA);
     }
 
+    @Transactional
     public ProductWeightedAPA save(ProductWeightedAPA p) {
         return productWeightedRepository.save(p);
     }
 
+    @Transactional
     public boolean disableById(String id){
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         if(productWeightedAPA!=null){
@@ -87,8 +90,14 @@ public class ProductWeightedService {
         return false;
     }
 
+    @Transactional
     public boolean activateById(String id){
-        //TODO
+        ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
+        if(productWeightedAPA!=null){
+            productWeightedAPA.setActive(true);
+            productWeightedRepository.save(productWeightedAPA);
+            return true;
+        }
         return false;
     }
 

@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
@@ -67,10 +68,12 @@ public class IngredientService {
         return ingredientsToDTO(ingredientAPA);
     }
 
+    @Transactional
     public IngredientAPA save(IngredientAPA i) {
         return ingredientRepository.save(i);
     }
 
+    @Transactional
     public boolean disableById(String id){
         IngredientAPA ingredientAPA = ingredientRepository.findById(id).orElse(null);
         if(ingredientAPA!=null){
@@ -91,13 +94,49 @@ public class IngredientService {
         return false;
     }
 
+    @Transactional
     public boolean activateById(String id){
         IngredientAPA ingredientAPA = ingredientRepository.findById(id).orElse(null);
-        if(ingredientAPA!=null){
+        if(ingredientAPA != null){
+
+            // Trova tutti i prodotti che contengono esclusivamente l'ingrediente in questione
+            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByIngredientIdsContaining(id);
+            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByIngredientIdsContaining(id);
+
+            // Verifica e aggiorna lo stato dei prodotti
+            for(ProductKgAPA productKg : prodottiAlKg){
+                List<String> idIngredientiPerProdottoKg = productKg.getIngredientIds();
+                List<IngredientAPA> ingredientiDisattivati = new ArrayList<>();
+                for(String idIngrediente : idIngredientiPerProdottoKg){
+                    IngredientAPA ingrediente = ingredientRepository.findById(idIngrediente).orElse(null);
+                    if(ingrediente != null && !ingrediente.isActive())
+                        ingredientiDisattivati.add(ingrediente);
+                }
+                if(ingredientiDisattivati.size()==1 && ingredientiDisattivati.contains(ingredientAPA)) { // Verifica se l'ingrediente è l'unico presente
+                    productKg.setActive(true);
+                    productKgRepository.save(productKg);
+                }
+            }
+
+            for(ProductWeightedAPA productWeighted : prodottiWeighted){
+                List<String> idIngredientiPerProdottoWeighted = productWeighted.getIngredientIds();
+                List<IngredientAPA> ingredientiDisattivati = new ArrayList<>();
+                for(String idIngrediente : idIngredientiPerProdottoWeighted){
+                    IngredientAPA ingrediente = ingredientRepository.findById(idIngrediente).orElse(null);
+                    if(ingrediente != null && !ingrediente.isActive())
+                        ingredientiDisattivati.add(ingrediente);
+                }
+                if(ingredientiDisattivati.size()==1 && ingredientiDisattivati.contains(ingredientAPA)) { // Verifica se l'ingrediente è l'unico presente
+                    productWeighted.setActive(true);
+                    productWeightedRepository.save(productWeighted);
+                }
+            }
+
             ingredientAPA.setActive(true);
             ingredientRepository.save(ingredientAPA);
             return true;
         }
-        else return false;
+        return false;
     }
+
 }

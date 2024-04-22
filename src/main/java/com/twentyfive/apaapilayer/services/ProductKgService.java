@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
@@ -73,10 +74,12 @@ public class ProductKgService {
         return productsKgToDTO(productKgAPA);
     }
 
+    @Transactional
     public ProductKgAPA save(ProductKgAPA p) {
         return productKgRepository.save(p);
     }
 
+    @Transactional
     public boolean disableById(String id){
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         if(productKgAPA!=null){
@@ -87,8 +90,14 @@ public class ProductKgService {
         return false;
     }
 
+    @Transactional
     public boolean activateById(String id){
-       //TODO
+        ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
+        if(productKgAPA!=null){
+            productKgAPA.setActive(true);
+            productKgRepository.save(productKgAPA);
+            return true;
+        }
         return false;
     }
 
