@@ -17,5 +17,6 @@ public class ProductWeightedAPADTO {
     private List<String> ingredients;
     private String weight;
     private String imageUrl;//immagine
+    private boolean enable;
 
 }

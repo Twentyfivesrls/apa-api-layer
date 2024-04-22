@@ -17,4 +17,5 @@ public class ProductKgAPADTO {
     private List<String> ingredients;
     private String pricePerKg;
     private String imageUrl;
+    private boolean enable;
 }
