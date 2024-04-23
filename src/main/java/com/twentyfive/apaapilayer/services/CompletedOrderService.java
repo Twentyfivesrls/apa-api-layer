@@ -158,6 +158,27 @@ public class CompletedOrderService {
 
         // Altri campi specifici dell'ordine possono essere aggiunti qui
     }
+
+    public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
+        // Supponendo che il repository abbia il metodo findOrdersByCustomerId
+        return completedOrderRepository.findOrdersByCustomerId(customerId, pageable)
+                .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
+    }
+
+    private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
+        CustomerAPA customer = customerRepository.findById(order.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
+
+        OrderAPADTO dto = new OrderAPADTO();
+        dto.setId(order.getId());
+        dto.setFirstName(customer.getName());
+        dto.setLastName(customer.getSurname());
+        dto.setPickupDate(order.getPickupDate());
+        dto.setPickupTime(order.getPickupTime());
+        dto.setPrice(String.format("%.2f", order.getTotalPrice()));
+        dto.setStatus(order.getStatus().name());
+        return dto;
+    }
 }
 
 

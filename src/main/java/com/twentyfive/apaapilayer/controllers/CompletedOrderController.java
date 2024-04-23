@@ -48,4 +48,17 @@ public class CompletedOrderController {
         OrderAPADTO restoredOrder = completedOrderService.restoreOrder(id);
         return ResponseEntity.ok(restoredOrder);
     }
+
+    @GetMapping("/by-customer/{customerId}")
+    public ResponseEntity<Page<OrderAPADTO>> getByCustomerId(
+            @PathVariable String customerId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        Page<OrderAPADTO> orders = completedOrderService.getByCustomerId(customerId, PageRequest.of(page, size));
+        if (!orders.isEmpty()) {
+            return ResponseEntity.ok(orders);
+        } else {
+            return ResponseEntity.noContent().build(); // Restituisce 204 No Content se non ci sono ordini
+        }
+    }
 }
