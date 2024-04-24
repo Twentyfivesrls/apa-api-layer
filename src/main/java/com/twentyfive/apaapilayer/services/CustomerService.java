@@ -106,33 +106,10 @@ public class CustomerService {
         }
     }
 
-    @Transactional
-    public boolean buySingleItem(String customerId, int positionId, LocalDateTime selectedPickupDateTime) {
 
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        if (customer.getCart()==null) customer.setCart(new Cart());
-
-        Cart cart = customer.getCart();
-        List<ItemInPurchase> items = cart.getPurchases();
-
-        if (positionId < 0 || positionId >= items.size()) {
-            throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
-        }
-
-        ItemInPurchase item = items.remove(positionId);
-        if (item == null) {
-            return false;
-        }
-
-        OrderAPA order = createOrderFromItems(customer, Collections.singletonList(item), selectedPickupDateTime);
-
-        orderService.createOrder(order);
-        customerRepository.save(customer);//salvo il nuovo carrello, tolto l'elemento comprato
-        return true;
-    }
 
     @Transactional
-    public boolean buyMultipleItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) {
+    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         if (customer.getCart()==null) customer.setCart(new Cart());
 
@@ -155,26 +132,7 @@ public class CustomerService {
     }
 
 
-    @Transactional
-    public boolean buyAllItems(String customerId, LocalDateTime selectedPickupDateTime) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        if (customer.getCart()==null) customer.setCart(new Cart());
 
-
-        Cart cart = customer.getCart();
-
-        if (cart == null || cart.getPurchases().isEmpty()) {
-            return false;
-        }
-
-        List<ItemInPurchase> allItems = new ArrayList<>(cart.getPurchases());
-        cart.clearCart(); // Rimuove tutti gli articoli dal carrello
-
-        OrderAPA order = createOrderFromItems(customer, allItems, selectedPickupDateTime);
-        orderService.createOrder(order);
-        customerRepository.save(customer);
-        return true;
-    }
 
     private OrderAPA createOrderFromItems(CustomerAPA customer, List<ItemInPurchase> items, LocalDateTime selectedPickupDateTime) {
         OrderAPA order = new OrderAPA();
