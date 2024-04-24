@@ -1,11 +1,11 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
-import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderAPA;
+import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.repositories.ActiveOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,29 +17,30 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPur
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final ActiveOrderRepository orderRepository;
+    private final ActiveOrderRepository activeOrderRepository;
+
+    private final CompletedOrderRepository completedOrderRepository;
 
     private final ActiveOrderService orderService;
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService,CompletedOrderRepository completedOrderRepository) {
         this.customerRepository = customerRepository;
-        this.orderRepository = activeOrderRepository;
+        this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
+        this.completedOrderRepository=completedOrderRepository;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
@@ -51,7 +52,7 @@ public class CustomerService {
         if (customer.getCart()==null) customer.setCart(new Cart());
 
 
-        List<OrderAPA> orders = orderRepository.findByCustomerId(customerId);
+        List<OrderAPA> orders = completedOrderRepository.findByCustomerId(customerId);
 
         // Calcola il totale speso e il numero di ordini
         String totalSpent = String.format("%.2f", orders.stream()
