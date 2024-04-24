@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -51,6 +52,12 @@ public class ActiveOrderController {
         } else {
             return ResponseEntity.notFound().build(); // Restituisce 404 Not Found se l'ordine non esiste
         }
+    }
+
+
+    @PostMapping("/save")
+    public void saveOrder(@RequestBody OrderAPA order){
+        activeOrderService.createOrder(order);
     }
 
 
