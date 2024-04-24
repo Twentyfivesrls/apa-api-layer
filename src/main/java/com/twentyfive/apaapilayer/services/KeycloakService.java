@@ -1,7 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twentyfive.apaapilayer.clients.TwentyfiveKeycloakClientController;
+import com.twentyfive.apaapilayer.clients.KeycloakClient;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class KeycloakService {
-    private final TwentyfiveKeycloakClientController twentyfiveKeycloakClientController;
+    private final KeycloakClient keycloakClient;
 
     @Value("${keycloak.clientId}")
     protected String clientId;
@@ -41,7 +41,7 @@ public class KeycloakService {
         TokenRequest request = new TokenRequest(clientId, clientSecret, "password", usernameAdmin, passwordAdmin);
 
         // Chiamata al client Feign per ottenere l'accessToken
-        ResponseEntity<Object> response = twentyfiveKeycloakClientController.getToken(request);
+        ResponseEntity<Object> response = keycloakClient.getTokenFromTwentyfiveInternal(request);
 
         // Estrai l'accessToken dalla risposta
         ObjectMapper objectMapper = new ObjectMapper();
@@ -52,7 +52,7 @@ public class KeycloakService {
     public Map<String, List<String>> getEmailSettings(){
         String accessToken = this.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
-        UserRepresentation userRepresentation = twentyfiveKeycloakClientController.getUserFromUsername(authorizationHeader, username).getBody().get(0);
+        UserRepresentation userRepresentation = keycloakClient.getUserFromUsernameTwentyfiveInternal(authorizationHeader, username).getBody().get(0);
         return userRepresentation.getAttributes();
     }
 }

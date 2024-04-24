@@ -22,8 +22,8 @@ public class EmailService {
     private final KeycloakService keycloakService;
     private final EmailUtilities emailUtilities;
 
-    private String templateReceived ="templates/orderSuccessful.html";
-    private String subjectReceived ="Il tuo ordine è arrivato!";
+    private final String templateReceived ="templates/orderSuccessful.html";
+    private final String subjectReceived ="Il tuo ordine è arrivato!";
     public void sendEmailReceived(String id) throws IOException {
         Optional<CustomerAPA> customerAPA =customerRepository.findById(id);
         if(customerAPA.isPresent()){
