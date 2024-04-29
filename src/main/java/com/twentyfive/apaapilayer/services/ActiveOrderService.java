@@ -5,6 +5,8 @@ import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
+import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
+import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,16 +15,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.ProductKg;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,14 +40,17 @@ public class ActiveOrderService {
 
     private final SettingRepository settingRepository;
 
+    private final TimeSlotAPARepository timeSlotAPARepository;
+
     @Autowired
-    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository,SettingRepository settingRepository) {
+    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository,SettingRepository settingRepository,TimeSlotAPARepository timeSlotAPARepository) {
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
         this.productKgRepository=productKgRepository;
         this.trayRepository=trayRepository;
         this.settingRepository=settingRepository;
+        this.timeSlotAPARepository=timeSlotAPARepository;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -211,13 +216,64 @@ public class ActiveOrderService {
 
             CompletedOrderAPA completedOrder = new CompletedOrderAPA();
             createCompletedOrder(order, completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
-
-            activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
-            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
+            ArrayList<ItemInPurchase> items= new ArrayList<>();
+            items.addAll(order.getBundlesInPurchase());
+            items.addAll(order.getProductsInPurchase());
+            if(timeSlotAPARepository.findAll().get(0).freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
+                activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
+                completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
+            }else return false;
 
             return true;
         }
         return false;
+    }
+
+    private Map<LocalTime, Integer> getStandardHourSlotMap() {
+        Map<LocalTime,Integer> slotsPerH= new TreeMap<>();
+        slotsPerH.put(LocalTime.of(8,0,0),4);
+        slotsPerH.put(LocalTime.of(9,0,0),4);
+        slotsPerH.put(LocalTime.of(10,0,0),4);
+        slotsPerH.put(LocalTime.of(11,0,0),4);
+        slotsPerH.put(LocalTime.of(12,0,0),4);
+        slotsPerH.put(LocalTime.of(13,0,0),4);
+
+
+        slotsPerH.put(LocalTime.of(14,0,0),10);
+        slotsPerH.put(LocalTime.of(15,0,0),10);
+        slotsPerH.put(LocalTime.of(16,0,0),10);
+        slotsPerH.put(LocalTime.of(17,0,0),10);
+        slotsPerH.put(LocalTime.of(18,0,0),10);
+        slotsPerH.put(LocalTime.of(19,0,0),10);
+        return slotsPerH;
+
+    }
+
+    private int countSlotRequired(List<ItemInPurchase>items) {
+        int numSlotRequired = 0;
+
+
+        for (ItemInPurchase item : items) {
+
+            if (item instanceof ProductInPurchase) {
+                ProductInPurchase pip = (ProductInPurchase) item;
+                ProductKgAPA product = productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                if (product.isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+
+                }
+
+
+            } else if (item instanceof BundleInPurchase) {
+                BundleInPurchase pip = (BundleInPurchase) item;
+                Tray tray = trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                if (tray.isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+                }
+
+            }
+        }
+        return numSlotRequired;
     }
 
 }

@@ -157,9 +157,6 @@ public class CustomerService {
                     numSlotRequired += pip.getQuantity();
 
                 }
-                if (categoryRepository.findById(product.getId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")) {
-                    double weight = pip.getWeight();
-                }
 
 
             } else if (item instanceof BundleInPurchase) {
