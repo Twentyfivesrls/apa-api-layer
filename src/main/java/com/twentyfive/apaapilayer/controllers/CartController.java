@@ -90,7 +90,7 @@ public class CartController {
         }
     }
 
-    @GetMapping("/minimum-pickup-dateTime/{id}")
+    @GetMapping("/pickup-dateTimes/{id}")
     public ResponseEntity<Map<LocalDate, List<LocalTime>>> obtainMinimumPickupDateTime(
             @PathVariable String id, @RequestBody List<Integer> positions) {
 
