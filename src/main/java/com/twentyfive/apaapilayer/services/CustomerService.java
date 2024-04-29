@@ -3,12 +3,11 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.emails.EmailService;
+import com.twentyfive.apaapilayer.exceptions.IllegalCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
-import com.twentyfive.apaapilayer.models.CustomerAPA;
-import com.twentyfive.apaapilayer.models.OrderAPA;
-import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
-import com.twentyfive.apaapilayer.repositories.CustomerRepository;
-import com.twentyfive.apaapilayer.repositories.ActiveOrderRepository;
+import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.models.*;
+import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,15 +37,31 @@ public class CustomerService {
     private final EmailService emailService;
     private final KeycloakService keycloakService;
 
+    private final SettingRepository settingRepository;
+
+    private final ProductKgRepository productKgRepository;
+
+
+    private final TimeSlotAPARepository timeSlotAPARepository;
+
+    private final CategoryRepository categoryRepository;
+
+    private final TrayRepository trayRepository;
+
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
         this.customerRepository = customerRepository;
         this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
+        this.settingRepository=settingRepository;
+        this.productKgRepository = productKgRepository;
+        this.timeSlotAPARepository = timeSlotAPARepository;
+        this.categoryRepository = categoryRepository;
+        this.trayRepository = trayRepository;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
@@ -120,14 +135,47 @@ public class CustomerService {
 
         if (!selectedItems.isEmpty()) {
             OrderAPA order = createOrderFromItems(customer, selectedItems, selectedPickupDateTime);
-            orderService.createOrder(order);
-            cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
+            if(timeSlotAPARepository.findAll().get(0).reserveTimeSlots(selectedPickupDateTime,countSlotRequired(selectedItems))) {
+                orderService.createOrder(order);
+                cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
+            }
             customerRepository.save(customer);
             emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
         return false;
     }
+
+    private int countSlotRequired(List<ItemInPurchase>items) {
+        int numSlotRequired = 0;
+
+
+        for (ItemInPurchase item : items) {
+
+            if (item instanceof ProductInPurchase) {
+                ProductInPurchase pip = (ProductInPurchase) item;
+                ProductKgAPA product = productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                if (product.isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+
+                }
+                if (categoryRepository.findById(product.getId()).orElseThrow(IllegalCategoryException::new).getName().equals("Semifreddo")) {
+                    double weight = pip.getWeight();
+                }
+
+
+            } else if (item instanceof BundleInPurchase) {
+                BundleInPurchase pip = (BundleInPurchase) item;
+                Tray tray = trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                if (tray.isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+                }
+
+            }
+        }
+        return numSlotRequired;
+    }
+
 
 
 
@@ -230,52 +278,102 @@ public class CustomerService {
         return new CartDTO(customer);
     }
 
+    private LocalDateTime next(int hour){
+        LocalDateTime now= LocalDateTime.now();
+        // Definisce il mezzogiorno
+        LocalTime noon = LocalTime.of(hour, 0);
+
+        // Se ora è già passato il mezzogiorno, passa al giorno successivo
+        if (now.toLocalTime().isAfter(noon)) {
+            return now.toLocalDate().plusDays(1).atTime(noon);
+        } else {
+            // Altrimenti, restituisce il mezzogiorno di oggi
+            return now.toLocalDate().atTime(noon);
+        }
+    }
+
 
 
     public Map<LocalDate, List<LocalTime>> getAvailablePickupTimes(String customerId, List<Integer> positions) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
         if (cart == null) {
-            throw new IllegalStateException("Customer does not have a cart.");
+            cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
+            customer.setCart(cart);
+            customerRepository.save(customer);
+            return new TreeMap<>();
         }
+        else{
+            Integer minDelay= settingRepository.findAll().get(0).getMinOrderDelay();
 
-        List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
-        List<Map<LocalDate, List<LocalTime>>> allItemsTimes = new ArrayList<>();
+            List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
+            int numSlotRequired=0;
+            boolean somethingCustomized=false;
+            boolean bigSemifreddo=false;
 
-        // Map phase: Retrieve available times for each item
-        for (ItemInPurchase item : items) {
-            Map<LocalDate, List<LocalTime>> availableTimes = calculateAvailableTimes(item);
-            allItemsTimes.add(availableTimes);
-        }
 
-        // Reduce phase: Intersect all times
-        Map<LocalDate, List<LocalTime>> commonAvailableTimes = new HashMap<>();
-        if (!allItemsTimes.isEmpty()) {
-            commonAvailableTimes.putAll(allItemsTimes.get(0)); // Start with the first item's times
+            for (ItemInPurchase item: items){
 
-            // Intersect with the rest
-            for (Map<LocalDate, List<LocalTime>> itemTimes : allItemsTimes.subList(1, allItemsTimes.size())) {
-                commonAvailableTimes.keySet().retainAll(itemTimes.keySet()); // Keep only dates present in both maps
-                for (LocalDate date : commonAvailableTimes.keySet()) {
-                    commonAvailableTimes.get(date).retainAll(itemTimes.getOrDefault(date, Collections.emptyList())); // Intersect the times
+                if(item instanceof ProductInPurchase){
+                    ProductInPurchase pip=(ProductInPurchase) item;
+                    ProductKgAPA product= productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                    if(product.isCustomized()){
+                        numSlotRequired+=pip.getQuantity();
+                        somethingCustomized=true;
+
+                    }
+                    if(categoryRepository.findById(product.getId()).orElseThrow(IllegalCategoryException::new).getName().equals("Semifreddo")){
+                        double weight= pip.getWeight();
+                        if(weight>=1.5)bigSemifreddo=true;
+                    }
+
+
+                }else if (item instanceof BundleInPurchase){
+                    BundleInPurchase pip =(BundleInPurchase) item;
+                    Tray tray= trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                    if(tray.isCustomized()){
+                        numSlotRequired+=pip.getQuantity();
+                        somethingCustomized=true;
+                    }
+
                 }
+
+                LocalTime now=LocalTime.now();
+                LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();;
+                LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+                LocalDateTime minStartingDate;
+
+                if (bigSemifreddo)minDelay=48;
+
+                if(!now.isBefore(startTime) && now.isBefore(endTime)){//la richiesta è fatta in orario lavorativo
+                    if(!somethingCustomized)
+                        minStartingDate= LocalDateTime.now().plusHours(minDelay);
+                    else
+                        minStartingDate=next(8).plusHours(minDelay);
+                }
+                else{
+                    if(!somethingCustomized)
+                        minStartingDate= next(8).plusHours(minDelay);
+                    else
+                        minStartingDate= next(12).plusHours(minDelay);
+
+                }
+
+
+                return timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate,numSlotRequired);
+
+
+
             }
+            return new TreeMap<>();
+
+
         }
 
-        return commonAvailableTimes;
-    }
 
-    private Map<LocalDate, List<LocalTime>> calculateAvailableTimes(ItemInPurchase item) {
-        Map<LocalDate, List<LocalTime>> availableTimes = new HashMap<>();
-        LocalDate today = LocalDate.now();
-        LocalTime[] possibleTimes = { LocalTime.of(9, 0), LocalTime.of(12, 0), LocalTime.of(15, 0), LocalTime.of(18, 0) }; // Possible pickup times
 
-        for (int i = 0; i < 30; i++) { // Simulate availability for the next 30 days
-            LocalDate date = today.plusDays(i);
-            availableTimes.put(date, new ArrayList<>(List.of(possibleTimes))); // Assume all times are available
-        }
 
-        return availableTimes;
+
     }
 
 
