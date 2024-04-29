@@ -11,9 +11,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.utils.DateRange;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -22,51 +20,47 @@ public class TimeSlotRefreshScheduling {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Scheduled(cron = "0 0 0 * * *")
-    public void timeSlotRefreshDaily(){
+    public void timeSlotRefreshDaily() {
         SettingAPA settingAPA = settingRepository.findAll().get(0);
         TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
         Map<LocalDate, Map<LocalTime, Integer>> availableSlots = timeSlotAPA.getNumSlotsMap();
 
-        // Identifica il giorno massimo presente nella mappa
-        LocalDate maxDay = availableSlots.keySet().stream().max(LocalDate::compareTo).orElse(null);
+        // Ottieni la data più distante nel futuro (ultima data presente nel TreeMap)
+        LocalDate maxDay = availableSlots.isEmpty() ? LocalDate.now() : Collections.max(availableSlots.keySet());
 
-        // Aggiungi un giorno dopo il giorno massimo presente nella mappa
-        LocalDate giornoDopoMax;
-        if (maxDay != null) {
-            giornoDopoMax = maxDay.plusDays(1);
-        } else {
-            giornoDopoMax = LocalDate.now(); // Se la mappa è vuota, aggiungi un giorno dopo l'odierno
-        }
-        DateRange dateRange =settingAPA.getBusinessHours();
-        LocalTime slots =dateRange.getStartTime();
-        Map<LocalTime,Integer> timeSlots = new HashMap<>();
-        while(slots.isBefore(dateRange.getEndTime())){
-            if(slots.isBefore(LocalTime.of(14,0))){
-                timeSlots.put(slots, settingAPA.getMaxMorningOrder());
-            } else {
-                timeSlots.put(slots, settingAPA.getMaxAfternoonOrder());
-            }
-            slots = slots.plusHours(1);
-        }
-        timeSlotAPA.initializeDay(giornoDopoMax,timeSlots);
+        // Determina il giorno successivo da inizializzare
+        LocalDate giornoSuccessivo = maxDay.plusDays(1);
+
+        // Crea la mappa degli slot temporali per il nuovo giorno
+        Map<LocalTime, Integer> timeSlots = createTimeSlotsMap(settingAPA);
+
+        // Inizializza il nuovo giorno con gli slot temporali creati
+        timeSlotAPA.initializeDay(giornoSuccessivo, timeSlots);
+
         // Rimuovi tutti i giorni antecedenti all'odierno
-        LocalDate minDay = availableSlots.keySet().stream().min(LocalDate::compareTo).orElse(null).minusDays(1);
-        if (minDay != null) {
-            LocalDate oggi = LocalDate.now();
-            Iterator<LocalDate> iterator = availableSlots.keySet().iterator();
-            while (iterator.hasNext()) {
-                LocalDate giorno = iterator.next();
-                if (giorno.isAfter(minDay) && giorno.isBefore(oggi)) {
-                    iterator.remove();
-                }
-            }
-        }
+        LocalDate giornoCorrente = LocalDate.now();
+        availableSlots.keySet().removeIf(day -> day.isBefore(giornoCorrente));
+
         timeSlotAPARepository.save(timeSlotAPA);
     }
-    /*public void createSlotsForNext15Days() {
+
+    private Map<LocalTime, Integer> createTimeSlotsMap(SettingAPA settingAPA) {
+        Map<LocalTime, Integer> timeSlots = new TreeMap<>();
+        DateRange dateRange = settingAPA.getBusinessHours();
+        LocalTime slots = dateRange.getStartTime();
+        while (slots.isBefore(dateRange.getEndTime())) {
+            int maxOrder = slots.isBefore(LocalTime.of(14, 0)) ? settingAPA.getMaxMorningOrder() : settingAPA.getMaxAfternoonOrder();
+            timeSlots.put(slots, maxOrder);
+            slots = slots.plusHours(1);
+        }
+        return timeSlots;
+    }
+
+    public void createSlotsForNext15Days() {
         SettingAPA settingAPA = settingRepository.findAll().get(0);
         TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
-        Map<LocalDate, Map<LocalTime, Integer>> slotsMap = new HashMap<>();
+        timeSlotAPA.getNumSlotsMap().clear();
+        Map<LocalDate, Map<LocalTime, Integer>> slotsMap = new TreeMap<>();
 
         // Ottieni la data odierna
         LocalDate currentDate = LocalDate.now();
@@ -79,7 +73,7 @@ public class TimeSlotRefreshScheduling {
             // Crea la mappa degli slot per il giorno successivo
             DateRange dateRange =settingAPA.getBusinessHours();
             LocalTime slots =dateRange.getStartTime();
-            Map<LocalTime,Integer> timeSlots = new HashMap<>();
+            Map<LocalTime,Integer> timeSlots = new TreeMap<>();
             while(slots.isBefore(dateRange.getEndTime())){
                 if(slots.isBefore(LocalTime.of(14,0))){
                     timeSlots.put(slots, settingAPA.getMaxMorningOrder());
@@ -96,5 +90,4 @@ public class TimeSlotRefreshScheduling {
         timeSlotAPA.setNumSlotsMap(slotsMap);
         timeSlotAPARepository.save(timeSlotAPA);
     }
-     */
 }

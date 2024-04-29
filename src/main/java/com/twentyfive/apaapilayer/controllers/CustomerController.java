@@ -9,9 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
 @RequestMapping("/customers")
 public class CustomerController {
@@ -42,31 +39,18 @@ public class CustomerController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerDTO customer) {
+    public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerAPA customerAPA) {
         try {
-            CustomerAPA newUser=customer.toCustomerAPA();
-            newUser.setId(null);
-            CustomerAPA savedCustomer = customerService.saveCustomer(newUser);
+            CustomerAPA savedCustomer = customerService.saveCustomer(customerAPA);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
-
-    @PostMapping("/update")
-    public ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customer) {
-        try {
-            CustomerAPA updatedCustomer = customerService.updateCustomer(customer.toCustomerAPA());
-            return ResponseEntity.ok(new CustomerDTO(updatedCustomer));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
-        }
-    }
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Boolean> deleteCustomerById(@PathVariable String id) {
-        boolean deleted = customerService.deleteCustomerById(id);
-        if (deleted) {
+    @DeleteMapping("/changeStatus/{id}")
+    public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
+        boolean changed = customerService.changeStatusById(id);
+        if (changed) {
             return ResponseEntity.ok(true);  // Restituisce true se la cancellazione è avvenuta con successo
         } else {
             return ResponseEntity.notFound().build();  // Restituisce 404 se il cliente non è stato trovato

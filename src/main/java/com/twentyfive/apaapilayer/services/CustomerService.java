@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.IllegalCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
@@ -19,6 +20,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurch
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,6 +35,8 @@ public class CustomerService {
     private final CompletedOrderRepository completedOrderRepository;
 
     private final ActiveOrderService orderService;
+    private final EmailService emailService;
+    private final KeycloakService keycloakService;
 
     private final SettingRepository settingRepository;
 
@@ -46,7 +50,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService,CompletedOrderRepository completedOrderRepository,SettingRepository settingRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository,TimeSlotAPARepository timeSlotAPARepository,CategoryRepository categoryRepository) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService,CompletedOrderRepository completedOrderRepository) {
         this.customerRepository = customerRepository;
         this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
@@ -56,6 +60,8 @@ public class CustomerService {
         this.trayRepository=trayRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
         this.categoryRepository=categoryRepository;
+        this.emailService = emailService;
+        this.keycloakService = keycloakService;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
@@ -91,40 +97,31 @@ public class CustomerService {
     }
 
     public CustomerAPA saveCustomer(CustomerAPA customer) {
-        // Verifica se il cliente già esiste
-        if (customer.getId() != null && customerRepository.existsById(customer.getId())) {
-            throw new IllegalStateException("Customer already exists with id: " + customer.getId());
+        if(customer.getIdKeycloak()!=null){
+            keycloakService.update(customer);
+        } else {
+            keycloakService.add(customer);
         }
-        // Salva il nuovo cliente nel database
+        // Salva il nuovo cliente nel database o gli faccio update
         return customerRepository.save(customer);
     }
 
-    public CustomerAPA updateCustomer(CustomerAPA customer) {
-        // Verifica se il cliente esiste
-        if (customer.getId() == null || !customerRepository.existsById(customer.getId())) {
-            throw new IllegalStateException("Cannot update non-existing customer with id: " + customer.getId());
-        }
-        // Aggiorna il cliente esistente nel database
-        return customerRepository.save(customer);
-    }
-
-    public boolean deleteCustomerById(String id) {
+    public boolean changeStatusById(String id) {
+        Optional<CustomerAPA> customerAPA = customerRepository.findById(id);
         // Verifica che il cliente esista prima di tentare di eliminarlo
-        if (customerRepository.existsById(id)) {
-            customerRepository.deleteById(id);
-            // Dopo la cancellazione, verifica che il cliente sia stato effettivamente rimosso
-            boolean stillExists = customerRepository.existsById(id);
-            return !stillExists;
+        if (customerAPA.isPresent()) {
+            customerAPA.get().setEnabled(!customerAPA.get().isEnabled());
         } else {
             // Se il cliente non esiste, restituisci false indicando che non c'era nulla da eliminare
             throw new InvalidCustomerIdException();
         }
+        return true;
     }
 
 
 
     @Transactional
-    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) {
+    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) throws IOException {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         if (customer.getCart()==null) customer.setCart(new Cart());
 
@@ -143,6 +140,7 @@ public class CustomerService {
                 cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
             }
             customerRepository.save(customer);
+            emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
         return false;
