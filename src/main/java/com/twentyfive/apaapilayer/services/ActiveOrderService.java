@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
 import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
+import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.ProductKg;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,13 +36,16 @@ public class ActiveOrderService {
 
     private final TrayRepository trayRepository;
 
+    private final SettingRepository settingRepository;
+
     @Autowired
-    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository) {
+    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository,SettingRepository settingRepository) {
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
         this.productKgRepository=productKgRepository;
         this.trayRepository=trayRepository;
+        this.settingRepository=settingRepository;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -187,6 +193,18 @@ public class ActiveOrderService {
     public boolean cancel(String id) {
         OrderAPA order = activeOrderRepository.findById(id)
                 .orElse(null); // Trova l'ordine o restituisce null se non esiste
+
+        LocalDate pickupDate= order.getPickupDate();
+
+        // Calcola la data di "oggi più due giorni"
+        LocalDate cancelThreshold = pickupDate.minusDays(settingRepository.findAll().get(0).getMinCancelOrder());
+
+        // Verifica se la data fornita è dopo "due giorni da oggi"
+        if(LocalDate.now().isAfter(cancelThreshold)){
+            throw new CancelThresholdPassedException();
+        }
+
+
 
         if (order != null) {
             order.setStatus(OrderStatus.ANNULLATO); // Imposta lo stato a ANNULLATO

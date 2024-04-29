@@ -3,7 +3,7 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.emails.EmailService;
-import com.twentyfive.apaapilayer.exceptions.IllegalCategoryException;
+import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
@@ -29,7 +29,6 @@ import java.util.*;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final ActiveOrderRepository activeOrderRepository;
 
     private final CompletedOrderRepository completedOrderRepository;
 
@@ -50,9 +49,8 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
         this.customerRepository = customerRepository;
-        this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
         this.emailService = emailService;
@@ -159,7 +157,7 @@ public class CustomerService {
                     numSlotRequired += pip.getQuantity();
 
                 }
-                if (categoryRepository.findById(product.getId()).orElseThrow(IllegalCategoryException::new).getName().equals("Semifreddo")) {
+                if (categoryRepository.findById(product.getId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")) {
                     double weight = pip.getWeight();
                 }
 
@@ -322,7 +320,7 @@ public class CustomerService {
                         somethingCustomized=true;
 
                     }
-                    if(categoryRepository.findById(product.getId()).orElseThrow(IllegalCategoryException::new).getName().equals("Semifreddo")){
+                    if(categoryRepository.findById(product.getId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")){
                         double weight= pip.getWeight();
                         if(weight>=1.5)bigSemifreddo=true;
                     }

@@ -27,6 +27,18 @@ public class GlobalExceptionHandler {
         return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InvalidItemException.class)
+    public ResponseEntity<ApiError> handleIllegalItem (InvalidItemException ex){
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "l'item selezionato non esiste"+ex);
+        return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidCategoryException.class)
+    public ResponseEntity<ApiError> handleIllegalCategory (InvalidCategoryException ex){
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "la categoria non esiste"+ex);
+        return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
+
     @Data
     @AllArgsConstructor
     public static class ApiError {

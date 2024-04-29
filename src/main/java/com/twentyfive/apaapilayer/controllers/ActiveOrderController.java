@@ -75,7 +75,7 @@ public class ActiveOrderController {
     }
 
 
-    @PostMapping("/complete/{id}")
+    @PostMapping("/complete/{id}")//per segnare ordine come completato
     public ResponseEntity<OrderAPADTO> completeOrder(@PathVariable String id) {
         try {
             OrderAPADTO updatedOrder = activeOrderService.complete(id);
@@ -89,7 +89,7 @@ public class ActiveOrderController {
         }
     }
 
-    @PostMapping("/cancel/{id}")
+    @PostMapping("/cancel/{id}")//per annullare ordine
     public ResponseEntity<Boolean> cancelOrder(@PathVariable String id) {
         try {
             boolean result = activeOrderService.cancel(id);
