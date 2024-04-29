@@ -8,7 +8,6 @@ import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
-import org.apache.james.mime4j.dom.datetime.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,26 +41,27 @@ public class CustomerService {
 
     private final ProductKgRepository productKgRepository;
 
-    private final TrayRepository trayRepository;
 
     private final TimeSlotAPARepository timeSlotAPARepository;
 
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+
+    private final TrayRepository trayRepository;
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService,CompletedOrderRepository completedOrderRepository) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
         this.customerRepository = customerRepository;
         this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
-        this.settingRepository=settingRepository;
-        this.productKgRepository=productKgRepository;
-        this.trayRepository=trayRepository;
-        this.timeSlotAPARepository=timeSlotAPARepository;
-        this.categoryRepository=categoryRepository;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
+        this.settingRepository=settingRepository;
+        this.productKgRepository = productKgRepository;
+        this.timeSlotAPARepository = timeSlotAPARepository;
+        this.categoryRepository = categoryRepository;
+        this.trayRepository = trayRepository;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
