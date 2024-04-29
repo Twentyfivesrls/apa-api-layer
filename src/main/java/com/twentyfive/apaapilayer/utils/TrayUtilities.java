@@ -12,7 +12,7 @@ public class TrayUtilities {
         TrayDetailsAPADTO dto = new TrayDetailsAPADTO();
         dto.setId(tray.getId());
         dto.setDescription(tray.getDescription());
-        dto.setType(tray.getType());
+        dto.setCustomized(tray.isCustomized());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         return dto;
     }
@@ -21,7 +21,7 @@ public class TrayUtilities {
         TrayAPADTO dto= new TrayAPADTO();
         dto.setId(tray.getId());
         dto.setName(tray.getName());
-        dto.setType(tray.getType());
+        dto.setCustomized(tray.isCustomized());
         dto.setDescription(tray.getDescription());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         dto.setEnabled(tray.isEnabled());

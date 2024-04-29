@@ -24,13 +24,10 @@ public class EmailService {
 
     private final String templateReceived ="templates/orderSuccessful.html";
     private final String subjectReceived ="Il tuo ordine è arrivato!";
-    public void sendEmailReceived(String id) throws IOException {
-        Optional<CustomerAPA> customerAPA =customerRepository.findById(id);
-        if(customerAPA.isPresent()){
-            EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,customerAPA.get());
+    public void sendEmailReceived(String email) throws IOException {
+            EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,email);
             String token = keycloakService.getAccessToken();
             String authorizationHeader = "Bearer " + token;
             emailClientController.sendMail(authorizationHeader, emailSendRequest);
-        }
     }
 }

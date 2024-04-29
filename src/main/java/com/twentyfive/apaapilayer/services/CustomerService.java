@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderAPA;
@@ -19,6 +20,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurch
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,14 +35,16 @@ public class CustomerService {
     private final CompletedOrderRepository completedOrderRepository;
 
     private final ActiveOrderService orderService;
+    private final EmailService emailService;
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService,CompletedOrderRepository completedOrderRepository) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService) {
         this.customerRepository = customerRepository;
         this.activeOrderRepository = activeOrderRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
+        this.emailService = emailService;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
@@ -109,7 +113,7 @@ public class CustomerService {
 
 
     @Transactional
-    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) {
+    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) throws IOException {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         if (customer.getCart()==null) customer.setCart(new Cart());
 
@@ -126,6 +130,7 @@ public class CustomerService {
             orderService.createOrder(order);
             cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
             customerRepository.save(customer);
+            emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
         return false;

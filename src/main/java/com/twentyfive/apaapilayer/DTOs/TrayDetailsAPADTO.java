@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TrayDetailsAPADTO {
     private String id;
-    private String type;
+    private boolean customized;
     private String measures;
     private String description;
 }
