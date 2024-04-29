@@ -18,11 +18,11 @@ public class EmailUtilities {
         byte[] htmlBytes = htmlFileResource.getInputStream().readAllBytes();
         return new String(htmlBytes, StandardCharsets.UTF_8);
     }
-    public EmailSendRequest toEmailSendRequest(String template, String subject, CustomerAPA customerAPA) throws IOException {
+    public EmailSendRequest toEmailSendRequest(String template, String subject, String email) throws IOException {
         ClassPathResource htmlFileResource = new ClassPathResource(template);
         String htmlContent = readHtmlFile(htmlFileResource);
         EmailSendRequest emailSendRequest = new EmailSendRequest();
-        emailSendRequest.setTo(customerAPA.getEmail());
+        emailSendRequest.setTo(email);
         emailSendRequest.setText(htmlContent);
         emailSendRequest.setHtmlContent(htmlContent);
         emailSendRequest.setSubject(subject);

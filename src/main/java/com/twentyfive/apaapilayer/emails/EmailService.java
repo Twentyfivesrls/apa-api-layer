@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.emails;
 
 import com.twentyfive.apaapilayer.clients.EmailClientController;
-import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.services.KeycloakService;
 import com.twentyfive.apaapilayer.utils.EmailUtilities;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.models.twentyfiveEmailModels.EmailSendRequest;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Service
 @Data
@@ -26,7 +24,7 @@ public class EmailService {
     private final String subjectReceived ="Il tuo ordine è arrivato!";
     public void sendEmailReceived(String email) throws IOException {
             EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,email);
-            String token = keycloakService.getAccessToken();
+            String token = keycloakService.getAccessTokenTF();
             String authorizationHeader = "Bearer " + token;
             emailClientController.sendMail(authorizationHeader, emailSendRequest);
     }

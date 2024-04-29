@@ -12,9 +12,7 @@ import java.io.IOException;
 @CrossOrigin(origins = "*")
 public class EmailController {
     private final EmailService emailService;
-    private final KeycloakService keycloakService;
-    public EmailController(EmailService emailService, KeycloakService keycloakService){
-        this.keycloakService=keycloakService;
+    public EmailController(EmailService emailService){
         this.emailService=emailService;
     }
 

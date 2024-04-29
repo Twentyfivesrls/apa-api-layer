@@ -11,6 +11,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
 @NoArgsConstructor
 public class CustomerDTO {
     private String id;                // Unique identifier for the customer
+    private String idKeycloak;        //
     private String firstName;         // First name of the customer
     private String lastName;          // Last name of the customer
     private String email;             // Email address of the customer
@@ -20,6 +21,7 @@ public class CustomerDTO {
 
     public CustomerDTO (CustomerAPA capa){
         this.id=capa.getId();
+        this.idKeycloak=capa.getIdKeycloak();
         this.firstName=capa.getName();
         this.lastName=capa.getSurname();
         this.email=capa.getEmail();
@@ -31,6 +33,7 @@ public class CustomerDTO {
     public CustomerAPA toCustomerAPA (){
         CustomerAPA capa= new CustomerAPA();
         capa.setId(this.getId());
+        capa.setIdKeycloak(this.idKeycloak);
         capa.setName(this.getFirstName());
         capa.setSurname(this.getLastName());
         capa.setEmail(this.getEmail());
