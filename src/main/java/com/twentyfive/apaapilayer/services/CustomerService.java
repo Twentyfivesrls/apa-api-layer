@@ -111,6 +111,8 @@ public class CustomerService {
         // Verifica che il cliente esista prima di tentare di eliminarlo
         if (customerAPA.isPresent()) {
             customerAPA.get().setEnabled(!customerAPA.get().isEnabled());
+            keycloakService.update(customerAPA.get());
+            customerRepository.save(customerAPA.get());
         } else {
             // Se il cliente non esiste, restituisci false indicando che non c'era nulla da eliminare
             throw new InvalidCustomerIdException();
