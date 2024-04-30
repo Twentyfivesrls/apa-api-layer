@@ -47,7 +47,7 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
-    @PutMapping("/changeStatus/{id}")
+    @GetMapping("/changeStatus/{id}")
     public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
         boolean changed = customerService.changeStatusById(id);
         if (changed) {
