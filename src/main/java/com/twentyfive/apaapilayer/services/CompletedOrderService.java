@@ -113,21 +113,22 @@ public class CompletedOrderService {
     public OrderAPADTO restoreOrder(String id) {
         CompletedOrderAPA completedOrder = completedOrderRepository.findById(id).orElse(null);
 
-        if (completedOrder.getStatus().equals(OrderStatus.ANNULLATO) && completedOrder.getPickupDate().isAfter(LocalDate.now()) && completedOrder.getPickupTime().isAfter(LocalTime.now())) {
-            completedOrderRepository.delete(completedOrder);
-            completedOrder.setStatus(OrderStatus.RICEVUTO);
+        if (completedOrder.getPickupDate().isAfter(LocalDate.now()) || completedOrder.getPickupDate().isEqual(LocalDate.now())) {
+            if(!(completedOrder.getPickupDate().isEqual(LocalDate.now()) && completedOrder.getPickupTime().isBefore(LocalTime.now()))) {
+                completedOrderRepository.delete(completedOrder);
+                completedOrder.setStatus(OrderStatus.RICEVUTO);
 
-            OrderAPA restoredOrder= new OrderAPA();
-            // copia i dati dell'ordine completato nell'ordine restorato
-            restoreCompletedOrder(completedOrder,restoredOrder);
+                OrderAPA restoredOrder = new OrderAPA();
+                // copia i dati dell'ordine completato nell'ordine restorato
+                restoreCompletedOrder(completedOrder, restoredOrder);
 
-            activeOrderRepository.save(restoredOrder);
-            // Converti l'ordine in un dto per restituirlo
-            OrderAPADTO orderAPADTO = convertToOrderAPADTO(completedOrder);
-            return orderAPADTO;
-        } else {
-            throw new OrderRestoringNotAllowedException("Non puoi restorare un ordine con una data di prelievo gia passata");
+                activeOrderRepository.save(restoredOrder);
+                // Converti l'ordine in un dto per restituirlo
+                OrderAPADTO orderAPADTO = convertToOrderAPADTO(completedOrder);
+                return orderAPADTO;
+            }
         }
+        throw new OrderRestoringNotAllowedException("Non è più possibile ripristinare l'ordine, il tempo di consegna è passato");
     }
 
     private void restoreCompletedOrder (CompletedOrderAPA completedOrder, OrderAPA activeOrder) {
