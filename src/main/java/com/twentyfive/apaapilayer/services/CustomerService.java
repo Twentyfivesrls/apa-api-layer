@@ -98,7 +98,8 @@ public class CustomerService {
         if(customer.getIdKeycloak()!=null){
             keycloakService.update(customer);
         } else {
-            keycloakService.add(customer);
+            String temporaryPassword=keycloakService.add(customer);
+            emailService.sendEmailResetPassword(customer.getEmail(), temporaryPassword);
         }
         // Salva il nuovo cliente nel database o gli faccio update
         return customerRepository.save(customer);

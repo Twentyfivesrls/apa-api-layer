@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.utils;
 
 import com.twentyfive.apaapilayer.models.CustomerAPA;
-import com.twentyfive.twentyfivemodel.models.partenupModels.Utente;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakUser;
 
