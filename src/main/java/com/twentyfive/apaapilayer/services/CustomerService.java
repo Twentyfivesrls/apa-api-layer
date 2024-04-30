@@ -123,6 +123,7 @@ public class CustomerService {
     @Transactional
     public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime) throws IOException {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
         if (customer.getCart()==null) customer.setCart(new Cart());
 
         Cart cart = customer.getCart();
@@ -135,10 +136,11 @@ public class CustomerService {
 
         if (!selectedItems.isEmpty()) {
             OrderAPA order = createOrderFromItems(customer, selectedItems, selectedPickupDateTime);
-            if(timeSlotAPARepository.findAll().get(0).reserveTimeSlots(selectedPickupDateTime,countSlotRequired(selectedItems))) {
+            if(timeSlotAPA.reserveTimeSlots(selectedPickupDateTime,countSlotRequired(selectedItems))) {
                 orderService.createOrder(order);
                 cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
             }
+            timeSlotAPARepository.save(timeSlotAPA);
             customerRepository.save(customer);
             emailService.sendEmailReceived(customer.getEmail());
             return true;

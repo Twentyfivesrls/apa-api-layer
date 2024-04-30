@@ -212,6 +212,7 @@ public class ActiveOrderService {
 
 
         if (order != null) {
+            TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
             order.setStatus(OrderStatus.ANNULLATO); // Imposta lo stato a ANNULLATO
 
             CompletedOrderAPA completedOrder = new CompletedOrderAPA();
@@ -219,7 +220,8 @@ public class ActiveOrderService {
             ArrayList<ItemInPurchase> items= new ArrayList<>();
             items.addAll(order.getBundlesInPurchase());
             items.addAll(order.getProductsInPurchase());
-            if(timeSlotAPARepository.findAll().get(0).freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
+            if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
+                timeSlotAPARepository.save(timeSlotAPA);
                 activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
                 completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
             }else return false;
