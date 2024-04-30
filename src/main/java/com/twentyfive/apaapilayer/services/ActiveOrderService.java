@@ -205,7 +205,7 @@ public class ActiveOrderService {
         LocalDate cancelThreshold = pickupDate.minusDays(settingRepository.findAll().get(0).getMinCancelOrder());
 
         // Verifica se la data fornita è dopo "due giorni da oggi"
-        if(LocalDate.now().isBefore(cancelThreshold)){
+        if(LocalDate.now().isAfter(cancelThreshold)){
             throw new CancelThresholdPassedException();
         }
 
