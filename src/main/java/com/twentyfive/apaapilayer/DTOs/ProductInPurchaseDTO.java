@@ -26,7 +26,7 @@ public class ProductInPurchaseDTO {
 
 
     public ProductInPurchaseDTO(ProductInPurchase product, String name) {
-        this.id = product.getItemId();
+        this.id = product.getId();
         this.name = name;
         this.weight = product.getWeight();
         this.quantity = product.getQuantity();

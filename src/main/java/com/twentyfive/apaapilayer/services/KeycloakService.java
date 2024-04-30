@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twentyfive.apaapilayer.clients.KeycloakClient;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import com.twentyfive.twentyfivemodel.models.partenupModels.Utente;
@@ -14,6 +15,7 @@ import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakRole;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakUser;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.TokenRequest;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +86,11 @@ public class KeycloakService {
         return (String) responseMap.get("access_token");
     }
 
-    public void add(CustomerAPA customerAPA) {
+    public void add(CustomerAPA customerAPA) throws IOException {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
         String authorizationHeader = "Bearer " + accessToken;
-        ResponseEntity<Object> result = keycloakClient.add(authorizationHeader, KeycloakUtilities.createUserForKeycloak(customerAPA));
+        KeycloakUser keycloakUser = KeycloakUtilities.createUserForKeycloak(customerAPA);
+        ResponseEntity<Object> result = keycloakClient.add(authorizationHeader, keycloakUser);
         String[] stringArray = result.getHeaders().get("location").get(0).split("/");
         String id = stringArray[stringArray.length - 1];
         customerAPA.setIdKeycloak(id);
@@ -96,6 +99,7 @@ public class KeycloakService {
         List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals("cliente")).toList();
         String clientIdRole = ruoliSelezionati.get(0).getClientId();
         keycloakClient.addRoleToUser(authorizationHeader, id, clientIdRole, ruoliSelezionati.stream().map(KeycloakRole::toRoleRepresentation).collect(Collectors.toList()));
+        //emailService.sendEmailResetPassword(customerAPA.getEmail(),keycloakUser.getCredentials().get(0).getValue());
     }
     public void update(CustomerAPA customerAPA) {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");

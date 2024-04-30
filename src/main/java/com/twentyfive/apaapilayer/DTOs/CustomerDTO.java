@@ -22,8 +22,8 @@ public class CustomerDTO {
     public CustomerDTO (CustomerAPA capa){
         this.id=capa.getId();
         this.idKeycloak=capa.getIdKeycloak();
-        this.firstName=capa.getName();
-        this.lastName=capa.getSurname();
+        this.firstName=capa.getFirstName();
+        this.lastName=capa.getLastName();
         this.email=capa.getEmail();
         this.phoneNumber=capa.getPhoneNumber();
         this.note=capa.getNote();
@@ -34,8 +34,8 @@ public class CustomerDTO {
         CustomerAPA capa= new CustomerAPA();
         capa.setId(this.getId());
         capa.setIdKeycloak(this.idKeycloak);
-        capa.setName(this.getFirstName());
-        capa.setSurname(this.getLastName());
+        capa.setFirstName(this.getFirstName());
+        capa.setLastName(this.getLastName());
         capa.setEmail(this.getEmail());
         capa.setPhoneNumber(this.getPhoneNumber());
         capa.setEnabled(this.enabled);

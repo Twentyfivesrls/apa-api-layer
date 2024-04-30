@@ -27,7 +27,7 @@ public class BundleInPurchaseDTO {
     private List<ProductInPurchaseDTO> pices;
 
     public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<ProductInPurchaseDTO> pices) {
-        this.id = bundle.getItemId();
+        this.id = bundle.getId();
         this.name = name;
         this.measure = bundle.getMeasure();
         this.quantity = bundle.getQuantity();

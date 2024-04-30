@@ -20,12 +20,23 @@ public class EmailService {
     private final KeycloakService keycloakService;
     private final EmailUtilities emailUtilities;
 
+
     private final String templateReceived ="templates/orderSuccessful.html";
     private final String subjectReceived ="Il tuo ordine è arrivato!";
+
+    private final String subjectReset ="Account creato, resetta la tua password!";
+    //TODO creazione template Reset
+    private final String templateReset="";
     public void sendEmailReceived(String email) throws IOException {
             EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,email);
             String token = keycloakService.getAccessTokenTF();
             String authorizationHeader = "Bearer " + token;
             emailClientController.sendMail(authorizationHeader, emailSendRequest);
+    }
+    public void sendEmailResetPassword(String email, String temporaryPassword) throws  IOException {
+        EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReset,templateReceived,email);
+        String token = keycloakService.getAccessTokenTF();
+        String authorizationHeader = "Bearer " + token;
+        emailClientController.sendMail(authorizationHeader, emailSendRequest);
     }
 }

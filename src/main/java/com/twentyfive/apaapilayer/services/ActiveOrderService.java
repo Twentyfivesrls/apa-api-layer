@@ -69,8 +69,8 @@ public class ActiveOrderService {
 
         OrderAPADTO dto = new OrderAPADTO();
         dto.setId(order.getId());
-        dto.setFirstName(customer.getName());
-        dto.setLastName(customer.getSurname());
+        dto.setFirstName(customer.getFirstName());
+        dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate());
         dto.setPickupTime(order.getPickupTime());
         dto.setPrice(String.format("%.2f", order.getTotalPrice()));
@@ -116,13 +116,13 @@ public class ActiveOrderService {
     }
 
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
-        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getItemId());
+        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getId());
         String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
         return new ProductInPurchaseDTO(productInPurchase, name);
     }
 
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
-        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getItemId());
+        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getId());
         String name = bun.map(Tray::getName).orElse("no registered product");
 
         List<ProductInPurchase> pieces= bundleInPurchase.getWeightedProducts();
@@ -205,7 +205,7 @@ public class ActiveOrderService {
         LocalDate cancelThreshold = pickupDate.minusDays(settingRepository.findAll().get(0).getMinCancelOrder());
 
         // Verifica se la data fornita è dopo "due giorni da oggi"
-        if(LocalDate.now().isAfter(cancelThreshold)){
+        if(LocalDate.now().isBefore(cancelThreshold)){
             throw new CancelThresholdPassedException();
         }
 
@@ -257,7 +257,7 @@ public class ActiveOrderService {
 
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
-                ProductKgAPA product = productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                 if (product.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
 
@@ -266,7 +266,7 @@ public class ActiveOrderService {
 
             } else if (item instanceof BundleInPurchase) {
                 BundleInPurchase pip = (BundleInPurchase) item;
-                Tray tray = trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                 if (tray.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
                 }

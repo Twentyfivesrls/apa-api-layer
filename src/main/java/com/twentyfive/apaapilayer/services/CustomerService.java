@@ -81,8 +81,8 @@ public class CustomerService {
 
         return new CustomerDetailsDTO(
                 customer.getId(),
-                customer.getName(),
-                customer.getSurname(),
+                customer.getLastName(),
+                customer.getFirstName(),
                 customer.getEmail(),
                 customer.getPhoneNumber(),
                 orderCount,
@@ -94,7 +94,7 @@ public class CustomerService {
 
     }
 
-    public CustomerAPA saveCustomer(CustomerAPA customer) {
+    public CustomerAPA saveCustomer(CustomerAPA customer) throws IOException {
         if(customer.getIdKeycloak()!=null){
             keycloakService.update(customer);
         } else {
@@ -129,7 +129,7 @@ public class CustomerService {
         List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positionIds);
 
         for(Integer positionId: positionIds)
-            if (positionId < 0 || positionId >= selectedItems.size()) {
+            if (positionId < 0 || positionId >= cart.getPurchases().size()) {
                 throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
             }
 
@@ -154,7 +154,7 @@ public class CustomerService {
 
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
-                ProductKgAPA product = productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                 if (product.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
 
@@ -163,7 +163,7 @@ public class CustomerService {
 
             } else if (item instanceof BundleInPurchase) {
                 BundleInPurchase pip = (BundleInPurchase) item;
-                Tray tray = trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                 if (tray.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
                 }
@@ -313,7 +313,7 @@ public class CustomerService {
 
                 if(item instanceof ProductInPurchase){
                     ProductInPurchase pip=(ProductInPurchase) item;
-                    ProductKgAPA product= productKgRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                    ProductKgAPA product= productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                     if(product.isCustomized()){
                         numSlotRequired+=pip.getQuantity();
                         somethingCustomized=true;
@@ -327,7 +327,7 @@ public class CustomerService {
 
                 }else if (item instanceof BundleInPurchase){
                     BundleInPurchase pip =(BundleInPurchase) item;
-                    Tray tray= trayRepository.findById(pip.getItemId()).orElseThrow(InvalidItemException::new);
+                    Tray tray= trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                     if(tray.isCustomized()){
                         numSlotRequired+=pip.getQuantity();
                         somethingCustomized=true;

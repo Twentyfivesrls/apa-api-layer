@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/customers")
 public class CustomerController {
@@ -45,6 +47,8 @@ public class CustomerController {
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
     @GetMapping("/changeStatus/{id}")
