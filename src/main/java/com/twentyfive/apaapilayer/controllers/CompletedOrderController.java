@@ -20,16 +20,11 @@ public class CompletedOrderController {
         this.completedOrderService = completedOrderService;
     }
 
-    @GetMapping
+    @GetMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        Page<OrderAPADTO> orders = completedOrderService.getAll(PageRequest.of(page, size));
-        if (!orders.isEmpty()) {
-            return new ResponseEntity<>(orders, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
+        return ResponseEntity.ok().body(completedOrderService.getAll(PageRequest.of(page, size)));
     }
 
     @GetMapping("/{id}")
