@@ -99,7 +99,7 @@ public class CustomerService {
             keycloakService.update(customer);
         } else {
             String temporaryPassword=keycloakService.add(customer);
-            emailService.sendEmailResetPassword(customer.getEmail(), temporaryPassword);
+            //emailService.sendEmailResetPassword(customer.getEmail(), temporaryPassword);
         }
         // Salva il nuovo cliente nel database o gli faccio update
         return customerRepository.save(customer);
@@ -143,7 +143,7 @@ public class CustomerService {
             }
             timeSlotAPARepository.save(timeSlotAPA);
             customerRepository.save(customer);
-            emailService.sendEmailReceived(customer.getEmail());
+            //emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
         return false;
