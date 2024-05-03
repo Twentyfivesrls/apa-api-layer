@@ -2,12 +2,14 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.StompUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +29,8 @@ import java.util.*;
 
 @Service
 public class CustomerService {
+    private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
+
 
     private final CustomerRepository customerRepository;
 
@@ -46,10 +50,11 @@ public class CustomerService {
     private final CategoryRepository categoryRepository;
 
     private final TrayRepository trayRepository;
+    private final ProducerPool producerPool;
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
+    public CustomerService(CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
@@ -60,9 +65,12 @@ public class CustomerService {
         this.timeSlotAPARepository = timeSlotAPARepository;
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
+        this.producerPool = producerPool;
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
+        String in = StompUtilities.sendNewOrderNotification();
+        producerPool.send(in,1,NOTIFICATION_TOPIC);
         return customerRepository.findAll(PageRequest.of(page, size));
     }
 
@@ -143,6 +151,8 @@ public class CustomerService {
             }
             timeSlotAPARepository.save(timeSlotAPA);
             customerRepository.save(customer);
+            String in= StompUtilities.sendNewOrderNotification();
+            producerPool.send(in,1,NOTIFICATION_TOPIC);
             //emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
