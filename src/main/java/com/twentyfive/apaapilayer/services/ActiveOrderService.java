@@ -9,6 +9,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.PageUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,8 +65,13 @@ public class ActiveOrderService {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
         Pageable pageable= PageRequest.of(page,size,sort);
         // Fetching paginated orders from the database
-        return activeOrderRepository.findAll(pageable)
-                .map(this::convertToOrderAPADTO); // Convert Entity to DTO
+        List<OrderAPA> orderList= activeOrderRepository.findAll();
+        List<OrderAPADTO> realOrder= new ArrayList<>();
+        for(OrderAPA order:orderList){
+            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
+            realOrder.add(orderAPA);
+        }
+        return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
@@ -76,8 +82,7 @@ public class ActiveOrderService {
         dto.setId(order.getId());
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
-        dto.setPickupDate(order.getPickupDate());
-        dto.setPickupTime(order.getPickupTime());
+        dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()));
         dto.setStatus(order.getStatus().name());
         return dto;

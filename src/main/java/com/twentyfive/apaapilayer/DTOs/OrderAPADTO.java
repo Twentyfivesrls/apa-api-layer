@@ -7,7 +7,9 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPur
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Data
@@ -18,10 +20,13 @@ public class OrderAPADTO {
     private String id;
     private String firstName;
     private String lastName;
-    private LocalDate pickupDate;
-    private LocalTime pickupTime;
+    private LocalDateTime pickupDate;
     private String price;
     private String status;
 
+    public String getFormattedPickupDate() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return pickupDate.format(formatter);
+    }
 
 }
