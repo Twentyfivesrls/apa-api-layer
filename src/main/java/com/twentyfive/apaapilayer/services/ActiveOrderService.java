@@ -62,8 +62,6 @@ public class ActiveOrderService {
 
     public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
 
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-        Pageable pageable= PageRequest.of(page,size,sort);
         // Fetching paginated orders from the database
         List<OrderAPA> orderList= activeOrderRepository.findAll();
         List<OrderAPADTO> realOrder= new ArrayList<>();
@@ -71,7 +69,13 @@ public class ActiveOrderService {
             OrderAPADTO orderAPA= convertToOrderAPADTO(order);
             realOrder.add(orderAPA);
         }
-        return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realOrder,pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {

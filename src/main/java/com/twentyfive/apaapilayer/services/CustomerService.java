@@ -13,6 +13,8 @@ import com.twentyfive.apaapilayer.utils.StompUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
@@ -68,8 +70,15 @@ public class CustomerService {
         this.producerPool = producerPool;
     }
 
-    public Page<CustomerAPA> getAll(int page, int size) {
-        return customerRepository.findAll(PageRequest.of(page, size));
+    public Page<CustomerAPA> getAll(int page, int size,String sortColumn,String sortDirection) {
+        Pageable pageable;
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            pageable=PageRequest.of(page,size,sort);
+            return customerRepository.findAll(pageable);
+        }
+        pageable=PageRequest.of(page,size);
+        return customerRepository.findAll(pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {

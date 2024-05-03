@@ -49,8 +49,6 @@ public class IngredientService {
     }
 
     public Page<IngredientsAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn,String sortDirection) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-        Pageable pageable = PageRequest.of(page, size,sort);
         List<IngredientAPA> ingredients = ingredientRepository.findAllByCategoryId(idCategory);
         List<IngredientsAPADTO> realIngredients = new ArrayList<>();
         for(IngredientAPA ingredient : ingredients){
@@ -59,8 +57,13 @@ public class IngredientService {
                 realIngredients.add(dto);
             }
         }
-        return PageUtilities.convertListToPageWithSorting(realIngredients, pageable);
-    }
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realIngredients,pageable);    }
 
 
     public IngredientsAPADTO getById(String id) {

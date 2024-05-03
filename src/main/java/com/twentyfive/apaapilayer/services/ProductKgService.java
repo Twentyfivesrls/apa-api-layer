@@ -56,8 +56,6 @@ public class ProductKgService {
 
 
     public Page<ProductKgAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-        Pageable pageable = PageRequest.of(page, size,sort);
         List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryId(idCategory);
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
         for(ProductKgAPA p : productsKg){
@@ -66,8 +64,13 @@ public class ProductKgService {
                 realProductsKg.add(dto);
             }
         }
-        return PageUtilities.convertListToPageWithSorting(realProductsKg, pageable);
-    }
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realProductsKg,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realProductsKg,pageable);    }
 
 
     public ProductKgAPADTO getById(String id) {

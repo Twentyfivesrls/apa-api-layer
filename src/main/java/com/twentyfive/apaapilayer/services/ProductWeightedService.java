@@ -56,8 +56,6 @@ public class ProductWeightedService {
 
 
     public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-        Pageable pageable = PageRequest.of(page, size,sort);
         List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
@@ -66,7 +64,13 @@ public class ProductWeightedService {
                 realProductsWeighted.add(dto);
             }
         }
-        return PageUtilities.convertListToPageWithSorting(realProductsWeighted, pageable);
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realProductsWeighted,pageable);
     }
 
 

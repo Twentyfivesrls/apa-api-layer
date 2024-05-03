@@ -24,8 +24,8 @@ public class CompletedOrderController {
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "column", defaultValue = "") String sortColumn,
-            @RequestParam(value = "direction", defaultValue = "") String sortDirection) {
+            @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(completedOrderService.getAll(page,size,sortColumn,sortDirection));
     }
 

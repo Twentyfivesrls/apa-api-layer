@@ -24,8 +24,10 @@ public class CustomerController {
 
     @GetMapping("/getAll")
     public ResponseEntity<Page<CustomerDTO>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                    @RequestParam(value = "size", defaultValue = "10") int size) {
-        Page<CustomerDTO> customerDTOs = customerService.getAll(page, size).map(customerAPA -> new CustomerDTO(customerAPA));
+                                                    @RequestParam(value = "size", defaultValue = "10") int size,
+                                                    @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+                                                    @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+        Page<CustomerDTO> customerDTOs = customerService.getAll(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
         return ResponseEntity.ok(customerDTOs);
     }
 
