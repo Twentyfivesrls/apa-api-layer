@@ -102,6 +102,9 @@ public class CustomerService {
 
     }
 
+    public CustomerAPA register(CustomerAPA customerAPA) {
+        return customerRepository.save(customerAPA);
+    }
     public CustomerAPA saveCustomer(CustomerAPA customer) throws IOException {
         if(customer.getIdKeycloak()!=null){
             keycloakService.update(customer);
