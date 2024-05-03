@@ -11,7 +11,9 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
@@ -57,7 +59,10 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(Pageable pageable) {
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+        Pageable pageable= PageRequest.of(page,size,sort);
         // Fetching paginated orders from the database
         return activeOrderRepository.findAll(pageable)
                 .map(this::convertToOrderAPADTO); // Convert Entity to DTO
@@ -222,10 +227,9 @@ public class ActiveOrderService {
             items.addAll(order.getProductsInPurchase());
             if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
                 timeSlotAPARepository.save(timeSlotAPA);
-                activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
-                completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
-            }else return false;
-
+            }
+            activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
+            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
             return true;
         }
         return false;

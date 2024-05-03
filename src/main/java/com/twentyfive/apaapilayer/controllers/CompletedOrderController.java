@@ -23,8 +23,10 @@ public class CompletedOrderController {
     @GetMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        return ResponseEntity.ok().body(completedOrderService.getAll(PageRequest.of(page, size)));
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "column", defaultValue = "") String sortColumn,
+            @RequestParam(value = "direction", defaultValue = "") String sortDirection) {
+        return ResponseEntity.ok().body(completedOrderService.getAll(page,size,sortColumn,sortDirection));
     }
 
     @GetMapping("/{id}")

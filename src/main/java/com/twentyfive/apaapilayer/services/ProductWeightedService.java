@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -54,8 +55,9 @@ public class ProductWeightedService {
     }
 
 
-    public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+        Pageable pageable = PageRequest.of(page, size,sort);
         List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
@@ -64,7 +66,7 @@ public class ProductWeightedService {
                 realProductsWeighted.add(dto);
             }
         }
-        return PageUtilities.convertListToPage(realProductsWeighted, pageable);
+        return PageUtilities.convertListToPageWithSorting(realProductsWeighted, pageable);
     }
 
 

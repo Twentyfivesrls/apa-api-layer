@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,14 +22,15 @@ public class TrayService {
 
     private final TrayRepository trayRepository;
 
-    public Page<TrayAPADTO> getAll(int page, int size) {
-        Pageable pageable= PageRequest.of(page,size);
+    public Page<TrayAPADTO> getAll(int page, int size,String sortColumn, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+        Pageable pageable= PageRequest.of(page,size,sort);
         List<Tray> trays = trayRepository.findAll();
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
         }
-        return PageUtilities.convertListToPage(realTrays,pageable);
+        return PageUtilities.convertListToPageWithSorting(realTrays,pageable);
     }
     public TrayDetailsAPADTO getById(String id) {
         Tray tray=trayRepository.findById(id).orElse(null);

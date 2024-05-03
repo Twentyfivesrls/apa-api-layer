@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,8 +48,9 @@ public class IngredientService {
         return dto;
     }
 
-    public Page<IngredientsAPADTO> findByIdCategory(String idCategory, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<IngredientsAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn,String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+        Pageable pageable = PageRequest.of(page, size,sort);
         List<IngredientAPA> ingredients = ingredientRepository.findAllByCategoryId(idCategory);
         List<IngredientsAPADTO> realIngredients = new ArrayList<>();
         for(IngredientAPA ingredient : ingredients){
@@ -57,7 +59,7 @@ public class IngredientService {
                 realIngredients.add(dto);
             }
         }
-        return PageUtilities.convertListToPage(realIngredients, pageable);
+        return PageUtilities.convertListToPageWithSorting(realIngredients, pageable);
     }
 
 

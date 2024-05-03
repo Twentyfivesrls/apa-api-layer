@@ -18,8 +18,12 @@ public class TrayController {
     private final TrayService trayService;
 
     @GetMapping("/getAll")
-    public ResponseEntity<Page<TrayAPADTO>> getAll(@RequestParam(value = "page", defaultValue ="0") int page, @RequestParam(value = "size", defaultValue ="5") int size) {
-        return ResponseEntity.ok().body(trayService.getAll(page,size));
+    public ResponseEntity<Page<TrayAPADTO>> getAll(
+            @RequestParam(value = "page", defaultValue ="0") int page,
+            @RequestParam(value = "size", defaultValue ="5") int size,
+            @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+        return ResponseEntity.ok().body(trayService.getAll(page,size,sortColumn,sortDirection));
     }
 
     @GetMapping("/getById/{id}")

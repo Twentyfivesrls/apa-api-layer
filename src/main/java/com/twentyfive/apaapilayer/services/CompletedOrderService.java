@@ -9,7 +9,9 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
@@ -42,10 +44,11 @@ public class CompletedOrderService {
         this.trayRepository=trayRepository;
     }
 
-    public Page<OrderAPADTO> getAll(Pageable pageable) {
-        // Fetching paginated orders from the database
-        return completedOrderRepository.findAll(pageable)
-                .map(this::convertToOrderAPADTO); // Convert Entity to DTO
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+        Pageable pageable= PageRequest.of(page,size,sort);
+        // Fetching paginated orders from the database        return completedOrderRepository.findAll(pageable)
+                return completedOrderRepository.findAll(pageable).map(this::convertToOrderAPADTO); // Convert Entity to DTO
     }
 
     private OrderAPADTO convertToOrderAPADTO(CompletedOrderAPA order) {
