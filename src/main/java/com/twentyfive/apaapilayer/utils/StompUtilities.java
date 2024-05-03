@@ -1,8 +1,8 @@
 package com.twentyfive.apaapilayer.utils;
 
 import com.google.gson.Gson;
-import com.twentyfive.apaapilayer.models.TwentyfiveMessage;
 import lombok.AllArgsConstructor;
+import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 
 @AllArgsConstructor
 public class StompUtilities {

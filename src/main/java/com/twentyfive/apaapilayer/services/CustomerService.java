@@ -69,8 +69,6 @@ public class CustomerService {
     }
 
     public Page<CustomerAPA> getAll(int page, int size) {
-        String in = StompUtilities.sendNewOrderNotification();
-        producerPool.send(in,1,NOTIFICATION_TOPIC);
         return customerRepository.findAll(PageRequest.of(page, size));
     }
 
