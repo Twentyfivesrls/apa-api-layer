@@ -13,6 +13,10 @@ public class TestController {
     private final TimeSlotRefreshScheduling timeSlotRefreshScheduling;
     @GetMapping("/test")
     public void test(){
-        timeSlotRefreshScheduling.createSlotsForNext15Days();
+        System.out.println("funziona!");
+
+
+
+        //timeSlotRefreshScheduling.createSlotsForNext15Days();
     }
 }
