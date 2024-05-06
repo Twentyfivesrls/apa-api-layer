@@ -16,22 +16,27 @@ public class PageUtilities {
 
     public static <T> Page<T> convertListToPage(List<T> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), list.size());
-        if (start > end) {
-            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        int total = list.size();
+        int end = Math.min(start + pageable.getPageSize(), total); // Imposta end come min(start + pageSize, total)
+        if (start >= end) { // Se start è maggiore o uguale a end, non ci sono elementi nella pagina richiesta
+            return new PageImpl<>(Collections.emptyList(), pageable, total);
         }
-        return new PageImpl<>(list.subList(start, end), pageable, list.size());
+        list = list.subList(start, end);
+        return new PageImpl<>(list, pageable, total);
     }
 
     public static <T> Page<T> convertListToPageWithSorting(List<T> list, Pageable pageable) {
         list = applySort(list, pageable.getSort());
         int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), list.size());
-        if (start > end) {
-            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        int total = list.size();
+        int end = Math.min(start + pageable.getPageSize(), total); // Imposta end come min(start + pageSize, total)
+        if (start >= end) { // Se start è maggiore o uguale a end, non ci sono elementi nella pagina richiesta
+            return new PageImpl<>(Collections.emptyList(), pageable, total);
         }
-        return new PageImpl<>(list.subList(start, end), pageable, list.size());
+        list = list.subList(start, end);
+        return new PageImpl<>(list, pageable, total);
     }
+
 
     public static <T> Page<T> convertSetToPage(Set<T> set, Pageable pageable) {
         int start = (int) pageable.getOffset();
