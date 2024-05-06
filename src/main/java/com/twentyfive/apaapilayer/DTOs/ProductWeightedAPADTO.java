@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.List;
 public class ProductWeightedAPADTO {
     private String id;
     private String nome;
-    private List<Allergen> allergens;
+    private List<Allergen> allergens = new ArrayList<>();
     private List<String> ingredients;
     private String weight;
     private String imageUrl;//immagine
