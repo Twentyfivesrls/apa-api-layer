@@ -23,15 +23,18 @@ public class TrayService {
     private final TrayRepository trayRepository;
 
     public Page<TrayAPADTO> getAll(int page, int size,String sortColumn, String sortDirection) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-        Pageable pageable= PageRequest.of(page,size,sort);
         List<Tray> trays = trayRepository.findAll();
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
         }
-        return PageUtilities.convertListToPageWithSorting(realTrays,pageable);
-    }
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realTrays,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realTrays,pageable);    }
     public TrayDetailsAPADTO getById(String id) {
         Tray tray=trayRepository.findById(id).orElse(null);
         if(tray != null){

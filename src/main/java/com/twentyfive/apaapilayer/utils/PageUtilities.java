@@ -17,6 +17,9 @@ public class PageUtilities {
     public static <T> Page<T> convertListToPage(List<T> list, Pageable pageable) {
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
+        if (start > end) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
         return new PageImpl<>(list.subList(start, end), pageable, list.size());
     }
 
@@ -24,6 +27,9 @@ public class PageUtilities {
         list = applySort(list, pageable.getSort());
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), list.size());
+        if (start > end) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
         return new PageImpl<>(list.subList(start, end), pageable, list.size());
     }
 
