@@ -50,7 +50,7 @@ public class ProductKgService {
             }
         }
         dto.setIngredients(nomeIngredienti);
-        dto.setAllergenList(allergeni);
+        dto.setAllergens(allergeni);
         return dto;
     }
 
