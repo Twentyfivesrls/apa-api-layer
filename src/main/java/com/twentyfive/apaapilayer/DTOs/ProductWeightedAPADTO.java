@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductWeightedAPADTO {
     private String id;
     private String nome;
-    private List<Allergen> allergenList;
+    private List<Allergen> allergens;
     private List<String> ingredients;
     private String weight;
     private String imageUrl;//immagine
