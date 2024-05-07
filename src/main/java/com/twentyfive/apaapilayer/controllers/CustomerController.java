@@ -57,11 +57,9 @@ public class CustomerController {
     public ResponseEntity<CustomerDTO> register(@RequestBody CustomerAPA customerAPA) {
 
         try {
-            log.info("è entrato Mac!!");
             CustomerAPA savedCustomer = customerService.register(customerAPA);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
-            log.error("c'è un problema Mac!");
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
