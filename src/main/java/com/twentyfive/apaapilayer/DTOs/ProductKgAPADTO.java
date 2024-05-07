@@ -15,7 +15,7 @@ public class ProductKgAPADTO {
     private String id;
     private String nome;
     private List<Allergen> allergens = new ArrayList<>();
-    private List<String> ingredients;
+    private String ingredients;
     private String pricePerKg;
     private String imageUrl;
     private boolean enable;

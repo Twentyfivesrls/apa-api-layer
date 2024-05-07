@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import com.twentyfive.apaapilayer.utils.StringUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,7 +50,7 @@ public class ProductKgService {
                 }
             }
         }
-        dto.setIngredients(nomeIngredienti);
+        dto.setIngredients(StringUtilities.ingredientsToString(nomeIngredienti));
         dto.setAllergens(allergeni);
         return dto;
     }
