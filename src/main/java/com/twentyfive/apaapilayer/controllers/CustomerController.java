@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.CustomerService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/customers")
+@Slf4j
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -55,9 +57,11 @@ public class CustomerController {
     public ResponseEntity<CustomerDTO> register(@RequestBody CustomerAPA customerAPA) {
 
         try {
+            log.info("è entrato Mac!!");
             CustomerAPA savedCustomer = customerService.register(customerAPA);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
         } catch (IllegalStateException e) {
+            log.error("c'è un problema Mac!");
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
