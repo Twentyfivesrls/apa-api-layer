@@ -35,7 +35,7 @@ public class ProductKgService {
         dto.setId(product.getId());
         dto.setNome(product.getName());
         dto.setImageUrl(product.getImageUrl());
-        dto.setPricePerKg(String.valueOf(product.getPricePerKg()));
+        dto.setPricePerKg("€ "+ product.getPricePerKg());
         List<String> idingredienti = product.getIngredientIds();
         List<String> nomeIngredienti = new ArrayList<>();
         List<Allergen> allergeni = new ArrayList<>();
@@ -59,7 +59,7 @@ public class ProductKgService {
         ProductKgDetailsAPADTO dto = new ProductKgDetailsAPADTO();
         dto.setId(product.getId());
         dto.setImageUrl(product.getImageUrl());
-        dto.setPricePerKg(String.valueOf(product.getPricePerKg()));
+        dto.setPricePerKg("€ "+ product.getPricePerKg());
         List<String> idingredienti = product.getIngredientIds();
         List<String> nomeIngredienti = new ArrayList<>();
         List<Allergen> allergeni = new ArrayList<>();
