@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductWeightedAPADTO {
     private String id;
-    private String nome;
+    private String name;
     private List<Allergen> allergens = new ArrayList<>();
     private List<String> ingredients;
     private String weight;

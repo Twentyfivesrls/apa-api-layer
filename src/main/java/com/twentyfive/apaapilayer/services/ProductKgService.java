@@ -7,7 +7,6 @@ import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.apaapilayer.utils.StringUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,7 +31,7 @@ public class ProductKgService {
         ProductKgAPADTO dto = new ProductKgAPADTO();
         dto.setEnable(product.isActive());
         dto.setId(product.getId());
-        dto.setNome(product.getName());
+        dto.setName(product.getName());
         dto.setImageUrl(product.getImageUrl());
         dto.setPricePerKg("€ "+ product.getPricePerKg());
         List<String> idingredienti = product.getIngredientIds();

@@ -31,7 +31,7 @@ public class ProductWeightedService {
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
         dto.setEnable(product.isActive());
         dto.setId(product.getId());
-        dto.setNome(product.getName());
+        dto.setName(product.getName());
         dto.setImageUrl(product.getImageUrl());
         dto.setWeight("Kg " +product.getWeight());
         List<String> idingredienti = product.getIngredientIds();
