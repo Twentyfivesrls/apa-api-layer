@@ -11,8 +11,9 @@ public class TrayUtilities {
     public static TrayDetailsAPADTO mapToTrayDetailsAPADTO(Tray tray) {
         TrayDetailsAPADTO dto = new TrayDetailsAPADTO();
         dto.setId(tray.getId());
+        dto.setName(tray.getName());
         dto.setDescription(tray.getDescription());
-        dto.setCustomized(tray.isCustomized());
+        dto.setCustomized(tray.isCustomized() ? "Personalizzato" : "Standard");
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         return dto;
     }
@@ -21,7 +22,7 @@ public class TrayUtilities {
         TrayAPADTO dto= new TrayAPADTO();
         dto.setId(tray.getId());
         dto.setName(tray.getName());
-        dto.setCustomized(tray.isCustomized());
+        dto.setCustomized(tray.isCustomized() ? "Personalizzato" : "Standard");
         dto.setDescription(tray.getDescription());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         dto.setEnabled(tray.isEnabled());
