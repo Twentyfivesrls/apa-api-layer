@@ -13,6 +13,7 @@ import java.util.List;
 public class IngredientsAPADTO {
     private String id;
     private String name;
+    private String idCategory;
     private List<Allergen> allergens;
     private String note;
     private boolean active;

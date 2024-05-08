@@ -32,6 +32,7 @@ public class IngredientService {
 
     private IngredientsAPADTO ingredientsToDTO(IngredientAPA ingredient){
         IngredientsAPADTO dto = new IngredientsAPADTO();
+        dto.setIdCategory(ingredient.getCategoryId());
         dto.setId(ingredient.getId());
         dto.setName(ingredient.getName());
         dto.setActive(ingredient.isActive());
