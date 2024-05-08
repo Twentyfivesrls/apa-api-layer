@@ -86,10 +86,23 @@ public class ActiveOrderController {
         }
     }
 
-    @PostMapping("/cancel/{id}")//per annullare ordine
+    @PostMapping("/cancel/{id}")//per annullare ordine lato cliente
     public ResponseEntity<Boolean> cancelOrder(@PathVariable String id) {
         try {
             boolean result = activeOrderService.cancel(id);
+            if (result) {
+                return ResponseEntity.ok(true); // Restituisce true se l'ordine è stato annullato correttamente
+            } else {
+                return ResponseEntity.ok(false); // Restituisce false se non c'è un ordine da annullare
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build(); // Restituisce un errore server interno in caso di problemi
+        }
+    }
+    @PostMapping("/adminCancel/{id}")//per annullare ordine lato cliente
+    public ResponseEntity<Boolean> AdminCancelOrder(@PathVariable String id) {
+        try {
+            boolean result = activeOrderService.adminCancel(id);
             if (result) {
                 return ResponseEntity.ok(true); // Restituisce true se l'ordine è stato annullato correttamente
             } else {

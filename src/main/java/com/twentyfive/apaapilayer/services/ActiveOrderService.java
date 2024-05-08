@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import com.twentyfive.authorizationflow.services.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -208,6 +209,35 @@ public class ActiveOrderService {
         // Altri campi specifici dell'ordine possono essere aggiunti qui
     }
 
+    @Transactional
+    public boolean adminCancel(String id) {
+        OrderAPA order = activeOrderRepository.findById(id)
+                .orElse(null); // Trova l'ordine o restituisce null se non esiste
+
+        LocalDate pickupDate= order.getPickupDate();
+
+        // Calcola la data di "oggi più un giorno"
+        LocalDate cancelThreshold = pickupDate.minusDays(1);
+
+
+        if (order != null && LocalDate.now().isBefore(cancelThreshold)) {
+            TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
+            order.setStatus(OrderStatus.ANNULLATO); // Imposta lo stato a ANNULLATO
+
+            CompletedOrderAPA completedOrder = new CompletedOrderAPA();
+            createCompletedOrder(order, completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
+            ArrayList<ItemInPurchase> items= new ArrayList<>();
+            items.addAll(order.getBundlesInPurchase());
+            items.addAll(order.getProductsInPurchase());
+            if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
+                timeSlotAPARepository.save(timeSlotAPA);
+            }
+            activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
+            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
+            return true;
+        }
+        return false;
+    }
     @Transactional
     public boolean cancel(String id) {
         OrderAPA order = activeOrderRepository.findById(id)
