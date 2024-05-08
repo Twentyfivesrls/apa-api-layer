@@ -55,7 +55,7 @@ public class CustomerController {
     }
     @PostMapping("/register")
     public ResponseEntity<CustomerDTO> register(@RequestBody CustomerAPA customerAPA) {
-
+        System.out.println("dehjufejhg!!!");
         try {
             CustomerAPA savedCustomer = customerService.register(customerAPA);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));

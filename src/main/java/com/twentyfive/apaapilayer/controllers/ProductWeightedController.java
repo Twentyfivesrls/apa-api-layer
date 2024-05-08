@@ -36,12 +36,12 @@ public class ProductWeightedController {
         return ResponseEntity.ok().body(productWeightedService.save(p));
     }
 
-    @DeleteMapping("/deleteById/{id}")
+    @GetMapping("/disableById/{id}")
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(productWeightedService.disableById(id));
     }
 
-    @PutMapping("/activateById/{id}")
+    @GetMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id) {
         return ResponseEntity.ok().body(productWeightedService.activateById(id));
     }

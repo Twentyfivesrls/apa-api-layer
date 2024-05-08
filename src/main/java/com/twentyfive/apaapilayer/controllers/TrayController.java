@@ -36,7 +36,7 @@ public class TrayController {
         return ResponseEntity.ok().body(trayService.save(tray));
     }
 
-    @PutMapping("/activateOrDisable/{id}")
+    @GetMapping("/activateOrDisable/{id}")
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(trayService.activateOrDisableById(id));
     }

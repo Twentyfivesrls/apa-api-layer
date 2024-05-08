@@ -37,12 +37,12 @@ public class IngredientController {
         return ResponseEntity.ok().body(ingredientService.save(i));
     }
 
-    @DeleteMapping("/deleteById/{id}")
+    @GetMapping("/disableById/{id}")
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
        return ResponseEntity.ok().body(ingredientService.disableById(id));
     }
 
-    @PutMapping("/activateById/{id}")
+    @GetMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id) {
         return ResponseEntity.ok().body(ingredientService.activateById(id));
     }
