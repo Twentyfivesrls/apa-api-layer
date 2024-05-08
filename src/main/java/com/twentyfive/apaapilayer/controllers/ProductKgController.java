@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
-import com.twentyfive.apaapilayer.DTOs.ProductKgDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.services.ProductKgService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class ProductKgController {
 
 
     @GetMapping("/getById/{id}")
-    public ResponseEntity<ProductKgDetailsAPADTO> getById(@PathVariable String id) {
+    public ResponseEntity<ProductKgAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(productkgService.getById(id));
     }
 

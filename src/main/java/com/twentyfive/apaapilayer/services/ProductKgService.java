@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
-import com.twentyfive.apaapilayer.DTOs.ProductKgDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
@@ -51,11 +50,11 @@ public class ProductKgService {
                 }
             }
         }
-        dto.setIngredients(StringUtilities.ingredientsToString(nomeIngredienti));
+        dto.setIngredients(nomeIngredienti);
         dto.setAllergens(allergeni);
         return dto;
     }
-    private ProductKgDetailsAPADTO productsKgToDetailsDTO(ProductKgAPA product){
+    /*private ProductKgDetailsAPADTO productsKgToDetailsDTO(ProductKgAPA product){
         ProductKgDetailsAPADTO dto = new ProductKgDetailsAPADTO();
         dto.setId(product.getId());
         dto.setImageUrl(product.getImageUrl());
@@ -81,6 +80,8 @@ public class ProductKgService {
     }
 
 
+     */
+
     public Page<ProductKgAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
         List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryId(idCategory);
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
@@ -99,11 +100,11 @@ public class ProductKgService {
         return PageUtilities.convertListToPage(realProductsKg,pageable);    }
 
 
-    public ProductKgDetailsAPADTO getById(String id) {
+    public ProductKgAPADTO getById(String id) {
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         if(productKgAPA==null)
             return null;
-        return productsKgToDetailsDTO(productKgAPA);
+        return productsKgToDTO(productKgAPA);
     }
 
     @Transactional
