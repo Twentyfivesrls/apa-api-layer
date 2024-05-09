@@ -26,7 +26,7 @@ public class CategoryController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<CategoryAPA> saveOrder(@RequestBody CategoryAPA c) {
+    public ResponseEntity<CategoryAPA> save(@RequestBody CategoryAPA c) {
         return ResponseEntity.ok().body(categoryService.save(c));
     }
 
