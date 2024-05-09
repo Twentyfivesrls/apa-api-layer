@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.DTOs.DropdownRes;
 import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
@@ -28,7 +29,7 @@ public class IngredientController {
     }
 
     @GetMapping("/getAllByTypeCategories")
-    public ResponseEntity<List<AutoCompleteRes>> getAllByTypeCategories(@RequestParam List<String> types){
+    public ResponseEntity<List<DropdownRes>> getAllByTypeCategories(@RequestParam List<String> types){
         return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(types));
     }
     @GetMapping("/getById/{id}")

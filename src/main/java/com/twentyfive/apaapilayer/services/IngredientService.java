@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.DTOs.DropdownRes;
 import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
@@ -148,20 +149,20 @@ public class IngredientService {
         return false;
     }
 
-    public List<AutoCompleteRes> getAllByTypeCategories(List<String> types) {
+    public List<DropdownRes> getAllByTypeCategories(List<String> types) {
         List<CategoryAPA> categories = categoryRepository.findAllByTypeInAndEnabledTrue(types);
         List<String> idCategories = new ArrayList<>();
         for (CategoryAPA category: categories){
             idCategories.add(category.getId());
         }
         List<IngredientAPA> ingredients= ingredientRepository.findAllByCategoryIdInAndActiveTrue(idCategories);
-        List<AutoCompleteRes> ingredientNames = new ArrayList<>();
+        List<DropdownRes> ingredientNames = new ArrayList<>();
         for (IngredientAPA ingredient: ingredients){
-            AutoCompleteRes autoCompleteRes = new AutoCompleteRes();
-            autoCompleteRes.setValue(ingredient.getName());
-            ingredientNames.add(autoCompleteRes);
+            DropdownRes dropdownRes = new DropdownRes();
+            dropdownRes.setActionName(ingredient.getName());
+            ingredientNames.add(dropdownRes);
         }
-        Collections.sort(ingredientNames, Comparator.comparing(AutoCompleteRes::getValue));
+        Collections.sort(ingredientNames, Comparator.comparing(DropdownRes::getActionName));
         return ingredientNames;
     }
 }
