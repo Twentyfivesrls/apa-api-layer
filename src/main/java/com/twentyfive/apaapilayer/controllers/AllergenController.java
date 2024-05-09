@@ -15,8 +15,8 @@ import java.util.List;
 public class AllergenController {
     private final AllergenRepository allergenRepository;
 
-    @GetMapping("/getall")
-    public List<Allergen> getall(){
+    @GetMapping("/getAll")
+    public List<Allergen> getAll(){
         return allergenRepository.findAll();
     }
 }
