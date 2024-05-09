@@ -65,7 +65,7 @@ public class CustomerController {
         }
     }
 
-    @PostMapping("/details/byKeycloakId/{keycloakId}")
+    @GetMapping("/details/byKeycloakId/{keycloakId}")
     public ResponseEntity<CustomerDetailsDTO> getCustomerDetailsByIdKeycloak(@PathVariable String keycloakId) {
         try {
             CustomerDetailsDTO customerDetailsDTO = customerService.getCustomerDetailsByIdKeycloak(keycloakId);
