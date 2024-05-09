@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DropdownRes {
 
-    private String id;
+    private String value;
 
     private String actionName;
 }
