@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -31,6 +30,7 @@ public class IngredientService {
     private final AllergenRepository allergenRepository;
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
+    private final CategoryRepository categoryRepository;
 
 
     private IngredientsAPADTO ingredientsToDTO(IngredientAPA ingredient){
@@ -148,7 +148,12 @@ public class IngredientService {
         return false;
     }
 
-    public List<AutoCompleteRes> getAllByIdCategories(List<String> idCategories) {
+    public List<AutoCompleteRes> getAllByTypeCategories(List<String> types) {
+        List<CategoryAPA> categories = categoryRepository.findAllByTypeInAndEnabledTrue(types);
+        List<String> idCategories = new ArrayList<>();
+        for (CategoryAPA category: categories){
+            idCategories.add(category.getId());
+        }
         List<IngredientAPA> ingredients= ingredientRepository.findAllByCategoryIdInAndActiveTrue(idCategories);
         List<AutoCompleteRes> ingredientNames = new ArrayList<>();
         for (IngredientAPA ingredient: ingredients){

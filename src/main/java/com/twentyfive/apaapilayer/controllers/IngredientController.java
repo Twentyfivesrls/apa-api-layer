@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
-import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
@@ -28,9 +27,9 @@ public class IngredientController {
         return ResponseEntity.ok().body(ingredientService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
 
-    @GetMapping("/getAllByIdCategories")
-    public ResponseEntity<List<AutoCompleteRes>> getAllByIdCategories(@RequestParam List<String> idCategories){
-        return ResponseEntity.ok().body(ingredientService.getAllByIdCategories(idCategories));
+    @GetMapping("/getAllByTypeCategories")
+    public ResponseEntity<List<AutoCompleteRes>> getAllByTypeCategories(@RequestParam List<String> types){
+        return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(types));
     }
     @GetMapping("/getById/{id}")
     public ResponseEntity<IngredientsAPADTO> getById(@PathVariable String id) {
