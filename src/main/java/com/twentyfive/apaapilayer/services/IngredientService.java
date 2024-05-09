@@ -160,7 +160,7 @@ public class IngredientService {
         for (IngredientAPA ingredient: ingredients){
             DropdownRes dropdownRes = new DropdownRes();
             dropdownRes.setActionName(ingredient.getName());
-            dropdownRes.setValue(ingredient.getName());
+            //dropdownRes.setValue(ingredient.getName());
             ingredientNames.add(dropdownRes);
         }
         Collections.sort(ingredientNames, Comparator.comparing(DropdownRes::getActionName));
