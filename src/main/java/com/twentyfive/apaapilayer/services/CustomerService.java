@@ -21,6 +21,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPur
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.IOException;
@@ -53,6 +54,28 @@ public class CustomerService {
 
     private final TrayRepository trayRepository;
     private final ProducerPool producerPool;
+
+    public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
+        CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
+                .orElseThrow(() -> new RuntimeException("No customer found with idKeycloak: " + idKeycloak));
+
+        List<OrderAPA> orders = completedOrderRepository.findByCustomerId(customer.getId());
+        String totalSpent = String.format("%.2f", orders.stream()
+                .mapToDouble(OrderAPA::getTotalPrice)
+                .sum());
+        String orderCount = String.valueOf(orders.size());
+        return new CustomerDetailsDTO(
+                customer.getId(),
+                customer.getFirstName(),
+                customer.getLastName(),
+                customer.getEmail(),
+                customer.getPhoneNumber(),
+                orderCount, // Example order count
+                totalSpent, // Example total spent
+                customer.isEnabled(),
+                "cannot access this info"
+        );
+    }
 
 
     @Autowired

@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.CustomerService;
+import feign.Body;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -63,6 +64,19 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
+
+    @PostMapping("/details/byKeycloakId/{keycloakId}")
+    public ResponseEntity<CustomerDetailsDTO> getCustomerDetailsByIdKeycloak(@PathVariable String keycloakId) {
+        try {
+            CustomerDetailsDTO customerDetailsDTO = customerService.getCustomerDetailsByIdKeycloak(keycloakId);
+            return ResponseEntity.ok(customerDetailsDTO);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/test")
+    public void test(){System.out.println("ok");}
     @GetMapping("/changeStatus/{id}")
     public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
         boolean changed = customerService.changeStatusById(id);
