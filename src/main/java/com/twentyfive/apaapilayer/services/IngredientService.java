@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -165,5 +162,10 @@ public class IngredientService {
         }
         Collections.sort(ingredientNames, Comparator.comparing(DropdownRes::getActionName));
         return ingredientNames;
+    }
+
+    public IngredientAPA getByName(String name) {
+        Optional<IngredientAPA> ingredient=ingredientRepository.findByName(name);
+        return ingredient.orElse(null);
     }
 }

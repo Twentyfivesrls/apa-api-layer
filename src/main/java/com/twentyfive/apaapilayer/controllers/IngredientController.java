@@ -32,6 +32,10 @@ public class IngredientController {
     public ResponseEntity<List<DropdownRes>> getAllByTypeCategories(@RequestParam List<String> types){
         return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(types));
     }
+    @GetMapping("/getByName")
+    public ResponseEntity<IngredientAPA> getByName(@RequestParam("name") String name){
+        return ResponseEntity.ok().body(ingredientService.getByName(name));
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<IngredientsAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(ingredientService.getById(id));
