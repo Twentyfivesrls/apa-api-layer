@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DropdownRes {
     private String actionName;
+    private String value;
 }
