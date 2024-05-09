@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -145,4 +148,15 @@ public class IngredientService {
         return false;
     }
 
+    public List<AutoCompleteRes> getAllByIdCategories(List<String> idCategories) {
+        List<IngredientAPA> ingredients= ingredientRepository.findAllByCategoryIdInAndActiveTrue(idCategories);
+        List<AutoCompleteRes> ingredientNames = new ArrayList<>();
+        for (IngredientAPA ingredient: ingredients){
+            AutoCompleteRes autoCompleteRes = new AutoCompleteRes();
+            autoCompleteRes.setValue(ingredient.getName());
+            ingredientNames.add(autoCompleteRes);
+        }
+        Collections.sort(ingredientNames, Comparator.comparing(AutoCompleteRes::getValue));
+        return ingredientNames;
+    }
 }
