@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DropdownRes {
+
+    private String id;
+
     private String actionName;
-    //private String value;
 }
