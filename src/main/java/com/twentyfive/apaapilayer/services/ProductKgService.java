@@ -51,6 +51,7 @@ public class ProductKgService {
         }
         dto.setIngredients(nomeIngredienti);
         dto.setAllergens(allergeni);
+        dto.setDescription(product.getDescription());
         return dto;
     }
     /*private ProductKgDetailsAPADTO productsKgToDetailsDTO(ProductKgAPA product){

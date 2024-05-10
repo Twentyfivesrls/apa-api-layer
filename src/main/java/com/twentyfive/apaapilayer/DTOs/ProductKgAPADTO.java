@@ -19,4 +19,5 @@ public class ProductKgAPADTO {
     private String pricePerKg;
     private String imageUrl;
     private boolean active;
+    private String description;
 }

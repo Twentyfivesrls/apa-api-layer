@@ -19,5 +19,6 @@ public class ProductWeightedAPADTO {
     private String weight;
     private String imageUrl;//immagine
     private boolean active;
+    private String description;
 
 }
