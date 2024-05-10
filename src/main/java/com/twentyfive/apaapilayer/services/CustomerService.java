@@ -77,6 +77,17 @@ public class CustomerService {
         );
     }
 
+    @Transactional
+    public void modifyCustomerInfo(String customerId, String firstName, String lastName, String phoneNumber){
+
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow();
+        customer.setFirstName(firstName);
+        customer.setLastName(lastName);
+        customer.setPhoneNumber(phoneNumber);
+        customerRepository.save(customer);
+
+    }
+
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {

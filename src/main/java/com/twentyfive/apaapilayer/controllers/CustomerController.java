@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
+import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.services.CustomerService;
 import feign.Body;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/customers")
@@ -54,6 +56,23 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
     }
+
+    @PostMapping("/save/client")
+    public ResponseEntity<String> editCustomerClient(@RequestBody Map<String,String> newCustomerInfos) {
+        String id = newCustomerInfos.get("id");
+        String firstName = newCustomerInfos.get("firstName");
+        String lastName = newCustomerInfos.get("lastName");
+        String phoneNumber = newCustomerInfos.get("phoneNumber");
+
+
+
+        customerService.modifyCustomerInfo(id,firstName,lastName,phoneNumber);
+
+
+        return ResponseEntity.ok("modifiche salvate");
+
+    }
+
     @PostMapping("/register")
     public ResponseEntity<CustomerDTO> register(@RequestBody CustomerAPA customerAPA) {
         System.out.println("dehjufejhg!!!");
