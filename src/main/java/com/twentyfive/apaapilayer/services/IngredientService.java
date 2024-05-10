@@ -39,6 +39,8 @@ public class IngredientService {
         dto.setActive(ingredient.isActive());
         dto.setNote(ingredient.getDescription());
         dto.setAlcoholic(ingredient.isAlcoholic());
+        dto.setStatus(ingredient.isActive() ? "ATTIVO" : "DISATTIVO");
+        dto.setAlcoholicString(ingredient.isAlcoholic() ? "SI" : "NO");
         List<String> allergeni = ingredient.getAllergenNames();
         List<Allergen> realAllergeni = new ArrayList<>();
         for(String allergene : allergeni){

@@ -18,4 +18,6 @@ public class IngredientsAPADTO {
     private String note;
     private boolean active;
     private boolean alcoholic;
+    private String status;
+    private String alcoholicString;
 }
