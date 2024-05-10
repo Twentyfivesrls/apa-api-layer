@@ -10,6 +10,8 @@ import java.util.List;
 public interface CategoryRepository extends MongoRepository<CategoryAPA,String> {
 
     List<CategoryAPA> findAllByTypeInAndEnabledTrue(List<String> types);
+    List<CategoryAPA> findAllByTypeAndEnabledTrue(String type);
+
 
     CategoryAPA findByName(String name);
 

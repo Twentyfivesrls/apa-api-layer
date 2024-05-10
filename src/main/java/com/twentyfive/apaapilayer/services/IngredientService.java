@@ -148,21 +148,17 @@ public class IngredientService {
         return false;
     }
 
-    public List<DropdownRes> getAllByTypeCategories(List<String> types) {
-        List<CategoryAPA> categories = categoryRepository.findAllByTypeInAndEnabledTrue(types);
-        List<String> idCategories = new ArrayList<>();
+    public List<String> getAllByTypeCategories(String type) {
+        List<CategoryAPA> categories = categoryRepository.findAllByTypeAndEnabledTrue(type);
+        List<IngredientAPA> ingredients= new ArrayList<>();
+        List<String> ingredientNames = new ArrayList<>();
         for (CategoryAPA category: categories){
-            idCategories.add(category.getId());
+            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrue(category.getId()));
         }
-        List<IngredientAPA> ingredients= ingredientRepository.findAllByCategoryIdInAndActiveTrue(idCategories);
-        List<DropdownRes> ingredientNames = new ArrayList<>();
         for (IngredientAPA ingredient: ingredients){
-            DropdownRes dropdownRes = new DropdownRes();
-            dropdownRes.setActionName(ingredient.getName());
-            dropdownRes.setValue(ingredient.getName());
-            ingredientNames.add(dropdownRes);
+            ingredientNames.add(ingredient.getName());
         }
-        Collections.sort(ingredientNames, Comparator.comparing(DropdownRes::getActionName));
+        ingredientNames.sort(Comparator.naturalOrder());
         return ingredientNames;
     }
 

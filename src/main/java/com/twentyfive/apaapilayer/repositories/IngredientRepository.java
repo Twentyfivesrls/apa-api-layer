@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface IngredientRepository extends MongoRepository<IngredientAPA,String> {
 
     List<IngredientAPA> findAllByCategoryId(String id);
-    List<IngredientAPA> findAllByCategoryIdInAndActiveTrue(List<String> idCategories);
+    List<IngredientAPA> findAllByCategoryIdAndActiveTrue(String idCategory);
 
 
     Optional<IngredientAPA> findByName(String name);

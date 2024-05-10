@@ -29,7 +29,7 @@ public class IngredientController {
     }
 
     @GetMapping("/getAllByTypeCategories")
-    public ResponseEntity<List<DropdownRes>> getAllByTypeCategories(@RequestParam List<String> types){
+    public ResponseEntity<List<String>> getAllByTypeCategories(@RequestParam String types){
         return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(types));
     }
     @GetMapping("/getByName")
