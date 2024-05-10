@@ -1,7 +1,8 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twentyfive.apaapilayer.clients.KeycloakClient;
+import com.twentyfive.apaapilayer.clients.KeycloakExtClient;
+import com.twentyfive.apaapilayer.clients.KeycloakIntClient;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class KeycloakService {
-    private final KeycloakClient keycloakClient;
+    private final KeycloakExtClient keycloakExtClient;
+    private final KeycloakIntClient keycloakIntClient;
 
     @Value("${keycloak.clientId}")
     protected String clientId;
@@ -48,7 +50,7 @@ public class KeycloakService {
         TokenRequest request = new TokenRequest(clientId, clientSecretTF, "password", usernameAdmin, passwordAdmin);
 
         // Chiamata al client Feign per ottenere l'accessToken
-        ResponseEntity<Object> response = keycloakClient.getTokenFromTwentyfiveInternal(request);
+        ResponseEntity<Object> response = keycloakIntClient.getTokenFromTwentyfiveInternal(request);
 
         // Estrai l'accessToken dalla risposta
         ObjectMapper objectMapper = new ObjectMapper();
@@ -59,7 +61,7 @@ public class KeycloakService {
     public Map<String, List<String>> getEmailSettings(){
         String accessToken = this.getAccessTokenTF();
         String authorizationHeader = "Bearer " + accessToken;
-        UserRepresentation userRepresentation = keycloakClient.getUserFromUsernameTwentyfiveInternal(authorizationHeader, username).getBody().get(0);
+        UserRepresentation userRepresentation = keycloakIntClient.getUserFromUsernameTwentyfiveInternal(authorizationHeader, username).getBody().get(0);
         return userRepresentation.getAttributes();
     }
 
@@ -75,7 +77,7 @@ public class KeycloakService {
         TokenRequest request = new TokenRequest(clientId, clientSecret, "password", username, password);
 
         // Chiamata al client Feign per ottenere l'accessToken
-        ResponseEntity<Object> response = keycloakClient.getToken(request);
+        ResponseEntity<Object> response = keycloakExtClient.getToken(request);
 
         // Estrai l'accessToken dalla risposta
         ObjectMapper objectMapper = new ObjectMapper();
@@ -87,20 +89,20 @@ public class KeycloakService {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
         String authorizationHeader = "Bearer " + accessToken;
         KeycloakUser keycloakUser = KeycloakUtilities.createUserForKeycloak(customerAPA);
-        ResponseEntity<Object> result = keycloakClient.add(authorizationHeader, keycloakUser);
+        ResponseEntity<Object> result = keycloakExtClient.add(authorizationHeader, keycloakUser);
         String[] stringArray = result.getHeaders().get("location").get(0).split("/");
         String id = stringArray[stringArray.length - 1];
         customerAPA.setIdKeycloak(id);
-        ResponseEntity<List<KeycloakRole>> ruoli = keycloakClient.getAvailableRoles(authorizationHeader, id, "0", "100", "");
+        ResponseEntity<List<KeycloakRole>> ruoli = keycloakExtClient.getAvailableRoles(authorizationHeader, id, "0", "100", "");
         List<KeycloakRole> listaRuoli = ruoli.getBody();
-        List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals("cliente")).toList();
+        List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals("customer")).toList();
         String clientIdRole = ruoliSelezionati.get(0).getClientId();
-        keycloakClient.addRoleToUser(authorizationHeader, id, clientIdRole, ruoliSelezionati.stream().map(KeycloakRole::toRoleRepresentation).collect(Collectors.toList()));
+        keycloakExtClient.addRoleToUser(authorizationHeader, id, clientIdRole, ruoliSelezionati.stream().map(KeycloakRole::toRoleRepresentation).collect(Collectors.toList()));
         return keycloakUser.getCredentials().get(0).getValue();
     }
     public void update(CustomerAPA customerAPA) {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
         String authorizationHeader = "Bearer " + accessToken;
-        keycloakClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
+        keycloakExtClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
     }
 }

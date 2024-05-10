@@ -12,8 +12,8 @@ import twentyfive.twentyfiveadapter.dto.keycloakDto.TokenRequest;
 
 import java.util.List;
 
-@FeignClient(name = "CustomerController", url = "http://80.211.123.141:9001")
-public interface KeycloakClient {
+@FeignClient(name = "TwentyfiveController", url = "http://80.211.123.141:8080")
+public interface KeycloakIntClient {
 
     @RequestMapping(method = RequestMethod.POST, value="/realms/${keycloak.realm}/protocol/openid-connect/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     ResponseEntity<Object> getToken(@RequestBody TokenRequest params);

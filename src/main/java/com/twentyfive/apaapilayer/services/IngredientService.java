@@ -148,18 +148,13 @@ public class IngredientService {
         return false;
     }
 
-    public List<String> getAllByTypeCategories(String type) {
+    public List<IngredientAPA> getAllByTypeCategories(String type) {
         List<CategoryAPA> categories = categoryRepository.findAllByTypeAndEnabledTrue(type);
         List<IngredientAPA> ingredients= new ArrayList<>();
-        List<String> ingredientNames = new ArrayList<>();
         for (CategoryAPA category: categories){
             ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrue(category.getId()));
         }
-        for (IngredientAPA ingredient: ingredients){
-            ingredientNames.add(ingredient.getName());
-        }
-        ingredientNames.sort(Comparator.naturalOrder());
-        return ingredientNames;
+        return ingredients;
     }
 
     public IngredientAPA getByName(String name) {

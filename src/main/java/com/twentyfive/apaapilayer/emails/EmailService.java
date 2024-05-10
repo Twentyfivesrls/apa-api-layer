@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.emails;
 
 import com.twentyfive.apaapilayer.clients.EmailClientController;
+import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.services.KeycloakService;
 import com.twentyfive.apaapilayer.utils.EmailUtilities;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.models.twentyfiveEmailModels.EmailSendRequest;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 @Data
@@ -27,11 +29,14 @@ public class EmailService {
     private final String subjectReset ="Account creato, resetta la tua password!";
     //TODO creazione template Reset
     private final String templateReset="";
-    public void sendEmailReceived(String email) throws IOException {
-            EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,email);
-            String token = keycloakService.getAccessTokenTF();
-            String authorizationHeader = "Bearer " + token;
-            emailClientController.sendMail(authorizationHeader, emailSendRequest);
+    public void sendEmailReceived(String id) throws IOException {
+            Optional<CustomerAPA> customerAPA = customerRepository.findById(id);
+            if(customerAPA.isPresent()){
+                EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,customerAPA.get().getEmail());
+                String token = keycloakService.getAccessTokenTF();
+                String authorizationHeader = "Bearer " + token;
+                emailClientController.sendMail(authorizationHeader, emailSendRequest);
+            }
     }
     public void sendEmailResetPassword(String email, String temporaryPassword) throws  IOException {
         EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReset,templateReceived,email);
