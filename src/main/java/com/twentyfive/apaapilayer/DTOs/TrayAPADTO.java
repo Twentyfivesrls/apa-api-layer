@@ -13,5 +13,5 @@ public class TrayAPADTO {
     private String customized;
     private String measures;
     private String description;
-    private boolean enabled;
+    private boolean active;
 }

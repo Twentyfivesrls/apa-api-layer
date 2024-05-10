@@ -29,7 +29,7 @@ public class ProductWeightedService {
 
     private ProductWeightedAPADTO productsWeightedToDTO(ProductWeightedAPA product){
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
-        dto.setEnable(product.isActive());
+        dto.setActive(product.isActive());
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setImageUrl(product.getImageUrl());

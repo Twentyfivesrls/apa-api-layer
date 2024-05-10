@@ -50,7 +50,7 @@ public class TrayService {
     public Boolean activateOrDisableById(String id) {
         Tray tray =trayRepository.findById(id).orElse(null);
         if(tray!=null){
-            tray.setEnabled(!(tray.isEnabled()));
+            tray.setActive(!(tray.isActive()));
             return true;
         }
         return false;

@@ -25,7 +25,7 @@ public class TrayUtilities {
         dto.setCustomized(tray.isCustomized() ? "Personalizzato" : "Standard");
         dto.setDescription(tray.getDescription());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
-        dto.setEnabled(tray.isEnabled());
+        dto.setActive(tray.isActive());
         return dto;
     }
 

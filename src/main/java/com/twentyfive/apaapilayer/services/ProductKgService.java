@@ -29,7 +29,7 @@ public class ProductKgService {
 
     private ProductKgAPADTO productsKgToDTO(ProductKgAPA product){
         ProductKgAPADTO dto = new ProductKgAPADTO();
-        dto.setEnable(product.isActive());
+        dto.setActive(product.isActive());
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setImageUrl(product.getImageUrl());
