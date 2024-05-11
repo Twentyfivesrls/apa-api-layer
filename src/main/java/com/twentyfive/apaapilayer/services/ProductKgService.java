@@ -52,35 +52,9 @@ public class ProductKgService {
         dto.setIngredients(nomeIngredienti);
         dto.setAllergens(allergeni);
         dto.setDescription(product.getDescription());
+        dto.setWeightRange(product.getWeightRange());
         return dto;
     }
-    /*private ProductKgDetailsAPADTO productsKgToDetailsDTO(ProductKgAPA product){
-        ProductKgDetailsAPADTO dto = new ProductKgDetailsAPADTO();
-        dto.setId(product.getId());
-        dto.setImageUrl(product.getImageUrl());
-        dto.setPricePerKg("€ "+ product.getPricePerKg());
-        List<String> idingredienti = product.getIngredientIds();
-        List<String> nomeIngredienti = new ArrayList<>();
-        List<Allergen> allergeni = new ArrayList<>();
-        for(String id : idingredienti){
-            IngredientAPA ingrediente = ingredientRepository.findById(id).orElse(null);
-            if(ingrediente!=null) {
-                nomeIngredienti.add(ingrediente.getName());
-                List<String> nomiAllergeni = ingrediente.getAllergenNames();
-                for(String nomeAllergene: nomiAllergeni){
-                    Allergen allergene = allergenRepository.findByName(nomeAllergene).orElse(null);
-                    if(allergene!=null && !allergeni.contains(allergene))
-                        allergeni.add(allergene);
-                }
-            }
-        }
-        dto.setIngredients(nomeIngredienti);
-        dto.setAllergens(allergeni);
-        return dto;
-    }
-
-
-     */
 
     public Page<ProductKgAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
         List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryId(idCategory);

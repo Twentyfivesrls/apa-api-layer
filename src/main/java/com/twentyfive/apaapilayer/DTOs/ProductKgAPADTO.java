@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.WeightRange;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,4 +21,5 @@ public class ProductKgAPADTO {
     private String imageUrl;
     private boolean active;
     private String description;
+    private WeightRange weightRange;
 }
