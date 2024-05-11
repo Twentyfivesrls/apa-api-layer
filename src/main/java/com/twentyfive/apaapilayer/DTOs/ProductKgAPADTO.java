@@ -22,4 +22,5 @@ public class ProductKgAPADTO {
     private boolean active;
     private String description;
     private WeightRange weightRange;
+    private boolean customized;
 }

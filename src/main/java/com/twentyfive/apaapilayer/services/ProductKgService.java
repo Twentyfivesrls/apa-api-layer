@@ -53,6 +53,7 @@ public class ProductKgService {
         dto.setAllergens(allergeni);
         dto.setDescription(product.getDescription());
         dto.setWeightRange(product.getWeightRange());
+        dto.setCustomized(product.isCustomized());
         return dto;
     }
 
