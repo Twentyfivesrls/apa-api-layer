@@ -197,7 +197,7 @@ public class CustomerService {
             customerRepository.save(customer);
             String in= StompUtilities.sendNewOrderNotification();
             producerPool.send(in,1,NOTIFICATION_TOPIC);
-            //emailService.sendEmailReceived(customer.getEmail());
+            emailService.sendEmailReceived(customer.getEmail());
             return true;
         }
         return false;

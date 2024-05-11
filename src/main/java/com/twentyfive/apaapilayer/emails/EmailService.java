@@ -17,7 +17,6 @@ import java.util.Optional;
 @Data
 @RequiredArgsConstructor
 public class EmailService {
-    private final CustomerRepository customerRepository;
     private final EmailClientController emailClientController;
     private final KeycloakService keycloakService;
     private final EmailUtilities emailUtilities;
@@ -29,14 +28,11 @@ public class EmailService {
     private final String subjectReset ="Account creato, resetta la tua password!";
     //TODO creazione template Reset
     private final String templateReset="";
-    public void sendEmailReceived(String id) throws IOException {
-            Optional<CustomerAPA> customerAPA = customerRepository.findById(id);
-            if(customerAPA.isPresent()){
-                EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,customerAPA.get().getEmail());
+    public void sendEmailReceived(String email) throws IOException {
+                EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReceived,subjectReceived,email);
                 String token = keycloakService.getAccessTokenTF();
                 String authorizationHeader = "Bearer " + token;
                 emailClientController.sendMail(authorizationHeader, emailSendRequest);
-            }
     }
     public void sendEmailResetPassword(String email, String temporaryPassword) throws  IOException {
         EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequest(templateReset,templateReceived,email);

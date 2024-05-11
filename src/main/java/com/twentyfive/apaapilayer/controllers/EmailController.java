@@ -16,9 +16,9 @@ public class EmailController {
         this.emailService=emailService;
     }
 
-    @PostMapping("/send/{id}")
-    public ResponseEntity<String> sendEmail(@PathVariable String id) throws IOException {
-        emailService.sendEmailReceived(id);
+    @PostMapping("/send/{email}")
+    public ResponseEntity<String> sendEmail(@PathVariable String email) throws IOException {
+        emailService.sendEmailReceived(email);
         return ResponseEntity.ok().body("email inviata!");
     }
 }
