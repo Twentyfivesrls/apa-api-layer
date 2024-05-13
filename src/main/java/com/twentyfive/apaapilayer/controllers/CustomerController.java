@@ -64,10 +64,8 @@ public class CustomerController {
         String lastName = newCustomerInfos.get("lastName");
         String phoneNumber = newCustomerInfos.get("phoneNumber");
 
-
-
+        //AGGIORNA LE INFO DELL'UTENTE SIA IN KEYCLOAK CHE SU MONGO
         customerService.modifyCustomerInfo(id,firstName,lastName,phoneNumber);
-
 
         return ResponseEntity.ok("modifiche salvate");
 
