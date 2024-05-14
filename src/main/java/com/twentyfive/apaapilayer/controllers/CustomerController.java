@@ -67,7 +67,7 @@ public class CustomerController {
         //AGGIORNA LE INFO DELL'UTENTE SIA IN KEYCLOAK CHE SU MONGO
         customerService.modifyCustomerInfo(id,firstName,lastName,phoneNumber);
 
-        return ResponseEntity.ok().body("\"modifiche salvate\"");
+        return ResponseEntity.ok().body("\"modifiche salvate con successo\"");
 
     }
 
