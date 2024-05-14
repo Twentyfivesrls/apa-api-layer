@@ -51,6 +51,7 @@ public class TrayService {
         Tray tray =trayRepository.findById(id).orElse(null);
         if(tray!=null){
             tray.setActive(!(tray.isActive()));
+            trayRepository.save(tray);
             return true;
         }
         return false;
