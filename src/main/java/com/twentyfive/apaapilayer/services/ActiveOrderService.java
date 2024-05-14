@@ -139,7 +139,11 @@ public class ActiveOrderService {
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
         Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getId());
         String name = bun.map(Tray::getName).orElse("no registered product");
-
+        if(bun.isPresent()){
+            if (!bun.get().isCustomized()) {
+                return new BundleInPurchaseDTO(bundleInPurchase,name);
+            }
+        }
         List<ProductInPurchase> pieces= bundleInPurchase.getWeightedProducts();
         List<ProductInPurchaseDTO> piecesDTOs= pieces.stream()
                 .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
