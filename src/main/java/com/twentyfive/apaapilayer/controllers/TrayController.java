@@ -1,9 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.DTOs.TrayAPADTO;
 import com.twentyfive.apaapilayer.DTOs.TrayDetailsAPADTO;
-import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.Tray;
 import com.twentyfive.apaapilayer.services.TrayService;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +17,12 @@ public class TrayController {
 
     @GetMapping("/getAll")
     public ResponseEntity<Page<TrayAPADTO>> getAll(
+            @RequestParam(value = "idCategory")String idCategory,
             @RequestParam(value = "page", defaultValue ="0") int page,
             @RequestParam(value = "size", defaultValue ="5") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        return ResponseEntity.ok().body(trayService.getAll(page,size,sortColumn,sortDirection));
+        return ResponseEntity.ok().body(trayService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
 
     @GetMapping("/getById/{id}")

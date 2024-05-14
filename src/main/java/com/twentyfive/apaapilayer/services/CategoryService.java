@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -34,6 +35,10 @@ public class CategoryService {
 
     @Transactional
     public CategoryAPA save(CategoryAPA c){
+        Optional<CategoryAPA> category = categoryRepository.findByName(c.getName());
+        if (category.isPresent()){
+            c.setId(category.get().getId());
+        }
         return categoryRepository.save(c);
     }
 

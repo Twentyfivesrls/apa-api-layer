@@ -22,8 +22,8 @@ public class TrayService {
 
     private final TrayRepository trayRepository;
 
-    public Page<TrayAPADTO> getAll(int page, int size,String sortColumn, String sortDirection) {
-        List<Tray> trays = trayRepository.findAll();
+    public Page<TrayAPADTO> findByIdCategory(String idCategory,int page, int size, String sortColumn, String sortDirection) {
+        List<Tray> trays = trayRepository.findAllByCategoryId(idCategory);
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
