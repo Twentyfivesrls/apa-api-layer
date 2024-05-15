@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SettingRepository extends MongoRepository<SettingAPA,String> {
+    boolean existsOrderReceivedAlertById(String id);
 }
