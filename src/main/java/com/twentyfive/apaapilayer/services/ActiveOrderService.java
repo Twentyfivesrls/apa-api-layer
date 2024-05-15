@@ -88,7 +88,7 @@ public class ActiveOrderService {
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setPrice(String.format("%.2f", order.getTotalPrice()));
+        dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().name());
         return dto;
     }
