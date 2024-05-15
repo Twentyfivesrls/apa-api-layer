@@ -161,4 +161,13 @@ public class IngredientService {
         Optional<IngredientAPA> ingredient=ingredientRepository.findByName(name);
         return ingredient.orElse(null);
     }
+
+    public List<IngredientAPA> getAllByNameCategories(String name, String type) {
+        List<CategoryAPA> categories = categoryRepository.findAllByTypeAndNameAndEnabledTrue(type,name);
+        List<IngredientAPA> ingredients= new ArrayList<>();
+        for (CategoryAPA category: categories){
+            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrue(category.getId()));
+        }
+        return ingredients;
+    }
 }

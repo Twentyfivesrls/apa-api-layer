@@ -1,10 +1,8 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.DropdownRes;
 import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
-import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +27,12 @@ public class IngredientController {
     }
 
     @GetMapping("/getAllByTypeCategories")
-    public ResponseEntity<List<IngredientAPA>> getAllByTypeCategories(@RequestParam String types){
-        return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(types));
+    public ResponseEntity<List<IngredientAPA>> getAllByTypeCategories(@RequestParam String type){
+        return ResponseEntity.ok().body(ingredientService.getAllByTypeCategories(type));
+    }
+    @GetMapping("/getAllByNameCategories")
+    public ResponseEntity<List<IngredientAPA>> getAllByNameCategories(@RequestParam("name") String name,@RequestParam("type") String type){
+        return ResponseEntity.ok().body(ingredientService.getAllByNameCategories(name, type));
     }
     @GetMapping("/getByName")
     public ResponseEntity<IngredientAPA> getByName(@RequestParam("name") String name){
