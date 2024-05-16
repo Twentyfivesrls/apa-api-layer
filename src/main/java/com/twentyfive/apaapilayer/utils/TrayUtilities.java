@@ -29,6 +29,7 @@ public class TrayUtilities {
         dto.setDescription(tray.getDescription());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         dto.setActive(tray.isActive());
+        dto.setPricePerKg(tray.getPricePerKg());
         return dto;
     }
 

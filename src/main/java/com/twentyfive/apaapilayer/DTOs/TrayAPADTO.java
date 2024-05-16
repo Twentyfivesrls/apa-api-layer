@@ -14,4 +14,5 @@ public class TrayAPADTO {
     private String measures;
     private String description;
     private boolean active;
+    private double pricePerKg;
 }
