@@ -20,6 +20,10 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.getEnabledCategories(types));
     }
 
+    @GetMapping("/getAllDisabled")
+    public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndDisable(@RequestParam List<String> types) {
+        return ResponseEntity.ok().body(categoryService.getDisabledCategories(types));
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<CategoryAPA> getOrderById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.getById(id));

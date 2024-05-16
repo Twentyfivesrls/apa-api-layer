@@ -29,6 +29,9 @@ public class CategoryService {
         return categoryRepository.findAllByTypeInAndEnabledTrueOrderByNameAsc(types);
     }
 
+    public List<CategoryAPA> getDisabledCategories(List<String> types) {
+        return categoryRepository.findAllByTypeInAndEnabledFalseOrderByNameAsc(types);
+    }
     public CategoryAPA getById(String id){
         return categoryRepository.findById(id).orElse(null);
     }
