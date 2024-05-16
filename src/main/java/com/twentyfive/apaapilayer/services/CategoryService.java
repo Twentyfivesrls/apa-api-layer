@@ -26,7 +26,7 @@ public class CategoryService {
 
 
     public List<CategoryAPA> getEnabledCategories(List<String> types) {
-        return categoryRepository.findAllByTypeInAndEnabledTrue(types);
+        return categoryRepository.findAllByTypeInAndEnabledTrueOrderByNameAsc(types);
     }
 
     public CategoryAPA getById(String id){

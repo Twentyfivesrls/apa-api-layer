@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends MongoRepository<CategoryAPA,String> {
 
-    List<CategoryAPA> findAllByTypeInAndEnabledTrue(List<String> types);
+    List<CategoryAPA> findAllByTypeInAndEnabledTrueOrderByNameAsc(List<String> types);
     List<CategoryAPA> findAllByTypeAndEnabledTrue(String type);
 
 
