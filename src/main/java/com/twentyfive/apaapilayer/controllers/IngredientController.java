@@ -3,8 +3,10 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
+import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +60,8 @@ public class IngredientController {
         return ResponseEntity.ok().body(ingredientService.activateById(id));
     }
 
-
+    @GetMapping("/get/autocomplete")
+    public ResponseEntity<List<AutoCompleteRes>> getIngredientsAutocomplete(@RequestParam("value") String value) {
+        return new ResponseEntity<>(ingredientService.getIngredientsAutocomplete(value), HttpStatus.OK);
+    }
 }
