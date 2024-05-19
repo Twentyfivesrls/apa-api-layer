@@ -7,7 +7,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.apaapilayer.utils.PdfUtils;
+import com.twentyfive.apaapilayer.utils.PdfUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -358,7 +358,7 @@ public class ActiveOrderService {
         Optional<OrderAPA> orderOptional = activeOrderRepository.findById(id);
         if (orderOptional.isPresent()) {
             OrderDetailsPrintAPADTO orderDetails = convertToOrderDetailsPrintAPADTO(orderOptional.get());
-            return PdfUtils.generatePdfStream(orderDetails);
+            return PdfUtilities.generatePdfStream(orderDetails);
         }
         return null;
     }

@@ -13,7 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-public class PdfUtils {
+public class PdfUtilities {
     public static ByteArrayOutputStream generatePdfStream(OrderDetailsPrintAPADTO orderDetails) throws DocumentException, IOException {
         Document document = new Document();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -77,11 +77,11 @@ public class PdfUtils {
 
         // Write bundle details if available
         if (orderDetails.getBundles() != null && !orderDetails.getBundles().isEmpty()) {
-            document.add(new Paragraph("Bundles:", boldFont));
+            document.add(new Paragraph("Vassoi:", boldFont));
             for (BundleInPurchaseDTO bundle : orderDetails.getBundles()) {
                 document.add(createParagraph("Nome: ", bundle.getName(), boldFont, normalFont));
                 document.add(createParagraph("Quantità: ", String.valueOf(bundle.getQuantity()), boldFont, normalFont));
-                document.add(createParagraph("Peso: ", String.valueOf(bundle.getMeasure()), boldFont, normalFont));
+                document.add(createParagraph("Peso: ", bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
                 document.add(new Paragraph("\n"));
                 document.add(new LineSeparator());
                 document.add(new Paragraph("\n"));
