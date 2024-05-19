@@ -122,7 +122,7 @@ public class ActiveOrderController {
         }
     }
 
-    @PostMapping("/print/{id}")
+    @GetMapping("/print/{id}")
     public ResponseEntity<byte[]> exportPdf(@PathVariable String id) throws IOException, DocumentException {
         ByteArrayOutputStream pdfStream = activeOrderService.print(id);
         HttpHeaders headers = new HttpHeaders();
