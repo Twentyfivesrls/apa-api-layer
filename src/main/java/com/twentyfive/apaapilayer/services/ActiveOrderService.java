@@ -1,16 +1,13 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
-import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
-import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
-import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
+import com.itextpdf.text.DocumentException;
+import com.twentyfive.apaapilayer.DTOs.*;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
-import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.authorizationflow.services.AuthenticationService;
+import com.twentyfive.apaapilayer.utils.PdfUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.ProductKg;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -128,6 +125,37 @@ public class ActiveOrderService {
 
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+        return dto;
+    }
+
+    private OrderDetailsPrintAPADTO convertToOrderDetailsPrintAPADTO(OrderAPA order) {
+        CustomerAPA customer = customerRepository.findById(order.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
+
+
+
+        OrderDetailsPrintAPADTO dto = new OrderDetailsPrintAPADTO();
+        dto.setId(order.getId());
+        dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setStatus(order.getStatus().name());
+
+        List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
+                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
+
+
+        dto.setProducts(productDTOs);
+
+
+
+        List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
+                .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
+        dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
+
+        dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
+        dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+        dto.setFullName(customer.getFirstName() + " " + customer.getLastName());
         return dto;
     }
 
@@ -326,5 +354,13 @@ public class ActiveOrderService {
         return numSlotRequired;
     }
 
+    public ByteArrayOutputStream print(String id) throws DocumentException, IOException {
+        Optional<OrderAPA> orderOptional = activeOrderRepository.findById(id);
+        if (orderOptional.isPresent()) {
+            OrderDetailsPrintAPADTO orderDetails = convertToOrderDetailsPrintAPADTO(orderOptional.get());
+            return PdfUtils.generatePdfStream(orderDetails);
+        }
+        return null;
+    }
 }
 

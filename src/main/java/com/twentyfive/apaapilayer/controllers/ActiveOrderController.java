@@ -1,14 +1,23 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
+import com.twentyfive.apaapilayer.utils.PdfUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/orders")
@@ -111,6 +120,16 @@ public class ActiveOrderController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build(); // Restituisce un errore server interno in caso di problemi
         }
+    }
+
+    @PostMapping("/print/{id}")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable String id) throws IOException, DocumentException {
+        ByteArrayOutputStream pdfStream = activeOrderService.print(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + ".pdf");
+        headers.setContentLength(pdfStream.size());
+        return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
     }
 
 }
