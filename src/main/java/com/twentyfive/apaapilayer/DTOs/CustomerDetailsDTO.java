@@ -15,7 +15,7 @@ public class CustomerDetailsDTO {
     private String lastName;          // Last name of the customer
     private String email;             // Email address of the customer
     private String phoneNumber;       // Phone number of the customer
-    private String completedOrderCount;// Number of orders the customer has made
+    private String completedOrdersCount;// Number of orders the customer has made
     private String activeOrdersCount;
     private String totalSpent;        // Total amount spent by the customer
     private boolean enabled;
