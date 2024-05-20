@@ -69,7 +69,7 @@ public class CustomerService {
 
         List<OrderAPA> activeOrders = activeOrdersRepository.findByCustomerId(customer.getId());
 
-        String activeOrdersCount = String.valueOf(comletedOrders.size());
+        String activeOrdersCount = String.valueOf(activeOrders.size());
 
 
         return new CustomerDetailsDTO(
@@ -143,7 +143,7 @@ public class CustomerService {
 
         List<OrderAPA> activeOrders = activeOrdersRepository.findByCustomerId(customerId);
 
-        String activeOrdersCount = String.valueOf(comletedOrders.size());
+        String activeOrdersCount = String.valueOf(activeOrders.size());
 
 
         return new CustomerDetailsDTO(
