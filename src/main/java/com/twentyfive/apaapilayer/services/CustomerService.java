@@ -21,7 +21,6 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPur
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.IOException;
@@ -54,26 +53,36 @@ public class CustomerService {
 
     private final TrayRepository trayRepository;
     private final ProducerPool producerPool;
+    private final ActiveOrderRepository activeOrdersRepository;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
                 .orElseThrow(() -> new RuntimeException("No customer found with idKeycloak: " + idKeycloak));
 
-        List<OrderAPA> orders = completedOrderRepository.findByCustomerId(customer.getId());
-        String totalSpent = String.format("%.2f", orders.stream()
+        List<OrderAPA> comletedOrders = completedOrderRepository.findByCustomerId(customer.getId());
+
+        // Calcola il totale speso e il numero di ordini
+        String totalSpent = String.format("%.2f", comletedOrders.stream()
                 .mapToDouble(OrderAPA::getTotalPrice)
                 .sum());
-        String orderCount = String.valueOf(orders.size());
+        String completedOrdersCount = String.valueOf(comletedOrders.size());
+
+        List<OrderAPA> activeOrders = activeOrdersRepository.findByCustomerId(customer.getId());
+
+        String activeOrdersCount = String.valueOf(comletedOrders.size());
+
+
         return new CustomerDetailsDTO(
                 customer.getId(),
-                customer.getFirstName(),
                 customer.getLastName(),
+                customer.getFirstName(),
                 customer.getEmail(),
                 customer.getPhoneNumber(),
-                orderCount, // Example order count
-                totalSpent, // Example total spent
+                completedOrdersCount,
+                activeOrdersCount,
+                totalSpent,
                 customer.isEnabled(),
-                "cannot access this info"
+                customer.getNote()
         );
     }
 
@@ -93,7 +102,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ActiveOrderRepository activeOrderRepository,CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
@@ -105,6 +114,7 @@ public class CustomerService {
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
         this.producerPool = producerPool;
+        this.activeOrdersRepository= activeOrderRepository;
     }
 
     public Page<CustomerAPA> getAll(int page, int size,String sortColumn,String sortDirection) {
@@ -123,13 +133,18 @@ public class CustomerService {
         if (customer.getCart()==null) customer.setCart(new Cart());
 
 
-        List<OrderAPA> orders = completedOrderRepository.findByCustomerId(customerId);
+        List<OrderAPA> comletedOrders = completedOrderRepository.findByCustomerId(customerId);
 
         // Calcola il totale speso e il numero di ordini
-        String totalSpent = String.format("%.2f", orders.stream()
+        String totalSpent = String.format("%.2f", comletedOrders.stream()
                 .mapToDouble(OrderAPA::getTotalPrice)
                 .sum());
-        String orderCount = String.valueOf(orders.size());
+        String completedOrdersCount = String.valueOf(comletedOrders.size());
+
+        List<OrderAPA> activeOrders = activeOrdersRepository.findByCustomerId(customerId);
+
+        String activeOrdersCount = String.valueOf(comletedOrders.size());
+
 
         return new CustomerDetailsDTO(
                 customer.getId(),
@@ -137,7 +152,8 @@ public class CustomerService {
                 customer.getFirstName(),
                 customer.getEmail(),
                 customer.getPhoneNumber(),
-                orderCount,
+                completedOrdersCount,
+                activeOrdersCount,
                 totalSpent,
                 customer.isEnabled(),
                 customer.getNote()
