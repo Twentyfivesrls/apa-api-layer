@@ -8,7 +8,8 @@ import java.util.List;
 
 @Repository
 public interface TrayRepository extends MongoRepository<Tray, String> {
-    List<Tray> findAllByCategoryIdAndCustomizedFalse(String idCategory);
 
     List<Tray> findAllByCategoryIdAndCustomizedFalseAndActiveTrue(String idCategory);
+
+    List<Tray> findAllByCategoryId(String idCategory);
 }
