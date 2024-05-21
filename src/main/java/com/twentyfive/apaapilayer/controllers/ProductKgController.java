@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/productsKg")
@@ -24,8 +26,10 @@ public class ProductKgController {
             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(productkgService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
-
-
+    @GetMapping("/getAllActive")
+    public ResponseEntity<List<ProductKgAPADTO>> getAllActive(@RequestParam("idCategory")String idCategory){
+        return ResponseEntity.ok().body(productkgService.getAllActive(idCategory));
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<ProductKgAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(productkgService.getById(id));

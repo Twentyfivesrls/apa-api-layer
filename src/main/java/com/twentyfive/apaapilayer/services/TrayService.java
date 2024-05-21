@@ -56,4 +56,13 @@ public class TrayService {
         }
         return false;
     }
+
+    public List<TrayAPADTO> getAllActive(String idCategory) {
+        List<Tray> trays = trayRepository.findAllByCategoryIdAndCustomizedFalseAndActiveTrue(idCategory);
+        List<TrayAPADTO> realTrays = new ArrayList<>();
+        for(Tray tray : trays){
+            realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
+        }
+        return realTrays;
+    }
 }

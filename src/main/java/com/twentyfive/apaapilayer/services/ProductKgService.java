@@ -121,6 +121,15 @@ public class ProductKgService {
     }
 
 
-
-
+    public List<ProductKgAPADTO> getAllActive(String idCategory) {
+        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalse(idCategory);
+        List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
+        for(ProductKgAPA p : productsKg){
+            if(p!=null) {
+                ProductKgAPADTO dto = productsKgToDTO(p);
+                realProductsKg.add(dto);
+            }
+        }
+        return realProductsKg;
+    }
 }

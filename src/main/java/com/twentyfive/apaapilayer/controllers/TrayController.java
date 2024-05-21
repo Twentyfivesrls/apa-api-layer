@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.DTOs.TrayAPADTO;
 import com.twentyfive.apaapilayer.DTOs.TrayDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.Tray;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,6 +28,10 @@ public class TrayController {
         return ResponseEntity.ok().body(trayService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
 
+    @GetMapping("/getAllActive")
+    public ResponseEntity<List<TrayAPADTO>> getAllActive(@RequestParam("idCategory")String idCategory){
+        return ResponseEntity.ok().body(trayService.getAllActive(idCategory));
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<TrayDetailsAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(trayService.getById(id));
