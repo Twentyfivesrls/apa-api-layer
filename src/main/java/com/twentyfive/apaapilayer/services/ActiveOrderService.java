@@ -37,6 +37,7 @@ public class ActiveOrderService {
     private final CompletedOrderRepository completedOrderRepository;
 
     private final ProductKgRepository productKgRepository;
+    private final ProductWeightedRepository productWeightedRepository;
 
     private final TrayRepository trayRepository;
 
@@ -45,11 +46,12 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository,SettingRepository settingRepository,TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
         this.productKgRepository=productKgRepository;
+        this.productWeightedRepository = productWeightedRepository;
         this.trayRepository=trayRepository;
         this.settingRepository=settingRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
@@ -126,8 +128,6 @@ public class ActiveOrderService {
 
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
-        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()).toString());
-        dto.setTotalPrice(order.getTotalPrice());
         return dto;
     }
 
@@ -168,6 +168,12 @@ public class ActiveOrderService {
         return new ProductInPurchaseDTO(productInPurchase, name);
     }
 
+    private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {
+        Optional<ProductWeightedAPA> pWght = productWeightedRepository.findById(piece.getId());
+        String name = pWght.map(ProductWeightedAPA::getName).orElse("No registered product");
+        double weight = pWght.map(ProductWeightedAPA::getWeight).orElseThrow(() -> new IllegalArgumentException());
+        return new PieceInPurchaseDTO(piece, name, weight);
+    }
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
         Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getId());
         String name = bun.map(Tray::getName).orElse("no registered product");
@@ -177,8 +183,11 @@ public class ActiveOrderService {
             }
         }
         List<PieceInPurchase> pieces= bundleInPurchase.getWeightedProducts();
+        List<PieceInPurchaseDTO> piecesDTOs= pieces.stream()
+                .map(this::convertPiecePurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
 
-        return new BundleInPurchaseDTO(bundleInPurchase, name,pieces);
+        return new BundleInPurchaseDTO(bundleInPurchase, name,piecesDTOs);
     }
 
 

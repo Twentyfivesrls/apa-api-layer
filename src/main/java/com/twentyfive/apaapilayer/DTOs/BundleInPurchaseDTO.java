@@ -24,9 +24,9 @@ public class BundleInPurchaseDTO {
     private int quantity;
     private double totalPrice;
 
-    private List<PieceInPurchase> pieces;
+    private List<PieceInPurchaseDTO> pieces;
 
-    public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<PieceInPurchase> pieces) {
+    public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<PieceInPurchaseDTO> pieces) {
         this.id = bundle.getId();
         this.name = name;
         this.measure = bundle.getMeasure();

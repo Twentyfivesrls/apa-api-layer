@@ -1,9 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
-import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
-import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
-import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
+import com.twentyfive.apaapilayer.DTOs.*;
 import com.twentyfive.apaapilayer.exceptions.OrderRestoringNotAllowedException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
@@ -31,16 +28,18 @@ public class CompletedOrderService {
     private final CompletedOrderRepository completedOrderRepository;
     private final ActiveOrderRepository activeOrderRepository;
     private final CustomerRepository customerRepository;
+    private final ProductWeightedRepository productWeightedRepository;
 
     private final ProductKgRepository productKgRepository;
 
     private final TrayRepository trayRepository;
 
     @Autowired
-    public CompletedOrderService(CompletedOrderRepository completedOrderRepository,CustomerRepository customerRepository,ActiveOrderRepository activeOrderRepository,ProductKgRepository productKgRepository,TrayRepository trayRepository) {
+    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, ProductKgRepository productKgRepository, TrayRepository trayRepository) {
         this.completedOrderRepository= completedOrderRepository;
         this.customerRepository=customerRepository;
         this.activeOrderRepository=activeOrderRepository;
+        this.productWeightedRepository = productWeightedRepository;
         this.productKgRepository=productKgRepository;
         this.trayRepository=trayRepository;
     }
@@ -122,8 +121,12 @@ public class CompletedOrderService {
             }
         }
         List<PieceInPurchase> pieces= bundleInPurchase.getWeightedProducts();
+        List<PieceInPurchaseDTO> piecesDTOs= pieces.stream()
+                .map(this::convertPiecePurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
 
-        return new BundleInPurchaseDTO(bundleInPurchase, name, pieces);
+        return new BundleInPurchaseDTO(bundleInPurchase, name,piecesDTOs);
+
     }
 
     public OrderAPADTO restoreOrder(String id) {
@@ -194,6 +197,13 @@ public class CompletedOrderService {
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().name());
         return dto;
+    }
+
+    private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {
+        Optional<ProductWeightedAPA> pWght = productWeightedRepository.findById(piece.getId());
+        String name = pWght.map(ProductWeightedAPA::getName).orElse("No registered product");
+        double weight = pWght.map(ProductWeightedAPA::getWeight).orElseThrow(() -> new IllegalArgumentException());
+        return new PieceInPurchaseDTO(piece, name, weight);
     }
 }
 

@@ -81,7 +81,7 @@ public class PdfUtilities {
             for (BundleInPurchaseDTO bundle : orderDetails.getBundles()) {
                 document.add(createParagraph("Nome: ", bundle.getName(), boldFont, normalFont));
                 document.add(createParagraph("Quantità: ", String.valueOf(bundle.getQuantity()), boldFont, normalFont));
-                document.add(createParagraph("Peso: ", bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
+                document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
                 document.add(new Paragraph("\n"));
                 document.add(new LineSeparator());
                 document.add(new Paragraph("\n"));
