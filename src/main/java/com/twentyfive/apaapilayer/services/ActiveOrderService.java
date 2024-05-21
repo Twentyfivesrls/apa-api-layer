@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
@@ -173,12 +174,9 @@ public class ActiveOrderService {
                 return new BundleInPurchaseDTO(bundleInPurchase,name);
             }
         }
-        List<ProductInPurchase> pieces= bundleInPurchase.getWeightedProducts();
-        List<ProductInPurchaseDTO> piecesDTOs= pieces.stream()
-                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
-                .collect(Collectors.toList());
+        List<PieceInPurchase> pieces= bundleInPurchase.getWeightedProducts();
 
-        return new BundleInPurchaseDTO(bundleInPurchase, name,piecesDTOs);
+        return new BundleInPurchaseDTO(bundleInPurchase, name,pieces);
     }
 
 
