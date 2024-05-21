@@ -18,7 +18,7 @@ public class OrderDetailsAPADTO {
     private List<BundleInPurchaseDTO> bundles;
     private String email;
     private String phoneNumber;
-    private LocalDateTime pickupDateTime;
+    private String pickupDateTime;
     private double totalPrice;
 
 }

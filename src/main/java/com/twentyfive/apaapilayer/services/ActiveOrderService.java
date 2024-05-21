@@ -125,7 +125,7 @@ public class ActiveOrderService {
 
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
-        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()).toString());
         return dto;
     }
 
