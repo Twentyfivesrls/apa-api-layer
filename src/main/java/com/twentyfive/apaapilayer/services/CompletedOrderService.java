@@ -102,6 +102,8 @@ public class CompletedOrderService {
         // Assumi che esista un getter che restituisca i bundle
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()).toString());
+        dto.setTotalPrice(order.getTotalPrice());
         return dto;
     }
 
