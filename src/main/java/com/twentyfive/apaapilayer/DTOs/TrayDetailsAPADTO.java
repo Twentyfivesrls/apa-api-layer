@@ -18,5 +18,6 @@ public class TrayDetailsAPADTO {
     private String measures;
     private List<Measure> measuresList;
     private String description;
+    private String imageUrl;
     private double pricePerKg;
 }

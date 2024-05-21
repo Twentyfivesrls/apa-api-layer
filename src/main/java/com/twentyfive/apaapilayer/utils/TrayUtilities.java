@@ -18,6 +18,7 @@ public class TrayUtilities {
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         dto.setMeasuresList(tray.getMeasures());
         dto.setPricePerKg(tray.getPricePerKg());
+        dto.setImageUrl(tray.getImageUrl());
         return dto;
     }
 
