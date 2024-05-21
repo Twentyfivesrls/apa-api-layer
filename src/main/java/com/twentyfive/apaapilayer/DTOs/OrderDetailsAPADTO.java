@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -17,4 +18,7 @@ public class OrderDetailsAPADTO {
     private List<BundleInPurchaseDTO> bundles;
     private String email;
     private String phoneNumber;
+    private LocalDateTime pickupDateTime;
+    private double totalPrice;
+
 }
