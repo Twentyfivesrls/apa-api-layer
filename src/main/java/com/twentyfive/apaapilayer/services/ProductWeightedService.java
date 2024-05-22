@@ -125,4 +125,16 @@ public class ProductWeightedService {
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         return productWeightedAPA.getImageUrl();
     }
+
+    public List<ProductWeightedAPADTO> getAllWithoutPage(String idCategory) {
+        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
+        List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
+        for(ProductWeightedAPA p : productsWeighted){
+            if(p!=null) {
+                ProductWeightedAPADTO dto = productsWeightedToDTO(p);
+                realProductsWeighted.add(dto);
+            }
+        }
+        return  realProductsWeighted;
+    }
 }
