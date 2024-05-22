@@ -132,4 +132,10 @@ public class ProductKgService {
         }
         return realProductsKg;
     }
+
+    public String getImageUrl(String id) {
+        ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
+        return productKgAPA.getImageUrl();
+
+    }
 }
