@@ -121,4 +121,8 @@ public class ProductWeightedService {
     }
 
 
+    public String getImageUrl(String id) {
+        ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
+        return productWeightedAPA.getImageUrl();
+    }
 }

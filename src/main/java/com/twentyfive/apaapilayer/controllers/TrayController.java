@@ -47,4 +47,9 @@ public class TrayController {
         return ResponseEntity.ok().body(trayService.activateOrDisableById(id));
     }
 
+    @GetMapping("/imageById/{id}")
+    public ResponseEntity<String> imageUrlById(@PathVariable String id){
+        return ResponseEntity.ok().body(trayService.getImageUrl(id));
+    }
+
 }

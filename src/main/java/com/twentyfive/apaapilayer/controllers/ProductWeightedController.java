@@ -46,4 +46,9 @@ public class ProductWeightedController {
         return ResponseEntity.ok().body(productWeightedService.activateById(id));
     }
 
+    @GetMapping("/imageById/{id}")
+    public ResponseEntity<String> imageUrlById(@PathVariable String id){
+        return ResponseEntity.ok().body(productWeightedService.getImageUrl(id));
+    }
+
 }

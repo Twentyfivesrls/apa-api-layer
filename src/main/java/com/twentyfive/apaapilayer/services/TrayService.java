@@ -65,4 +65,10 @@ public class TrayService {
         }
         return realTrays;
     }
+
+    public String getImageUrl(String id) {
+        Tray tray=trayRepository.findById(id).orElse(null);
+        return tray.getImageUrl();
+
+    }
 }
