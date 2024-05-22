@@ -16,6 +16,7 @@ public class ProductWeightedAPADTO {
     private String name;
     private List<Allergen> allergens = new ArrayList<>();
     private List<String> ingredients;
+    private double realWeight;
     private String weight;
     private String imageUrl;//immagine
     private boolean active;

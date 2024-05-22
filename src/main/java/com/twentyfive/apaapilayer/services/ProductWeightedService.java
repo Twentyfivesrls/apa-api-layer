@@ -33,6 +33,7 @@ public class ProductWeightedService {
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setImageUrl(product.getImageUrl());
+        dto.setRealWeight(product.getWeight());
         dto.setWeight("Kg " +product.getWeight());
         dto.setDescription(product.getDescription());
         List<String> idingredienti = product.getIngredientIds();
@@ -57,7 +58,7 @@ public class ProductWeightedService {
 
 
     public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
+        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
@@ -127,7 +128,7 @@ public class ProductWeightedService {
     }
 
     public List<ProductWeightedAPADTO> getAllWithoutPage(String idCategory) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
+        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
