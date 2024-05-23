@@ -107,11 +107,10 @@ public class CustomerController {
         }
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(
-            @RequestParam String userId) {
-
+    @PostMapping("/reset-password/{userId}")
+    public ResponseEntity<String> resetPassword(@PathVariable String userId) {
         try {
+            System.out.println("recived reset pass");
             keycloakService.sendPasswordResetEmail(userId);
             return ResponseEntity.ok("Password reset email sent successfully.");
         } catch (Exception e) {
