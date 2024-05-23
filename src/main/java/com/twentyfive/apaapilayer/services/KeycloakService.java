@@ -14,6 +14,7 @@ import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakRole;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakUser;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.TokenRequest;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,5 +105,15 @@ public class KeycloakService {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
         String authorizationHeader = "Bearer " + accessToken;
         keycloakExtClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
+    }
+
+    public void sendPasswordResetEmail(String userId) {
+        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+
+        // Define the actions to be executed, in this case, UPDATE_PASSWORD
+        List<String> actions = Collections.singletonList("UPDATE_PASSWORD");
+
+        // Call the Feign client method to send the reset email
+        keycloakExtClient.resetPassword("Bearer " + accessToken, userId, actions);
     }
 }
