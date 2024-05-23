@@ -22,6 +22,7 @@ public class BundleInPurchaseDTO {
 
     private int quantity;
     private double totalPrice;
+    private double totalWeight;
 
     private List<PieceInPurchaseDTO> weightedProducts;
 
@@ -30,6 +31,7 @@ public class BundleInPurchaseDTO {
         this.name = name;
         this.measure = bundle.getMeasure();
         this.quantity = bundle.getQuantity();
+        this.totalWeight = bundle.getTotalWeight();
         this.totalPrice = bundle.getTotalPrice();
         this.weightedProducts = weightedProducts;
     }

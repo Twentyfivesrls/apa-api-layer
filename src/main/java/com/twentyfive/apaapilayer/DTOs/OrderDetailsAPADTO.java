@@ -20,5 +20,5 @@ public class OrderDetailsAPADTO {
     private String phoneNumber;
     private String pickupDateTime;
     private double totalPrice;
-
+    private double totalWeight;
 }

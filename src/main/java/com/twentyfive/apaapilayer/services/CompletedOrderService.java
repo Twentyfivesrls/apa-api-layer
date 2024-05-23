@@ -124,7 +124,6 @@ public class CompletedOrderService {
         List<PieceInPurchaseDTO> weightedProductsDTOs = weightedProducts.stream()
                 .map(this::convertPiecePurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());
-
         return new BundleInPurchaseDTO(bundleInPurchase, name, weightedProductsDTOs);
 
     }
