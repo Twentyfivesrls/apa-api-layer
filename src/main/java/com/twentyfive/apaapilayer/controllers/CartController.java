@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.DTOs.BuyInfosDTO;
+import com.twentyfive.apaapilayer.DTOs.BuyListsDTO;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
 import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
@@ -90,7 +91,7 @@ public class CartController {
         }
     }
 
-    @GetMapping("/pickup-dateTimes/{id}")
+    @PostMapping("/pickup-dateTimes/{id}")
     public ResponseEntity<Map<LocalDate, List<LocalTime>>> obtainMinimumPickupDateTime(
             @PathVariable String id, @RequestBody List<Integer> positions) {
 

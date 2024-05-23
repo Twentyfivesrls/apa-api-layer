@@ -395,7 +395,7 @@ public class CustomerService {
                         somethingCustomized=true;
 
                     }
-                    if(categoryRepository.findById(product.getId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")){
+                    if(categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")){
                         double weight= pip.getWeight();
                         if(weight>=1.5)bigSemifreddo=true;
                     }
