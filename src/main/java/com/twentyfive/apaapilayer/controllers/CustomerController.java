@@ -5,6 +5,7 @@ import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.services.CustomerService;
+import com.twentyfive.apaapilayer.services.KeycloakService;
 import feign.Body;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,12 @@ import java.util.Map;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private KeycloakService keycloakService;
 
     @Autowired
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(CustomerService customerService,KeycloakService keycloakService) {
         this.customerService = customerService;
+        this.keycloakService= keycloakService;
     }
 
     @GetMapping("/getAll")
@@ -101,6 +104,19 @@ public class CustomerController {
             return ResponseEntity.ok(true);  // Restituisce true se la cancellazione è avvenuta con successo
         } else {
             return ResponseEntity.notFound().build();  // Restituisce 404 se il cliente non è stato trovato
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam String userId,
+            @RequestHeader("Authorization") String accessToken) {
+
+        try {
+            keycloakService.sendPasswordResetEmail(userId, accessToken);
+            return ResponseEntity.ok("Password reset email sent successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to send password reset email: " + e.getMessage());
         }
     }
 
