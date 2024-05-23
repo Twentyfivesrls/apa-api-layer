@@ -5,6 +5,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsPrintAPADTO;
+import com.twentyfive.apaapilayer.DTOs.PieceInPurchaseDTO;
 import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
 
 import java.io.ByteArrayOutputStream;
@@ -82,6 +83,13 @@ public class PdfUtilities {
                 document.add(createParagraph("Nome: ", bundle.getName(), boldFont, normalFont));
                 document.add(createParagraph("Quantità: ", String.valueOf(bundle.getQuantity()), boldFont, normalFont));
                 document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
+                if (bundle.getWeightedProducts().size()>0){
+                    document.add(new Paragraph("Mignon: ", boldFont));
+                    for (PieceInPurchaseDTO piece: bundle.getWeightedProducts()){
+                        document.add(createParagraph("Mignon", "x"+piece.getQuantity()+" "+piece.getName(), boldFont, normalFont));
+                    }
+                    document.add(createParagraph("Peso Totale Mignon scelti: ", bundle.getTotalWeight()+ "kg", boldFont, normalFont));
+                }
                 document.add(new Paragraph("\n"));
                 document.add(new LineSeparator());
                 document.add(new Paragraph("\n"));
