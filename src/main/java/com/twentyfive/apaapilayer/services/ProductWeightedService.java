@@ -128,7 +128,8 @@ public class ProductWeightedService {
     }
 
     public List<ProductWeightedAPADTO> getAllWithoutPage(String idCategory) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory);
+        Sort sort = Sort.by(Sort.Direction.ASC, "name");
+        List<ProductWeightedAPA> productsWeighted =  productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory, sort);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
