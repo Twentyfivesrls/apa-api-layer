@@ -86,9 +86,9 @@ public class PdfUtilities {
                 if (bundle.getWeightedProducts().size()>0){
                     document.add(new Paragraph("Mignon: ", boldFont));
                     for (PieceInPurchaseDTO piece: bundle.getWeightedProducts()){
-                        document.add(createParagraph("Mignon", "x"+piece.getQuantity()+" "+piece.getName(), boldFont, normalFont));
+                        document.add(new Paragraph("x"+piece.getQuantity()+" "+piece.getName(), normalFont));
                     }
-                    document.add(createParagraph("Peso Totale Mignon scelti: ", bundle.getTotalWeight()+ "kg", boldFont, normalFont));
+                    document.add(createParagraph("Peso Totale Mignon scelti: ", bundle.getTotalWeight()+ " kg", boldFont, normalFont));
                 }
                 document.add(new Paragraph("\n"));
                 document.add(new LineSeparator());
