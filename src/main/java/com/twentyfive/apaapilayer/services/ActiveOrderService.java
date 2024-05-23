@@ -58,6 +58,18 @@ public class ActiveOrderService {
     }
 
     public OrderAPA createOrder(OrderAPA order) {
+        double totalPrice=0;
+        if (order.getBundlesInPurchase().size()>0){
+            for(BundleInPurchase bIP : order.getBundlesInPurchase()){
+                totalPrice+=bIP.getTotalPrice();
+            }
+        }
+        if (order.getProductsInPurchase().size()>0){
+            for(BundleInPurchase pIP : order.getBundlesInPurchase()){
+                totalPrice+=pIP.getTotalPrice();
+            }
+        }
+        order.setTotalPrice(totalPrice);
         return activeOrderRepository.save(order);
     }
 
