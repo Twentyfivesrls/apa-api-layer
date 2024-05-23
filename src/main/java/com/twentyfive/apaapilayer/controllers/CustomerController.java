@@ -109,11 +109,10 @@ public class CustomerController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(
-            @RequestParam String userId,
-            @RequestHeader("Authorization") String accessToken) {
+            @RequestParam String userId) {
 
         try {
-            keycloakService.sendPasswordResetEmail(userId, accessToken);
+            keycloakService.sendPasswordResetEmail(userId);
             return ResponseEntity.ok("Password reset email sent successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to send password reset email: " + e.getMessage());

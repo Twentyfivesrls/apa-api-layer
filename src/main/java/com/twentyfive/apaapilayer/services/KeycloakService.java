@@ -107,7 +107,9 @@ public class KeycloakService {
         keycloakExtClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
     }
 
-    public void sendPasswordResetEmail(String userId, String accessToken) {
+    public void sendPasswordResetEmail(String userId) {
+        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+
         // Define the actions to be executed, in this case, UPDATE_PASSWORD
         List<String> actions = Collections.singletonList("UPDATE_PASSWORD");
 
