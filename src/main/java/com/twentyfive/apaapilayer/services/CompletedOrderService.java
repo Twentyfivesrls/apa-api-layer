@@ -120,12 +120,12 @@ public class CompletedOrderService {
                 return new BundleInPurchaseDTO(bundleInPurchase, name);
             }
         }
-        List<PieceInPurchase> pieces= bundleInPurchase.getWeightedProducts();
-        List<PieceInPurchaseDTO> piecesDTOs= pieces.stream()
+        List<PieceInPurchase> weightedProducts= bundleInPurchase.getWeightedProducts();
+        List<PieceInPurchaseDTO> weightedProductsDTOs = weightedProducts.stream()
                 .map(this::convertPiecePurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());
 
-        return new BundleInPurchaseDTO(bundleInPurchase, name,piecesDTOs);
+        return new BundleInPurchaseDTO(bundleInPurchase, name, weightedProductsDTOs);
 
     }
 
