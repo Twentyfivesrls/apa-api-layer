@@ -65,7 +65,7 @@ public class ActiveOrderService {
             }
         }
         if (order.getProductsInPurchase().size()>0){
-            for(BundleInPurchase pIP : order.getBundlesInPurchase()){
+            for(ProductInPurchase pIP : order.getProductsInPurchase()){
                 totalPrice+=pIP.getTotalPrice();
             }
         }
