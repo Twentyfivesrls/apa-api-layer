@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.IOException;
@@ -302,7 +303,7 @@ public class CustomerService {
         if (customer.getCart()==null) {
             customer.setCart(new Cart());
         }
-        return convertCartToDTO(customer.getCart());
+        return convertCartToDTO(customer);
     }
 
 
@@ -314,7 +315,7 @@ public class CustomerService {
             Cart cart=customer.getCart();
             cart.removeItemsAtPositions(positions);
             customerRepository.save(customer);
-            return convertCartToDTO(customer.getCart());
+            return convertCartToDTO(customer);
         }
         throw new IllegalStateException("No cart available for this customer or invalid positions");
     }
@@ -347,7 +348,7 @@ public class CustomerService {
         System.out.println(cart);
         cart.getPurchases().add(product);
         customerRepository.save(customer);
-        return convertCartToDTO(customer.getCart());
+        return convertCartToDTO(customer);
     }
 
     @Transactional
@@ -360,7 +361,7 @@ public class CustomerService {
         }
         cart.getPurchases().add(bundle);
         customerRepository.save(customer);
-        return convertCartToDTO(customer.getCart());
+        return convertCartToDTO(customer);
     }
 
     private LocalDateTime next(int hour){
@@ -462,9 +463,10 @@ public class CustomerService {
     }
 
 
-    private CartDTO convertCartToDTO(Cart cart){
-        CartDTO cartDTO = new CartDTO();
-        for (ItemInPurchase itemInPurchase : cart.getPurchases()){
+    private CartDTO convertCartToDTO(Customer customer){
+        CartDTO cartDTO = new CartDTO();;
+        cartDTO.setCustomerId(customer.getId());
+        for (ItemInPurchase itemInPurchase : customer.getCart().getPurchases()){
             if (itemInPurchase instanceof BundleInPurchase){
                 BundleInPurchaseDTO bundleInPurchaseDTO=convertBundlePurchaseToDTO((BundleInPurchase) itemInPurchase);
                 cartDTO.getPurchases().add(bundleInPurchaseDTO);
