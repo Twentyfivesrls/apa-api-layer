@@ -127,9 +127,10 @@ public class ProductWeightedService {
         return productWeightedAPA.getImageUrl();
     }
 
-    public List<ProductWeightedAPADTO> getAllWithoutPage(String idCategory) {
+    public Page<ProductWeightedAPADTO> getAllForCustomizedTray(String idCategory, int page, int size) {
         Sort sort = Sort.by(Sort.Order.desc("buyingCount"), Sort.Order.asc("name"));
-        List<ProductWeightedAPA> productsWeighted =  productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory, sort);
+        Pageable pageable=PageRequest.of(page,size,sort);
+        Page<ProductWeightedAPA> productsWeighted =  productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory, pageable);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
@@ -137,6 +138,6 @@ public class ProductWeightedService {
                 realProductsWeighted.add(dto);
             }
         }
-        return  realProductsWeighted;
+        return  PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
     }
 }

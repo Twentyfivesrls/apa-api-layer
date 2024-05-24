@@ -28,9 +28,12 @@ public class ProductWeightedController {
         return ResponseEntity.ok().body(productWeightedService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
 
-    @GetMapping("/getAllWithoutPage")
-    public ResponseEntity<List<ProductWeightedAPADTO>> getAllWithoutPage(@RequestParam("idCategory") String idCategory){
-        return ResponseEntity.ok().body(productWeightedService.getAllWithoutPage(idCategory));
+    @GetMapping("/getAllForCustomizedTray")
+    public ResponseEntity<Page<ProductWeightedAPADTO>> getAllForCustomizedTray(
+            @RequestParam("idCategory") String idCategory,
+            @RequestParam(value = "page", defaultValue ="0") int page,
+            @RequestParam(value = "size", defaultValue ="10") int size){
+        return ResponseEntity.ok().body(productWeightedService.getAllForCustomizedTray(idCategory, page, size));
     }
     @GetMapping("/getById/{id}")
     public ResponseEntity<ProductWeightedAPADTO> getById(@PathVariable String id) {
