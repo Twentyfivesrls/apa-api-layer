@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BundleInPurchaseDTO {
+public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
     private String id;
 
     private String name;

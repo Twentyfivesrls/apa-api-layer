@@ -9,7 +9,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurc
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PieceInPurchaseDTO {
+public class PieceInPurchaseDTO extends ItemInPurchaseDTO{
     private String id;
     private String name;
     private double weight;

@@ -11,7 +11,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductInPurchaseDTO {
+public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private String id;
     private String name;
     private double weight; // Il peso del prodotto
