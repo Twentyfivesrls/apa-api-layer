@@ -138,6 +138,7 @@ public class ProductWeightedService {
                 realProductsWeighted.add(dto);
             }
         }
-        return  PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
+        Pageable pageableWithoutSorting=PageRequest.of(page,size);
+        return  PageUtilities.convertListToPage(realProductsWeighted,pageableWithoutSorting);
     }
 }
