@@ -17,10 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Cart;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.IOException;
@@ -45,6 +42,7 @@ public class CustomerService {
     private final SettingRepository settingRepository;
 
     private final ProductKgRepository productKgRepository;
+    private final ProductWeightedRepository productWeightedRepository;
 
 
     private final TimeSlotAPARepository timeSlotAPARepository;
@@ -102,7 +100,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ActiveOrderRepository activeOrderRepository,CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
@@ -110,6 +108,7 @@ public class CustomerService {
         this.keycloakService = keycloakService;
         this.settingRepository=settingRepository;
         this.productKgRepository = productKgRepository;
+        this.productWeightedRepository = productWeightedRepository;
         this.timeSlotAPARepository = timeSlotAPARepository;
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
@@ -266,8 +265,20 @@ public class CustomerService {
         for (ItemInPurchase item : items) {
             if (item instanceof ProductInPurchase) {
                 products.add((ProductInPurchase) item);
+                Optional<ProductKgAPA> productKGAPA =productKgRepository.findById(item.getId());
+                if (productKGAPA.isPresent()){
+                    productKGAPA.get().setBuyingCount(productKGAPA.get().getBuyingCount()+1);
+                    productKgRepository.save(productKGAPA.get());
+                }
             } else if (item instanceof BundleInPurchase) {
                 bundles.add((BundleInPurchase) item);
+                for (PieceInPurchase piece : ((BundleInPurchase) item).getWeightedProducts()){
+                    Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
+                    if (productWeightedAPA.isPresent()){
+                        productWeightedAPA.get().setBuyingCount(productWeightedAPA.get().getBuyingCount()+1);
+                        productWeightedRepository.save(productWeightedAPA.get());
+                    }
+                }
             }
         }
 
