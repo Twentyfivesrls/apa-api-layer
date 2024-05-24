@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.CartDTO;
-import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.DTOs.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
@@ -25,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -299,9 +299,10 @@ public class CustomerService {
 
     public CartDTO getCartById(String customerId) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        if (customer.getCart()==null) customer.setCart(new Cart());
-
-        return new CartDTO(customer);
+        if (customer.getCart()==null) {
+            customer.setCart(new Cart());
+        }
+        return convertCartToDTO(customer.getCart());
     }
 
 
@@ -313,7 +314,7 @@ public class CustomerService {
             Cart cart=customer.getCart();
             cart.removeItemsAtPositions(positions);
             customerRepository.save(customer);
-            return new CartDTO(customer);
+            return convertCartToDTO(customer.getCart());
         }
         throw new IllegalStateException("No cart available for this customer or invalid positions");
     }
@@ -346,7 +347,7 @@ public class CustomerService {
         System.out.println(cart);
         cart.getPurchases().add(product);
         customerRepository.save(customer);
-        return new CartDTO(customer);
+        return convertCartToDTO(customer.getCart());
     }
 
     @Transactional
@@ -359,7 +360,7 @@ public class CustomerService {
         }
         cart.getPurchases().add(bundle);
         customerRepository.save(customer);
-        return new CartDTO(customer);
+        return convertCartToDTO(customer.getCart());
     }
 
     private LocalDateTime next(int hour){
@@ -461,9 +462,48 @@ public class CustomerService {
     }
 
 
+    private CartDTO convertCartToDTO(Cart cart){
+        CartDTO cartDTO = new CartDTO();
+        for (ItemInPurchase itemInPurchase : cart.getPurchases()){
+            if (itemInPurchase instanceof BundleInPurchase){
+                BundleInPurchaseDTO bundleInPurchaseDTO=convertBundlePurchaseToDTO((BundleInPurchase) itemInPurchase);
+                cartDTO.getPurchases().add(bundleInPurchaseDTO);
+            }
+            if (itemInPurchase instanceof ProductInPurchase){
+                ProductInPurchaseDTO productInPurchaseDTO =convertProductPurchaseToDTO((ProductInPurchase) itemInPurchase);
+                cartDTO.getPurchases().add(productInPurchaseDTO);
+            }
+        }
+        return cartDTO;
+    }
 
+    private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
+        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getId());
+        String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
+        return new ProductInPurchaseDTO(productInPurchase, name);
+    }
 
+    private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {
+        Optional<ProductWeightedAPA> pWght = productWeightedRepository.findById(piece.getId());
+        String name = pWght.map(ProductWeightedAPA::getName).orElse("No registered product");
+        double weight = pWght.map(ProductWeightedAPA::getWeight).orElseThrow(() -> new IllegalArgumentException());
+        return new PieceInPurchaseDTO(piece, name, weight);
+    }
+    private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
+        Optional<Tray> bun = trayRepository.findById(bundleInPurchase.getId());
+        String name = bun.map(Tray::getName).orElse("no registered product");
+        if(bun.isPresent()){
+            if (!bun.get().isCustomized()) {
+                return new BundleInPurchaseDTO(bundleInPurchase,name);
+            }
+        }
+        List<PieceInPurchase> weightedProducts= bundleInPurchase.getWeightedProducts();
+        List<PieceInPurchaseDTO> weightedProductsDTOs= weightedProducts.stream()
+                .map(this::convertPiecePurchaseToDTO) // Utilizza il metodo di conversione definito
+                .collect(Collectors.toList());
 
+        return new BundleInPurchaseDTO(bundleInPurchase, name,weightedProductsDTOs);
+    }
 
 
 
