@@ -65,5 +65,7 @@ public interface KeycloakExtClient {
     ResponseEntity<List<UserRepresentation>> getUserFromUsernameTwentyfiveInternal(@RequestHeader("Authorization") String accessToken,
                                                                  @RequestParam String username);
     @RequestMapping(method = RequestMethod.PUT, value = "/admin/realms/${keycloak.realm}/users/{userId}/execute-actions-email", produces = "application/json")
-    ResponseEntity<Object> resetPassword(@RequestHeader("Authorization") String accessToken, @PathVariable("userId") String userId, @RequestBody List<String> actions);
+    ResponseEntity<Object> resetPassword(@RequestHeader("Authorization") String accessToken, @PathVariable("userId") String userId, @RequestBody String action);
+
+
 }
