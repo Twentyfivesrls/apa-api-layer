@@ -14,10 +14,13 @@ import java.util.List;
 public class CartDTO {
 
     private String customerId;
-    private List<ItemInPurchase> purchases;
+    private List<ItemInPurchaseDTO> purchases;
 
     public CartDTO(CustomerAPA capa) {
         this.customerId = capa.getId();
-        this.purchases = capa.getCart().getPurchases();
+        for(ItemInPurchase item : capa.getCart().getPurchases()){
+            ItemInPurchaseDTO itemDTO= new ItemInPurchaseDTO(item);
+            this.purchases.add(itemDTO);
+        }
     }
 }
