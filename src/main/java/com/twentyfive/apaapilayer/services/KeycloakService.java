@@ -113,7 +113,9 @@ public class KeycloakService {
         // Define the actions to be executed, in this case, UPDATE_PASSWORD
         List<String> actions = Collections.singletonList("UPDATE_PASSWORD");
 
+        String action = "UPDATE_PASSWORD";
+
         // Call the Feign client method to send the reset email
-        keycloakExtClient.resetPassword("Bearer " + accessToken, userId, actions);
+        keycloakExtClient.resetPassword("Bearer " + accessToken, userId, action);
     }
 }
