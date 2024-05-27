@@ -466,16 +466,21 @@ public class CustomerService {
     private CartDTO convertCartToDTO(Customer customer){
         CartDTO cartDTO = new CartDTO();;
         cartDTO.setCustomerId(customer.getId());
+        Double totalPrice=0.0;
         for (ItemInPurchase itemInPurchase : customer.getCart().getPurchases()){
             if (itemInPurchase instanceof BundleInPurchase){
                 BundleInPurchaseDTO bundleInPurchaseDTO=convertBundlePurchaseToDTO((BundleInPurchase) itemInPurchase);
                 cartDTO.getPurchases().add(bundleInPurchaseDTO);
+                totalPrice+=bundleInPurchaseDTO.getTotalPrice();
+
             }
             if (itemInPurchase instanceof ProductInPurchase){
                 ProductInPurchaseDTO productInPurchaseDTO =convertProductPurchaseToDTO((ProductInPurchase) itemInPurchase);
                 cartDTO.getPurchases().add(productInPurchaseDTO);
+                totalPrice+=productInPurchaseDTO.getTotalPrice();
             }
         }
+        cartDTO.setTotalPrice(totalPrice);
         return cartDTO;
     }
 

@@ -42,4 +42,5 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.quantity = bundle.getQuantity();
         this.totalPrice = bundle.getTotalPrice();
     }
+
 }

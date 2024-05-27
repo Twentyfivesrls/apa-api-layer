@@ -19,4 +19,5 @@ public class CartDTO {
 
     private String customerId;
     private List<ItemInPurchaseDTO> purchases = new ArrayList<>();
+    private Double totalPrice;
 }
