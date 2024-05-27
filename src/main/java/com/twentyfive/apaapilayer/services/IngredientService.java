@@ -68,7 +68,7 @@ public class IngredientService {
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"name");
         Pageable pageable=PageRequest.of(page,size,sort);
-        return PageUtilities.convertListToPage(realIngredients,pageable);    }
+        return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);    }
 
 
     public IngredientsAPADTO getById(String id) {
