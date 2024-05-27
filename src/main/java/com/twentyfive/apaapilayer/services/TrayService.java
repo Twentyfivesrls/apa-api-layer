@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -65,6 +66,7 @@ public class TrayService {
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
         }
+        realTrays.sort(Comparator.comparing(TrayAPADTO::getName));
         return realTrays;
     }
 

@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
+import com.twentyfive.apaapilayer.DTOs.TrayAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -132,6 +134,7 @@ public class ProductKgService {
                 realProductsKg.add(dto);
             }
         }
+        realProductsKg.sort(Comparator.comparing(ProductKgAPADTO::getName));
         return realProductsKg;
     }
 

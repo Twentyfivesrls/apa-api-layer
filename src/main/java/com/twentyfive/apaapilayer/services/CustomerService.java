@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.PageUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -58,13 +59,13 @@ public class CustomerService {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
                 .orElseThrow(() -> new RuntimeException("No customer found with idKeycloak: " + idKeycloak));
 
-        List<OrderAPA> comletedOrders = completedOrderRepository.findByCustomerId(customer.getId());
+        List<OrderAPA> completedOrders = completedOrderRepository.findByCustomerId(customer.getId());
 
         // Calcola il totale speso e il numero di ordini
-        String totalSpent = String.format("%.2f", comletedOrders.stream()
+        String totalSpent = String.format("%.2f", completedOrders.stream()
                 .mapToDouble(OrderAPA::getTotalPrice)
                 .sum());
-        String completedOrdersCount = String.valueOf(comletedOrders.size());
+        String completedOrdersCount = String.valueOf(completedOrders.size());
 
         List<OrderAPA> activeOrders = activeOrdersRepository.findByCustomerId(customer.getId());
 
@@ -124,7 +125,8 @@ public class CustomerService {
             pageable=PageRequest.of(page,size,sort);
             return customerRepository.findAll(pageable);
         }
-        pageable=PageRequest.of(page,size);
+        Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
+        pageable=PageRequest.of(page,size,sort);
         return customerRepository.findAll(pageable);
     }
 
