@@ -66,7 +66,8 @@ public class IngredientService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);
         }
-        Pageable pageable=PageRequest.of(page,size);
+        Sort sort = Sort.by(Sort.Direction.ASC,"name");
+        Pageable pageable=PageRequest.of(page,size,sort);
         return PageUtilities.convertListToPage(realIngredients,pageable);    }
 
 
