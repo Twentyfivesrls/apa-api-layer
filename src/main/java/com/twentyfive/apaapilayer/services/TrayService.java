@@ -33,8 +33,10 @@ public class TrayService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realTrays,pageable);
         }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realTrays,pageable);    }
+        Sort sort = Sort.by(Sort.Direction.ASC,"name");
+        Pageable pageable=PageRequest.of(page,size,sort);
+        return PageUtilities.convertListToPageWithSorting(realTrays,pageable);
+    }
     public TrayDetailsAPADTO getById(String id) {
         Tray tray=trayRepository.findById(id).orElse(null);
         if(tray != null){

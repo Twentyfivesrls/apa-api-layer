@@ -71,8 +71,10 @@ public class ProductKgService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realProductsKg,pageable);
         }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realProductsKg,pageable);    }
+        Sort sort = Sort.by(Sort.Direction.ASC,"name");
+        Pageable pageable=PageRequest.of(page,size,sort);
+        return PageUtilities.convertListToPageWithSorting(realProductsKg,pageable);
+    }
 
 
     public ProductKgAPADTO getById(String id) {

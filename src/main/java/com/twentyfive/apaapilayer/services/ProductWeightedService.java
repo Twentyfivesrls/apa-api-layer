@@ -71,8 +71,9 @@ public class ProductWeightedService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
         }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realProductsWeighted,pageable);
+        Sort sort = Sort.by(Sort.Direction.ASC,"name");
+        Pageable pageable=PageRequest.of(page,size,sort);
+        return PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
     }
 
 
