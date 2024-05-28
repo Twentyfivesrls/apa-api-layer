@@ -56,7 +56,7 @@ public class TimeSlotRefreshScheduling {
         return timeSlots;
     }
 
-    public void createSlotsForNext15Days() {
+    public void createSlotsForNext30Days() {
         SettingAPA settingAPA = settingRepository.findAll().get(0);
         TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
         timeSlotAPA.getNumSlotsMap().clear();
@@ -66,7 +66,7 @@ public class TimeSlotRefreshScheduling {
         LocalDate currentDate = LocalDate.now();
 
         // Crea gli slot per i prossimi 15 giorni
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 30; i++) {
             // Calcola la data per il giorno successivo
             LocalDate nextDate = currentDate.plusDays(i);
 

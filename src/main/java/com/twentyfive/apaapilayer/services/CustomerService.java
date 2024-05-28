@@ -442,15 +442,43 @@ public class CustomerService {
                         minStartingDate = next(12).plusHours(minDelay);
                 }
 
-                // Supponiamo che findTimeForNumSlots ritorni un Map<LocalDate, List<LocalTime>>
+                // Ottieni i tempi di ritiro disponibili
                 Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate, numSlotRequired);
 
-                // Usa TreeMap per ordinare le date
-                return new TreeMap<>(availableTimes);
+                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
+                if (availableTimes.isEmpty()) {
+                    return new TreeMap<>();
+                }
+
+                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
+                if (availableTimes.isEmpty()) {
+                    return new TreeMap<>();
+                }
+
+                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
+                if (availableTimes.isEmpty()) {
+                    return new TreeMap<>();
+                }
+
+                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
+                if (availableTimes.isEmpty()) {
+                    return new TreeMap<>();
+                }
+
+                // Trova la data minima comune tra le due mappe
+                TreeMap<LocalDate, List<LocalTime>> commonAvailableTimes = new TreeMap<>();
+                for (Map.Entry<LocalDate, List<LocalTime>> entry : availableTimes.entrySet()) {
+                    if (commonAvailableTimes.containsKey(entry.getKey())) {
+                        // Se la data è presente in entrambe le mappe, conserva la data minima
+                        commonAvailableTimes.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                return commonAvailableTimes;
             }
             return new TreeMap<>();
         }
     }
+
 
     // Metodo di utilità per ottenere il prossimo orario di inizio lavorativo
     private LocalDateTime next(int hour) {
