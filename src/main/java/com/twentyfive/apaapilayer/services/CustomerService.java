@@ -172,12 +172,14 @@ public class CustomerService {
     public CustomerAPA saveCustomer(CustomerAPA customer) throws IOException {
         if(customer.getIdKeycloak()!=null){
             keycloakService.update(customer);
+            return customerRepository.save(customer);
         } else {
-            String temporaryPassword=keycloakService.add(customer);
-            //emailService.sendEmailResetPassword(customer.getEmail(), temporaryPassword);
+            keycloakService.add(customer);
+            CustomerAPA newCustomer = customerRepository.save(customer);
+            keycloakService.sendPasswordResetEmail(newCustomer.getIdKeycloak());
+            return newCustomer;
         }
         // Salva il nuovo cliente nel database o gli faccio update
-        return customerRepository.save(customer);
     }
 
     public boolean changeStatusById(String id) {

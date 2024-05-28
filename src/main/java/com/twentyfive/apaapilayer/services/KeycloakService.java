@@ -86,7 +86,7 @@ public class KeycloakService {
         return (String) responseMap.get("access_token");
     }
 
-    public String add(CustomerAPA customerAPA) {
+    public void add(CustomerAPA customerAPA) {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
         String authorizationHeader = "Bearer " + accessToken;
         KeycloakUser keycloakUser = KeycloakUtilities.createUserForKeycloak(customerAPA);
@@ -99,7 +99,6 @@ public class KeycloakService {
         List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals("customer")).toList();
         String clientIdRole = ruoliSelezionati.get(0).getClientId();
         keycloakExtClient.addRoleToUser(authorizationHeader, id, clientIdRole, ruoliSelezionati.stream().map(KeycloakRole::toRoleRepresentation).collect(Collectors.toList()));
-        return keycloakUser.getCredentials().get(0).getValue();
     }
     public void update(CustomerAPA customerAPA) {
         String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
