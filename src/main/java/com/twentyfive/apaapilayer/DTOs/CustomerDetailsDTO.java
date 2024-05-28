@@ -13,6 +13,7 @@ public class CustomerDetailsDTO {
     private String id;                // Unique identifier for the customer
     private String firstName;         // First name of the customer
     private String lastName;          // Last name of the customer
+    private String idKeycloak;          // Last name of the customer
     private String email;             // Email address of the customer
     private String phoneNumber;       // Phone number of the customer
     private String completedOrdersCount;// Number of orders the customer has made
