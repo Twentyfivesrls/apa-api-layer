@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -154,7 +153,7 @@ public class IngredientService {
         List<CategoryAPA> categories = categoryRepository.findAllByTypeAndEnabledTrue(type);
         List<IngredientAPA> ingredients= new ArrayList<>();
         for (CategoryAPA category: categories){
-            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrue(category.getId()));
+            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrueOrderByNameAsc(category.getId()));
         }
         return ingredients;
     }
@@ -168,7 +167,7 @@ public class IngredientService {
         List<CategoryAPA> categories = categoryRepository.findAllByTypeAndNameAndEnabledTrue(type,name);
         List<IngredientAPA> ingredients= new ArrayList<>();
         for (CategoryAPA category: categories){
-            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrue(category.getId()));
+            ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrueOrderByNameAsc(category.getId()));
         }
         return ingredients;
     }
