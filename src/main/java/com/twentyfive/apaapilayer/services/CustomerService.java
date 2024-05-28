@@ -394,89 +394,59 @@ public class CustomerService {
             customer.setCart(cart);
             customerRepository.save(customer);
             return new TreeMap<>();
-        } else {
-            Integer minDelay = settingRepository.findAll().get(0).getMinOrderDelay();
+        }
 
-            List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
-            int numSlotRequired = 0;
-            boolean somethingCustomized = false;
-            boolean bigSemifreddo = false;
+        Integer minDelay = settingRepository.findAll().get(0).getMinOrderDelay();
+        LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
+        LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+        boolean bigSemifreddo = false;
 
-            for (ItemInPurchase item : items) {
-                if (item instanceof ProductInPurchase) {
-                    ProductInPurchase pip = (ProductInPurchase) item;
-                    ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                    if (product.isCustomized()) {
-                        numSlotRequired += pip.getQuantity();
-                        somethingCustomized = true;
-                    }
-                    if (categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")) {
-                        double weight = pip.getWeight();
-                        if (weight >= 1.5) bigSemifreddo = true;
-                    }
-                } else if (item instanceof BundleInPurchase) {
-                    BundleInPurchase pip = (BundleInPurchase) item;
-                    Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                    if (tray.isCustomized()) {
-                        numSlotRequired += pip.getQuantity();
-                        somethingCustomized = true;
-                    }
+        List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
+        int numSlotRequired = 0;
+        boolean somethingCustomized = false;
+
+        for (ItemInPurchase item : items) {
+            if (item instanceof ProductInPurchase) {
+                ProductInPurchase pip = (ProductInPurchase) item;
+                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
+                if (product.isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+                    somethingCustomized = true;
                 }
-
-                LocalTime now = LocalTime.now();
-                LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
-                LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
-                LocalDateTime minStartingDate;
-
-                if (bigSemifreddo) minDelay = 48;
-
-                if (!now.isBefore(startTime) && now.isBefore(endTime)) { // La richiesta è fatta in orario lavorativo
-                    if (!somethingCustomized)
-                        minStartingDate = LocalDateTime.now().plusHours(minDelay);
-                    else
-                        minStartingDate = next(8).plusHours(minDelay);
-                } else {
-                    if (!somethingCustomized)
-                        minStartingDate = next(8).plusHours(minDelay);
-                    else
-                        minStartingDate = next(12).plusHours(minDelay);
+                if (categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo") && pip.getWeight() >= 1.5) {
+                    bigSemifreddo = true;
                 }
-
-                // Ottieni i tempi di ritiro disponibili
-                Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate, numSlotRequired);
-
-                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
-                if (availableTimes.isEmpty()) {
-                    return new TreeMap<>();
+            } else if (item instanceof BundleInPurchase) {
+                BundleInPurchase pip = (BundleInPurchase) item;
+                if (trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new).isCustomized()) {
+                    numSlotRequired += pip.getQuantity();
+                    somethingCustomized = true;
                 }
-
-                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
-                if (availableTimes.isEmpty()) {
-                    return new TreeMap<>();
-                }
-
-                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
-                if (availableTimes.isEmpty()) {
-                    return new TreeMap<>();
-                }
-
-                // Se è la prima iterazione, crea una nuova TreeMap con le stesse date e tempi della prima mappa
-                if (availableTimes.isEmpty()) {
-                    return new TreeMap<>();
-                }
-
-                // Trova la data minima comune tra le due mappe
-                TreeMap<LocalDate, List<LocalTime>> commonAvailableTimes = new TreeMap<>();
-                for (Map.Entry<LocalDate, List<LocalTime>> entry : availableTimes.entrySet()) {
-                    if (commonAvailableTimes.containsKey(entry.getKey())) {
-                        // Se la data è presente in entrambe le mappe, conserva la data minima
-                        commonAvailableTimes.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                return commonAvailableTimes;
             }
+        }
+
+        if (bigSemifreddo) {
+            minDelay = 48;
+        }
+
+        LocalTime now = LocalTime.now();
+        LocalDateTime minStartingDate;
+
+        if (!now.isBefore(startTime) && now.isBefore(endTime)) {
+            minStartingDate = somethingCustomized ? next(8).plusHours(minDelay) : LocalDateTime.now().plusHours(minDelay);
+        } else {
+            minStartingDate = somethingCustomized ? next(12).plusHours(minDelay) : next(8).plusHours(minDelay);
+        }
+
+        Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate, numSlotRequired);
+
+        // Se non ci sono tempi di ritiro disponibili, restituisci una mappa vuota
+        if (availableTimes.isEmpty()) {
             return new TreeMap<>();
         }
+
+        // Restituisci una TreeMap ordinata per le chiavi (LocalDate)
+        return new TreeMap<>(availableTimes);
     }
 
 
