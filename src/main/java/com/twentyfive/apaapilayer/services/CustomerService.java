@@ -370,7 +370,7 @@ public class CustomerService {
         return convertCartToDTO(customer);
     }
 
-    private LocalDateTime next(int hour){
+    /*private LocalDateTime next(int hour){
         LocalDateTime now= LocalDateTime.now();
         // Definisce il mezzogiorno
         LocalTime noon = LocalTime.of(hour, 0);
@@ -382,7 +382,7 @@ public class CustomerService {
             // Altrimenti, restituisce il mezzogiorno di oggi
             return now.toLocalDate().atTime(noon);
         }
-    }
+    }*/
 
 
 
@@ -394,78 +394,71 @@ public class CustomerService {
             customer.setCart(cart);
             customerRepository.save(customer);
             return new TreeMap<>();
-        }
-        else{
-            Integer minDelay= settingRepository.findAll().get(0).getMinOrderDelay();
+        } else {
+            Integer minDelay = settingRepository.findAll().get(0).getMinOrderDelay();
 
             List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
-            int numSlotRequired=0;
-            boolean somethingCustomized=false;
-            boolean bigSemifreddo=false;
+            int numSlotRequired = 0;
+            boolean somethingCustomized = false;
+            boolean bigSemifreddo = false;
 
-
-            for (ItemInPurchase item: items){
-
-                if(item instanceof ProductInPurchase){
-                    ProductInPurchase pip=(ProductInPurchase) item;
-                    ProductKgAPA product= productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                    if(product.isCustomized()){
-                        numSlotRequired+=pip.getQuantity();
-                        somethingCustomized=true;
-
+            for (ItemInPurchase item : items) {
+                if (item instanceof ProductInPurchase) {
+                    ProductInPurchase pip = (ProductInPurchase) item;
+                    ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
+                    if (product.isCustomized()) {
+                        numSlotRequired += pip.getQuantity();
+                        somethingCustomized = true;
                     }
-                    if(categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")){
-                        double weight= pip.getWeight();
-                        if(weight>=1.5)bigSemifreddo=true;
+                    if (categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")) {
+                        double weight = pip.getWeight();
+                        if (weight >= 1.5) bigSemifreddo = true;
                     }
-
-
-                }else if (item instanceof BundleInPurchase){
-                    BundleInPurchase pip =(BundleInPurchase) item;
-                    Tray tray= trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                    if(tray.isCustomized()){
-                        numSlotRequired+=pip.getQuantity();
-                        somethingCustomized=true;
+                } else if (item instanceof BundleInPurchase) {
+                    BundleInPurchase pip = (BundleInPurchase) item;
+                    Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
+                    if (tray.isCustomized()) {
+                        numSlotRequired += pip.getQuantity();
+                        somethingCustomized = true;
                     }
-
                 }
 
-                LocalTime now=LocalTime.now();
-                LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();;
+                LocalTime now = LocalTime.now();
+                LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
                 LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
                 LocalDateTime minStartingDate;
 
-                if (bigSemifreddo)minDelay=48;
+                if (bigSemifreddo) minDelay = 48;
 
-                if(!now.isBefore(startTime) && now.isBefore(endTime)){//la richiesta è fatta in orario lavorativo
-                    if(!somethingCustomized)
-                        minStartingDate= LocalDateTime.now().plusHours(minDelay);
+                if (!now.isBefore(startTime) && now.isBefore(endTime)) { // La richiesta è fatta in orario lavorativo
+                    if (!somethingCustomized)
+                        minStartingDate = LocalDateTime.now().plusHours(minDelay);
                     else
-                        minStartingDate=next(8).plusHours(minDelay);
-                }
-                else{
-                    if(!somethingCustomized)
-                        minStartingDate= next(8).plusHours(minDelay);
+                        minStartingDate = next(8).plusHours(minDelay);
+                } else {
+                    if (!somethingCustomized)
+                        minStartingDate = next(8).plusHours(minDelay);
                     else
-                        minStartingDate= next(12).plusHours(minDelay);
-
+                        minStartingDate = next(12).plusHours(minDelay);
                 }
 
+                // Supponiamo che findTimeForNumSlots ritorni un Map<LocalDate, List<LocalTime>>
+                Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate, numSlotRequired);
 
-                return timeSlotAPARepository.findAll().get(0).findTimeForNumSlots(minStartingDate,numSlotRequired);
-
-
-
+                // Usa TreeMap per ordinare le date
+                return new TreeMap<>(availableTimes);
             }
             return new TreeMap<>();
-
-
         }
+    }
 
-
-
-
-
+    // Metodo di utilità per ottenere il prossimo orario di inizio lavorativo
+    private LocalDateTime next(int hour) {
+        LocalDateTime next = LocalDateTime.now().withHour(hour).withMinute(0).withSecond(0).withNano(0);
+        if (LocalDateTime.now().isAfter(next)) {
+            next = next.plusDays(1);
+        }
+        return next;
     }
 
 
