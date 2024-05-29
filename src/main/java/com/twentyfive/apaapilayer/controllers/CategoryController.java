@@ -39,6 +39,10 @@ public class CategoryController {
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.disableById(id));
     }
+    @GetMapping("/activateById/{id}")
+    public ResponseEntity<Boolean> activateById(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.activateById(id));
+    }
 
 
 }
