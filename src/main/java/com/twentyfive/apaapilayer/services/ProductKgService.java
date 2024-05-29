@@ -103,7 +103,7 @@ public class ProductKgService {
     }
 
     @Transactional
-    public boolean activateById(String id){
+    public boolean activateById(String id,boolean modalResponse){
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         if(productKgAPA!=null){
             List<String> idIngredienti = productKgAPA.getIngredientIds();
@@ -118,8 +118,13 @@ public class ProductKgService {
                 productKgRepository.save(productKgAPA);
                 return true;
             }
-            else
-                return false;
+            else{
+                if(modalResponse){
+                    productKgAPA.setActive(true);
+                    productKgRepository.save(productKgAPA);
+                    return true;
+                }
+            }
         }
         return false;
     }

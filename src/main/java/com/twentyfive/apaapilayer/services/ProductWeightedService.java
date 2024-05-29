@@ -58,7 +58,7 @@ public class ProductWeightedService {
 
 
     public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory);
+        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
@@ -101,7 +101,7 @@ public class ProductWeightedService {
     }
 
     @Transactional
-    public boolean activateById(String id){
+    public boolean activateById(String id,boolean modalResponse){
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         if(productWeightedAPA!=null){
             List<String> idIngredienti = productWeightedAPA.getIngredientIds();
@@ -116,8 +116,13 @@ public class ProductWeightedService {
                 productWeightedRepository.save(productWeightedAPA);
                 return true;
             }
-            else
-                return false;
+            else{
+                if(modalResponse){
+                    productWeightedAPA.setActive(true);
+                    productWeightedRepository.save(productWeightedAPA);
+                    return true;
+                }
+            }
         }
         return false;
     }

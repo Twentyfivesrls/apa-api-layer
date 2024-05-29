@@ -46,8 +46,9 @@ public class ProductKgController {
     }
 
     @GetMapping("/activateById/{id}")
-    public ResponseEntity<Boolean> activateById(@PathVariable String id) {
-        return ResponseEntity.ok().body(productkgService.activateById(id));
+    public ResponseEntity<Boolean> activateById(@PathVariable String id,
+                                                @RequestParam(value = "booleanModal", defaultValue = "false") boolean booleanModal) {
+        return ResponseEntity.ok().body(productkgService.activateById(id, booleanModal));
     }
 
     @GetMapping("/imageById/{id}")

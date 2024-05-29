@@ -51,8 +51,9 @@ public class ProductWeightedController {
     }
 
     @GetMapping("/activateById/{id}")
-    public ResponseEntity<Boolean> activateById(@PathVariable String id) {
-        return ResponseEntity.ok().body(productWeightedService.activateById(id));
+    public ResponseEntity<Boolean> activateById(@PathVariable String id,
+                                                @RequestParam(value = "booleanModal", defaultValue = "false") boolean booleanModal) {
+        return ResponseEntity.ok().body(productWeightedService.activateById(id, booleanModal));
     }
 
     @GetMapping("/imageById/{id}")
