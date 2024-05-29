@@ -196,6 +196,14 @@ public class CustomerService {
         return true;
     }
 
+    public CartDTO modifyProductInCart(String customerId, int index,int quantity) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        Cart cart = customer.getCart();
+        ItemInPurchase iIP = cart.getPurchases().get(index);
+        iIP.setQuantity(quantity);
+        customerRepository.save(customer);
+        return convertCartToDTO(customer);
+    }
 
 
     @Transactional
@@ -509,8 +517,4 @@ public class CustomerService {
 
         return new BundleInPurchaseDTO(bundleInPurchase, name,weightedProductsDTOs);
     }
-
-
-
-
 }

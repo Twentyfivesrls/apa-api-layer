@@ -2,12 +2,8 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.DTOs.BuyInfosDTO;
 import com.twentyfive.apaapilayer.DTOs.CartDTO;
-import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
-import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.CustomerService;
-import jakarta.ws.rs.HeaderParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +11,9 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPur
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/cart")
@@ -65,6 +59,14 @@ public class CartController {
         }
     }
 
+    @PostMapping("/modify-cart/{customerId}")
+    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId,@RequestParam("index") int index, @RequestParam("quantity") int quantity) {
+        try {
+            return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,quantity));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
+        }
+    }
 
 
     @PostMapping("/remove-from-cart/{idCustomer}")
