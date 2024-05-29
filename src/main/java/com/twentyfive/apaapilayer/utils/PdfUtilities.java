@@ -34,6 +34,7 @@ public class PdfUtilities {
         addRightAlignedParagraph(document, "Email: ", orderDetails.getEmail(), smallBoldFont, smallNormalFont);
         addRightAlignedParagraph(document, "Telefono: ", orderDetails.getPhoneNumber(), smallBoldFont, smallNormalFont);
         addRightAlignedParagraph(document, "Data Ritiro: ", orderDetails.getFormattedPickupDate(), smallBoldFont, smallNormalFont);
+        addRightAlignedParagraph(document, "Note: ", orderDetails.getNote(), smallBoldFont, smallNormalFont);
         document.add(new Paragraph("\n"));
         document.add(new LineSeparator());
         document.add(new Paragraph("\n"));

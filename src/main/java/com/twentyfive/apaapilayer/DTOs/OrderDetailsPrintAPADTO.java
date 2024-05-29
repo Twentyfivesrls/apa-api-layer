@@ -15,6 +15,7 @@ public class OrderDetailsPrintAPADTO {
     private String id;
     private String fullName;
     private String email;
+    private String note;
     private String phoneNumber;
     private String status;
     private LocalDateTime pickupDate;

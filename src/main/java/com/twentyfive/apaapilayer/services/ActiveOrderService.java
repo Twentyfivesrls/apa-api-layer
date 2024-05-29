@@ -172,6 +172,7 @@ public class ActiveOrderService {
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
         dto.setFullName(customer.getFirstName() + " " + customer.getLastName());
+        dto.setNote(order.getNote());
         return dto;
     }
 
