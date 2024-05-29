@@ -113,7 +113,7 @@ public class CartController {
     public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         try {
             // Converti la lista di stringhe in interi
-            boolean result = customerService.buyItems(id, buyInfos.getPositions(), buyInfos.getSelectedPickupDateTime());
+            boolean result = customerService.buyItems(id, buyInfos.getPositions(), buyInfos.getSelectedPickupDateTime(),buyInfos.getNote());
             return ResponseEntity.ok(result);
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(false); // In caso di formato non valido
