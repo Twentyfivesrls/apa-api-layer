@@ -59,7 +59,7 @@ public class CartController {
         }
     }
 
-    @PostMapping("/modify-cart/{customerId}")
+    @GetMapping("/modify-cart/{customerId}")
     public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId,@RequestParam("index") int index, @RequestParam("quantity") int quantity) {
         try {
             return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,quantity));
