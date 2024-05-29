@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
 import java.time.LocalDate;
@@ -59,10 +60,10 @@ public class CartController {
         }
     }
 
-    @GetMapping("/modify-cart/{customerId}")
-    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId,@RequestParam("index") int index, @RequestParam("quantity") int quantity) {
+    @PatchMapping("/modify-cart/{customerId}")
+    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody ItemInPurchase iIP) {
         try {
-            return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,quantity));
+            return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,iIP));
         }catch (Exception e) {
             return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
         }

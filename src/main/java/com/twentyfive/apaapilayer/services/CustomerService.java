@@ -196,11 +196,10 @@ public class CustomerService {
         return true;
     }
 
-    public CartDTO modifyProductInCart(String customerId, int index,int quantity) {
+    public CartDTO modifyProductInCart(String customerId, int index,ItemInPurchase iIP) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
-        ItemInPurchase iIP = cart.getPurchases().get(index);
-        iIP.setQuantity(quantity);
+        cart.getPurchases().set(index,iIP);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
     }
