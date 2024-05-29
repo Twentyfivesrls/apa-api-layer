@@ -94,6 +94,7 @@ public class CompletedOrderService {
                 .collect(Collectors.toList());
 
         dto.setProducts(productDTOs);
+        dto.setNote(order.getNote());
 
         List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
                 .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito

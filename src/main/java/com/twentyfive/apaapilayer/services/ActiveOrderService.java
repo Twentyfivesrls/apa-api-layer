@@ -138,7 +138,7 @@ public class ActiveOrderService {
                 .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());
         dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
-
+        dto.setNote(order.getNote());
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
         return dto;

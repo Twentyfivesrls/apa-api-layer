@@ -222,7 +222,7 @@ public class CustomerService {
 
         if (!selectedItems.isEmpty()) {
             OrderAPA order = createOrderFromItems(customer, selectedItems, selectedPickupDateTime);
-            order.setNote(note);
+            order.setDecorationText(note);
             if(timeSlotAPA.reserveTimeSlots(selectedPickupDateTime,countSlotRequired(selectedItems))) {
                 orderService.createOrder(order);
                 cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
