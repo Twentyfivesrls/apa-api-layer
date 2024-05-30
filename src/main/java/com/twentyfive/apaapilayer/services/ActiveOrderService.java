@@ -88,6 +88,7 @@ public class ActiveOrderService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
+        Collections.reverse(realOrder);
         Pageable pageable=PageRequest.of(page,size);
         return PageUtilities.convertListToPage(realOrder,pageable);
     }
