@@ -196,14 +196,21 @@ public class CustomerService {
         return true;
     }
 
-    public CartDTO modifyProductInCart(String customerId, int index,ItemInPurchase iIP) {
+    public CartDTO modifyProductInCart(String customerId, int index, ProductInPurchase pIP) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
-        cart.getPurchases().set(index,iIP);
+        cart.getPurchases().set(index,pIP);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
     }
 
+    public CartDTO modifyBundleInCart(String customerId, int index, BundleInPurchase bIP) {
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        Cart cart = customer.getCart();
+        cart.getPurchases().set(index,bIP);
+        customerRepository.save(customer);
+        return convertCartToDTO(customer);
+    }
 
     @Transactional
     public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime,String note) throws IOException {

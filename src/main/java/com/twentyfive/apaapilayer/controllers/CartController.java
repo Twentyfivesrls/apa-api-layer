@@ -60,10 +60,19 @@ public class CartController {
         }
     }
 
-    @PatchMapping("/modify-cart/{customerId}")
-    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody ItemInPurchase iIP) {
+    @PatchMapping("/modify-pip-cart/{customerId}")
+    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody ProductInPurchase pIP) {
         try {
-            return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,iIP));
+            return ResponseEntity.ok().body(customerService.modifyProductInCart(customerId,index,pIP));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
+        }
+    }
+
+    @PatchMapping("/modify-bip-cart/{customerId}")
+    public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody BundleInPurchase bIP) {
+        try {
+            return ResponseEntity.ok().body(customerService.modifyBundleInCart(customerId,index,bIP));
         }catch (Exception e) {
             return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
         }
