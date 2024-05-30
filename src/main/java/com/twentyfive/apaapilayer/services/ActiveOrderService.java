@@ -88,9 +88,8 @@ public class ActiveOrderService {
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
-        Sort sort = Sort.by(Sort.Direction.DESC,"formattedPickupDate");
-        Pageable pageable=PageRequest.of(page,size,sort);
-        return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realOrder,pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
