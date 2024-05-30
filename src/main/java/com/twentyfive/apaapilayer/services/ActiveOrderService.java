@@ -132,6 +132,8 @@ public class ActiveOrderService {
 
         dto.setProducts(productDTOs);
 
+        dto.setPickupDateTime(order.getPickupTime().toString());
+
 
 
         List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
