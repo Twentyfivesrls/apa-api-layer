@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
 import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
 import org.springframework.data.domain.Page;
@@ -93,19 +94,22 @@ public class ActiveOrderController {
         }
     }
 
-    @PostMapping("/cancel/{id}")//per annullare ordine lato cliente
-    public ResponseEntity<Boolean> cancelOrder(@PathVariable String id) {
+    @PostMapping("/cancel/{id}") // per annullare ordine lato cliente
+    public ResponseEntity<String> cancelOrder(@PathVariable String id) {
         try {
             boolean result = activeOrderService.cancel(id);
             if (result) {
-                return ResponseEntity.ok(true); // Restituisce true se l'ordine è stato annullato correttamente
+                return ResponseEntity.ok("Order cancelled successfully."); // Messaggio di successo
             } else {
-                return ResponseEntity.ok(false); // Restituisce false se non c'è un ordine da annullare
+                return ResponseEntity.ok("No order to cancel."); // Messaggio quando non c'è nessun ordine da annullare
             }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Restituisce un errore server interno in caso di problemi
+        } catch (CancelThresholdPassedException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Order cancellation failed. Order ID may be incorrect."); // Messaggio di errore dettagliato
         }
     }
+
+
     @PostMapping("/adminCancel/{id}")//per annullare ordine lato cliente
     public ResponseEntity<Boolean> AdminCancelOrder(@PathVariable String id) {
         try {

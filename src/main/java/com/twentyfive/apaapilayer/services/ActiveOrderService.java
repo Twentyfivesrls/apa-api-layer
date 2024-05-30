@@ -303,6 +303,7 @@ public class ActiveOrderService {
 
         LocalDate pickupDate= order.getPickupDate();
 
+
         // Calcola la data di "oggi più due giorni"
         LocalDate cancelThreshold = pickupDate.minusDays(settingRepository.findAll().get(0).getMinCancelOrder());
 
