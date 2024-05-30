@@ -74,8 +74,8 @@ public class CustomerService {
 
         return new CustomerDetailsDTO(
                 customer.getId(),
-                customer.getLastName(),
                 customer.getFirstName(),
+                customer.getLastName(),
                 customer.getIdKeycloak(),
                 customer.getEmail(),
                 customer.getPhoneNumber(),
