@@ -59,6 +59,11 @@ public class CompletedOrderService {
             } else {
                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
             }
+            if (sortColumn.equals("formattedPickupDate")){
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+            } else {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+            }
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
