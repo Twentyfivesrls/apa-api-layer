@@ -85,7 +85,12 @@ public class ActiveOrderService {
             realOrder.add(orderAPA);
         }
         if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Sort sort;
+            if (sortColumn.equals("price")){
+                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            } else {
+                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            }
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
@@ -102,7 +107,8 @@ public class ActiveOrderService {
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+        dto.setRealPrice(order.getTotalPrice());
+        dto.setPrice(String.format("%.3f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().name());
         return dto;
     }
