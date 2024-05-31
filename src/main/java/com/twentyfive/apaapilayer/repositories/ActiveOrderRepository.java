@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ActiveOrderRepository extends MongoRepository<OrderAPA,String> {
+    List<OrderAPA> findAllByOrderByCreatedDateDesc();
     List<OrderAPA> findByCustomerId(String customerId);
     Page<OrderAPA> findOrdersByCustomerId(String customerId, Pageable pageable);
 }
