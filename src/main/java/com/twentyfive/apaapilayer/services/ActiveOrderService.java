@@ -86,14 +86,12 @@ public class ActiveOrderService {
         }
         if(!(sortDirection.isBlank() || sortColumn.isBlank())){
             Sort sort;
-            if (sortColumn.equals("price")){
-                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } else {
-                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } if (sortColumn.equals("formattedPickupDate")){
+            if (sortColumn.equals("price")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            } else if (sortColumn.equals("formattedPickupDate")) {
                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
             } else {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
             }
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
