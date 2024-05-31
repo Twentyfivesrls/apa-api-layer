@@ -26,6 +26,7 @@ public class TrayUtilities {
         TrayAPADTO dto= new TrayAPADTO();
         dto.setId(tray.getId());
         dto.setName(tray.getName());
+        dto.setImageUrl(tray.getImageUrl());
         dto.setCustomized(tray.isCustomized() ? "Personalizzato" : "Standard");
         dto.setDescription(tray.getDescription());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
