@@ -99,13 +99,13 @@ public class ActiveOrderController {
         try {
             boolean result = activeOrderService.cancel(id);
             if (result) {
-                return ResponseEntity.status(HttpStatus.OK).body("\'Order cancelled successfully.\'"); // Messaggio di successo
+                return ResponseEntity.status(HttpStatus.OK).body("\"Order cancelled successfully.\""); // Messaggio di successo
             } else {
-                return ResponseEntity.status(HttpStatus.OK).body("\'No order to cancel.\'"); // Messaggio quando non c'è nessun ordine da annullare
+                return ResponseEntity.status(HttpStatus.OK).body("\"No order to cancel.\""); // Messaggio quando non c'è nessun ordine da annullare
             }
         } catch (CancelThresholdPassedException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("\'Order cancellation failed. Order ID may be incorrect.\'"); // Messaggio di errore dettagliato
+                    .body("\"Order cancellation failed. Order ID may be incorrect.\""); // Messaggio di errore dettagliato
         }
     }
 
