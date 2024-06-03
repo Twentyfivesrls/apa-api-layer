@@ -21,6 +21,7 @@ public class OrderAPADTO {
     private String firstName;
     private String lastName;
     private LocalDateTime pickupDate;
+    private double realPrice;
     private String price;
     private String status;
 

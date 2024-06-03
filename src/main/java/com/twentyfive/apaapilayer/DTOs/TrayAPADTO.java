@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class TrayAPADTO {
     private String id;
     private String name;
+    private String imageUrl;
     private String customized;
     private String measures;
     private String description;

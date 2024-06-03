@@ -53,7 +53,14 @@ public class CompletedOrderService {
             realOrder.add(orderAPA);
         }
         if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Sort sort;
+            if (sortColumn.equals("price")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            } else if (sortColumn.equals("formattedPickupDate")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+            } else {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
+            }
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
@@ -72,6 +79,7 @@ public class CompletedOrderService {
         dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+        dto.setRealPrice(order.getTotalPrice());
         dto.setStatus(order.getStatus().name());
         return dto;
     }
@@ -198,6 +206,7 @@ public class CompletedOrderService {
         dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+        dto.setRealPrice(order.getTotalPrice());
         dto.setStatus(order.getStatus().name());
         return dto;
     }

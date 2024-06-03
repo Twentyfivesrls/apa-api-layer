@@ -2,12 +2,14 @@ package com.twentyfive.apaapilayer.services;
 
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.DTOs.*;
+import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import com.twentyfive.apaapilayer.utils.PdfUtilities;
+import com.twentyfive.apaapilayer.utils.StompUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,9 +34,12 @@ import java.util.stream.Collectors;
 @Service
 public class ActiveOrderService {
 
+    private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
+
     private final ActiveOrderRepository activeOrderRepository;
     private final CustomerRepository customerRepository; // Aggiunto il CustomerRepository
     private final CompletedOrderRepository completedOrderRepository;
+    private final ProducerPool producerPool;
 
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
@@ -46,10 +51,11 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
+        this.producerPool = producerPool;
         this.productKgRepository=productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
         this.trayRepository=trayRepository;
@@ -85,7 +91,14 @@ public class ActiveOrderService {
             realOrder.add(orderAPA);
         }
         if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Sort sort;
+            if (sortColumn.equals("price")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            } else if (sortColumn.equals("formattedPickupDate")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+            } else {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
+            }
             Pageable pageable= PageRequest.of(page,size,sort);
             return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
         }
@@ -102,6 +115,7 @@ public class ActiveOrderService {
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setRealPrice(order.getTotalPrice());
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().name());
         return dto;
@@ -327,7 +341,9 @@ public class ActiveOrderService {
                 timeSlotAPARepository.save(timeSlotAPA);
             }
             activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
-            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
+            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
+            String in= StompUtilities.sendCancelOrderNotification(order.getId());
+            producerPool.send(in,1,NOTIFICATION_TOPIC);
             return true;
         }
         return false;
