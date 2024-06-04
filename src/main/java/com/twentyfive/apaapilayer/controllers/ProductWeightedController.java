@@ -1,15 +1,13 @@
 package com.twentyfive.apaapilayer.controllers;
 
 
-import com.twentyfive.apaapilayer.DTOs.ProductWeightedAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.services.ProductWeightedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController

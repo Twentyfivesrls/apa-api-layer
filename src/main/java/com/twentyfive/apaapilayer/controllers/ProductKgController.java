@@ -1,6 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.services.ProductKgService;
 import lombok.RequiredArgsConstructor;

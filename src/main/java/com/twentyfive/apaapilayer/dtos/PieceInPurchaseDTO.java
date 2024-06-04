@@ -1,6 +1,5 @@
-package com.twentyfive.apaapilayer.DTOs;
+package com.twentyfive.apaapilayer.dtos;
 
-import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

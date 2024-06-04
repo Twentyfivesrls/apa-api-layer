@@ -1,7 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
-import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
+import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.services.CompletedOrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

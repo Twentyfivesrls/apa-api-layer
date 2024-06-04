@@ -1,7 +1,7 @@
 package com.twentyfive.apaapilayer.utils;
 
-import com.twentyfive.apaapilayer.DTOs.TrayAPADTO;
-import com.twentyfive.apaapilayer.DTOs.TrayDetailsAPADTO;
+import com.twentyfive.apaapilayer.dtos.TrayAPADTO;
+import com.twentyfive.apaapilayer.dtos.TrayDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.Tray;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Measure;
 

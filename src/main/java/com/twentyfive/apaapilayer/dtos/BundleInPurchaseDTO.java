@@ -1,4 +1,4 @@
-package com.twentyfive.apaapilayer.DTOs;
+package com.twentyfive.apaapilayer.dtos;
 
 
 import lombok.AllArgsConstructor;

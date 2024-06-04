@@ -1,6 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
+import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;

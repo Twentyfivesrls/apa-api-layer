@@ -1,9 +1,8 @@
-package com.twentyfive.apaapilayer.DTOs;
+package com.twentyfive.apaapilayer.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.james.mime4j.dom.datetime.DateTime;
 
 import java.time.LocalDateTime;
 import java.util.List;

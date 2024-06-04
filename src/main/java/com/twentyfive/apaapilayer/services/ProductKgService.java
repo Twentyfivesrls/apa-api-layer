@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.ProductKgAPADTO;
-import com.twentyfive.apaapilayer.DTOs.TrayAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;

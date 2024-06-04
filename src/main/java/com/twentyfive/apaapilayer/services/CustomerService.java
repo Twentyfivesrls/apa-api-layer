@@ -1,6 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.*;
+import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;

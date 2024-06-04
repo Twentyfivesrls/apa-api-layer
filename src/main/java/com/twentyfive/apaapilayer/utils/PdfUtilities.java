@@ -3,10 +3,10 @@ package com.twentyfive.apaapilayer.utils;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
-import com.twentyfive.apaapilayer.DTOs.BundleInPurchaseDTO;
-import com.twentyfive.apaapilayer.DTOs.OrderDetailsPrintAPADTO;
-import com.twentyfive.apaapilayer.DTOs.PieceInPurchaseDTO;
-import com.twentyfive.apaapilayer.DTOs.ProductInPurchaseDTO;
+import com.twentyfive.apaapilayer.dtos.BundleInPurchaseDTO;
+import com.twentyfive.apaapilayer.dtos.OrderDetailsPrintAPADTO;
+import com.twentyfive.apaapilayer.dtos.PieceInPurchaseDTO;
+import com.twentyfive.apaapilayer.dtos.ProductInPurchaseDTO;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

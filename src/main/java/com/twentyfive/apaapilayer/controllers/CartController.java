@@ -1,14 +1,13 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.BuyInfosDTO;
-import com.twentyfive.apaapilayer.DTOs.CartDTO;
+import com.twentyfive.apaapilayer.dtos.BuyInfosDTO;
+import com.twentyfive.apaapilayer.dtos.CartDTO;
 import com.twentyfive.apaapilayer.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
 import java.time.LocalDate;

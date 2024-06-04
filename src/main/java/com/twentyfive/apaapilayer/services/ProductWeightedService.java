@@ -1,6 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.ProductWeightedAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;

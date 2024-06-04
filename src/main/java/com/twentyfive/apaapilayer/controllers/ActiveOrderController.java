@@ -1,8 +1,8 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.itextpdf.text.DocumentException;
-import com.twentyfive.apaapilayer.DTOs.OrderAPADTO;
-import com.twentyfive.apaapilayer.DTOs.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
+import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;

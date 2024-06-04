@@ -1,6 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.DTOs.IngredientsAPADTO;
+import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;

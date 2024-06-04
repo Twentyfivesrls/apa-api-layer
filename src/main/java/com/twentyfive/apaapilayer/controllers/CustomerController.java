@@ -1,12 +1,10 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.DTOs.CustomerDTO;
-import com.twentyfive.apaapilayer.DTOs.CustomerDetailsDTO;
+import com.twentyfive.apaapilayer.dtos.CustomerDTO;
+import com.twentyfive.apaapilayer.dtos.CustomerDetailsDTO;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
-import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.services.CustomerService;
 import com.twentyfive.apaapilayer.services.KeycloakService;
-import feign.Body;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
