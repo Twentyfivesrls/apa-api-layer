@@ -1,9 +1,9 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
-import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

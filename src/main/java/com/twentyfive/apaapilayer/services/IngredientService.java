@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
@@ -7,7 +8,6 @@ import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.twentyfivemodel.filterTicket.AutoCompleteRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

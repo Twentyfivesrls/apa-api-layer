@@ -123,7 +123,7 @@ public class ActiveOrderService {
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setRealPrice(order.getTotalPrice());
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
-        dto.setStatus(order.getStatus().name());
+        dto.setStatus(order.getStatus().getStatus());
         return dto;
     }
 
@@ -175,7 +175,7 @@ public class ActiveOrderService {
         OrderDetailsPrintAPADTO dto = new OrderDetailsPrintAPADTO();
         dto.setId(order.getId());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setStatus(order.getStatus().name());
+        dto.setStatus(order.getStatus().getStatus());
 
         List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
                 .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
@@ -376,7 +376,10 @@ public class ActiveOrderService {
     }
 
     public OrderStatus[] getAllStatuses() {
-        return OrderStatus.values();
+        OrderStatus[] orderStatuses = OrderStatus.values();
+        List<OrderStatus> ordersList = Arrays.asList(orderStatuses);
+        ordersList.sort(Comparator.comparing(status -> status.name()));
+        return ordersList.toArray(new OrderStatus[0]);
     }
 
     @Transactional

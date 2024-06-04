@@ -80,7 +80,7 @@ public class CompletedOrderService {
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
-        dto.setStatus(order.getStatus().name());
+        dto.setStatus(order.getStatus().getStatus());
         return dto;
     }
 
@@ -207,7 +207,7 @@ public class CompletedOrderService {
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
-        dto.setStatus(order.getStatus().name());
+        dto.setStatus(order.getStatus().getStatus());
         return dto;
     }
 
