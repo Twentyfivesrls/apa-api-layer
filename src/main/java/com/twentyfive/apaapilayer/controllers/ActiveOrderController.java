@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -110,20 +111,6 @@ public class ActiveOrderController {
     }
 
 
-    @PostMapping("/adminCancel/{id}")//per annullare ordine lato cliente
-    public ResponseEntity<Boolean> AdminCancelOrder(@PathVariable String id) {
-        try {
-            boolean result = activeOrderService.adminCancel(id);
-            if (result) {
-                return ResponseEntity.ok(true); // Restituisce true se l'ordine è stato annullato correttamente
-            } else {
-                return ResponseEntity.ok(false); // Restituisce false se non c'è un ordine da annullare
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Restituisce un errore server interno in caso di problemi
-        }
-    }
-
     @GetMapping("/print/{id}")
     public ResponseEntity<byte[]> exportPdf(@PathVariable String id) throws IOException, DocumentException {
         ByteArrayOutputStream pdfStream = activeOrderService.print(id);
@@ -132,6 +119,23 @@ public class ActiveOrderController {
         headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + id + ".pdf");
         headers.setContentLength(pdfStream.size());
         return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
+    }
+    @GetMapping("/changeOrderStatus/{id}")
+    public ResponseEntity<Boolean> changeOrderStatus(@PathVariable String id, @RequestParam("status") String status){
+        try {
+            Boolean changedStatus = activeOrderService.changeOrderStatus(id,status);
+            if (changedStatus) {
+                return ResponseEntity.ok(changedStatus);
+            } else {
+                return ResponseEntity.notFound().build(); // Non trovato se l'ordine non esiste
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build(); // Error interno se qualcosa va storto
+        }
+    }
+    @GetMapping("/getAllStatuses")
+    public ResponseEntity<OrderStatus[]> getAllStatuses() {
+        return ResponseEntity.ok().body(activeOrderService.getAllStatuses());
     }
 
 }

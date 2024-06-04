@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.services;
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.DTOs.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
@@ -31,10 +32,14 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.ANNULLATO;
+
 @Service
 public class ActiveOrderService {
 
     private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
+
+    private final EmailService emailService;
 
     private final ActiveOrderRepository activeOrderRepository;
     private final CustomerRepository customerRepository; // Aggiunto il CustomerRepository
@@ -51,7 +56,8 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+        this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
@@ -241,13 +247,7 @@ public class ActiveOrderService {
         OrderAPA order = activeOrderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        order.setStatus(OrderStatus.COMPLETO); // Assumendo che OrderStatus sia un enum
 
-        CompletedOrderAPA completedOrder = new CompletedOrderAPA();
-        createCompletedOrder(order, completedOrder); // Metodo helper per copiare i dettagli
-
-        activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
-        completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati
 
         return convertToOrderAPADTO(order); // Ritorna l'ordine completato come DTO
     }
@@ -280,36 +280,6 @@ public class ActiveOrderService {
 
         // Altri campi specifici dell'ordine possono essere aggiunti qui
     }
-
-    @Transactional
-    public boolean adminCancel(String id) {
-        OrderAPA order = activeOrderRepository.findById(id)
-                .orElse(null); // Trova l'ordine o restituisce null se non esiste
-
-        LocalDate pickupDate= order.getPickupDate();
-
-        // Calcola la data di "oggi più un giorno"
-        LocalDate cancelThreshold = pickupDate.minusDays(1);
-
-
-        if (order != null) {
-            TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
-            order.setStatus(OrderStatus.ANNULLATO); // Imposta lo stato a ANNULLATO
-
-            CompletedOrderAPA completedOrder = new CompletedOrderAPA();
-            createCompletedOrder(order, completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
-            ArrayList<ItemInPurchase> items= new ArrayList<>();
-            items.addAll(order.getBundlesInPurchase());
-            items.addAll(order.getProductsInPurchase());
-            if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap()) && LocalDate.now().isBefore(cancelThreshold)) {
-                timeSlotAPARepository.save(timeSlotAPA);
-            }
-            activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
-            completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/anullati
-            return true;
-        }
-        return false;
-    }
     @Transactional
     public boolean cancel(String id) {
         OrderAPA order = activeOrderRepository.findById(id)
@@ -330,7 +300,7 @@ public class ActiveOrderService {
 
         if (order != null) {
             TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
-            order.setStatus(OrderStatus.ANNULLATO); // Imposta lo stato a ANNULLATO
+            order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
 
             CompletedOrderAPA completedOrder = new CompletedOrderAPA();
             createCompletedOrder(order, completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
@@ -403,6 +373,61 @@ public class ActiveOrderService {
             return PdfUtilities.generatePdfStream(orderDetails);
         }
         return null;
+    }
+
+    public OrderStatus[] getAllStatuses() {
+        return OrderStatus.values();
+    }
+
+    @Transactional
+    public Boolean changeOrderStatus(String id, String status) throws IOException {
+        Optional<OrderAPA> order = activeOrderRepository.findById(id);
+        if (order.isPresent()){
+            Optional<CustomerAPA> customer = customerRepository.findById(order.get().getCustomerId());
+            if(customer.isPresent()){
+                order.get().setCreatedDate(LocalDateTime.now());
+                String in =StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()),customer.get().getId());
+                producerPool.send(in,1,NOTIFICATION_TOPIC);
+                switch(OrderStatus.valueOf(status.toUpperCase())) {
+                    case ANNULLATO -> {
+                        LocalDate pickupDate = order.get().getPickupDate();
+                        // Calcola la data di "oggi più un giorno"
+                        LocalDate cancelThreshold = pickupDate.minusDays(1);
+                        TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
+                        order.get().setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
+                        CompletedOrderAPA completedOrder = new CompletedOrderAPA();
+                        createCompletedOrder(order.get(), completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
+                        ArrayList<ItemInPurchase> items = new ArrayList<>();
+                        items.addAll(order.get().getBundlesInPurchase());
+                        items.addAll(order.get().getProductsInPurchase());
+                        if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, order.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap()) && LocalDate.now().isBefore(cancelThreshold)) {
+                            timeSlotAPARepository.save(timeSlotAPA);
+                        }
+                        activeOrderRepository.delete(order.get()); // Rimuove l'ordine dalla repository degli ordini attivi
+                        completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
+                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()));
+                    }
+                    case IN_PREPARAZIONE, PRONTO -> {
+                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()));
+                        order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                        activeOrderRepository.save(order.get());
+                    }
+                    case RICEVUTO -> {
+                        order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                        activeOrderRepository.save(order.get());
+                    }
+                    case COMPLETO -> {
+                        order.get().setStatus(OrderStatus.COMPLETO); // Assumendo che OrderStatus sia un enum
+                        CompletedOrderAPA completedOrder = new CompletedOrderAPA();
+                        createCompletedOrder(order.get(), completedOrder); // Metodo helper per copiare i dettagli
+                        activeOrderRepository.delete(order.get()); // Rimuove l'ordine dalla repository degli ordini attivi
+                        completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }
 
