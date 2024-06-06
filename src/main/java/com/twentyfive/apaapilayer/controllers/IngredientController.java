@@ -2,7 +2,9 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
+import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
+import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,7 +49,11 @@ public class IngredientController {
 
     @PostMapping("/save")
     public ResponseEntity<IngredientAPA> save(@RequestBody IngredientAPA i) {
-        return ResponseEntity.ok().body(ingredientService.save(i));
+        try {
+            return ResponseEntity.ok().body(ingredientService.save(i));
+        } catch (Exception e){
+            throw new ExistingFieldException();
+        }
     }
 
     @GetMapping("/disableById/{id}")

@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
+import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.services.ProductKgService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,11 @@ public class ProductKgController {
 
     @PostMapping("/save")
     public ResponseEntity<ProductKgAPA> save(@RequestBody ProductKgAPA p) {
-        return ResponseEntity.ok().body(productkgService.save(p));
+        try {
+            return ResponseEntity.ok().body(productkgService.save(p));
+        } catch (Exception e){
+            throw new ExistingFieldException();
+        }
     }
 
     @GetMapping("/disableById/{id}")

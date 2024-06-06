@@ -2,6 +2,8 @@ package com.twentyfive.apaapilayer.controllers;
 
 
 import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
+import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
+import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.services.ProductWeightedService;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +42,11 @@ public class ProductWeightedController {
 
     @PostMapping("/save")
     public ResponseEntity<ProductWeightedAPA> save(@RequestBody ProductWeightedAPA p) {
-        return ResponseEntity.ok().body(productWeightedService.save(p));
+        try {
+            return ResponseEntity.ok().body(productWeightedService.save(p));
+        } catch (Exception e){
+            throw new ExistingFieldException();
+        }
     }
 
     @GetMapping("/disableById/{id}")

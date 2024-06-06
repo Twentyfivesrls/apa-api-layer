@@ -12,12 +12,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @RequiredArgsConstructor
 @Service
@@ -26,6 +33,7 @@ public class ProductWeightedService {
     private final ProductWeightedRepository productWeightedRepository;
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
+    private final MongoTemplate mongoTemplate;
 
     private ProductWeightedAPADTO productsWeightedToDTO(ProductWeightedAPA product){
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
@@ -134,17 +142,13 @@ public class ProductWeightedService {
     }
 
     public Page<ProductWeightedAPADTO> getAllForCustomizedTray(String idCategory, int page, int size) {
-        Sort sort = Sort.by(Sort.Order.desc("buyingCount"), Sort.Order.asc("name"));
-        Pageable pageable=PageRequest.of(page,size,sort);
-        Page<ProductWeightedAPA> productsWeighted =  productWeightedRepository.findAllByCategoryIdAndActiveTrue(idCategory, pageable);
-        List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
-        for(ProductWeightedAPA p : productsWeighted){
-            if(p!=null) {
-                ProductWeightedAPADTO dto = productsWeightedToDTO(p);
-                realProductsWeighted.add(dto);
-            }
-        }
-        Pageable pageableWithoutSorting=PageRequest.of(page,size);
-        return  PageUtilities.convertListToPage(realProductsWeighted,pageableWithoutSorting);
+        Pageable pageable = PageRequest.of(page, size);
+        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryIdAndActiveTrueOrderByStats_BuyingCountDescNameAsc(idCategory);
+        List<ProductWeightedAPADTO> realProductsWeighted = products.stream()
+                .map(this::productsWeightedToDTO) // Converti i risultati direttamente in DTO
+                .collect(Collectors.toList());
+
+        return PageUtilities.convertListToPage(realProductsWeighted, pageable);
     }
+
 }

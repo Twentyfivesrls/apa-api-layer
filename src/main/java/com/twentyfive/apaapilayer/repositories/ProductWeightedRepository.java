@@ -18,4 +18,6 @@ public interface ProductWeightedRepository extends MongoRepository<ProductWeight
 
     Page<ProductWeightedAPA> findAllByCategoryIdAndActiveTrue(String categoryId, Pageable pageable);
 
+    List<ProductWeightedAPA> findAllByCategoryIdAndActiveTrueOrderByStats_BuyingCountDescNameAsc(String idCategory);
+
 }

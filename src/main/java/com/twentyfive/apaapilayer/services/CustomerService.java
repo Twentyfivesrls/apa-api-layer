@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class CustomerService {
     private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
 
-
+    private final ProductStatService productStatService;
     private final CustomerRepository customerRepository;
 
     private final CompletedOrderRepository completedOrderRepository;
@@ -102,7 +102,8 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+        this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
@@ -288,16 +289,20 @@ public class CustomerService {
                 products.add((ProductInPurchase) item);
                 Optional<ProductKgAPA> productKGAPA =productKgRepository.findById(item.getId());
                 if (productKGAPA.isPresent()){
-                    productKGAPA.get().setBuyingCount(productKGAPA.get().getBuyingCount()+1);
+                    productStatService.addBuyingCountProduct(productKGAPA.get(), 1);
                     productKgRepository.save(productKGAPA.get());
                 }
             } else if (item instanceof BundleInPurchase) {
                 bundles.add((BundleInPurchase) item);
-                for (PieceInPurchase piece : ((BundleInPurchase) item).getWeightedProducts()){
-                    Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
-                    if (productWeightedAPA.isPresent()){
-                        productWeightedAPA.get().setBuyingCount(productWeightedAPA.get().getBuyingCount()+1);
-                        productWeightedRepository.save(productWeightedAPA.get());
+                Optional<Tray> tray=trayRepository.findById(item.getId());
+                if(tray.isPresent()) {
+                    productStatService.addBuyingCountTray(tray.get(),1);
+                    for (PieceInPurchase piece : ((BundleInPurchase) item).getWeightedProducts()) {
+                        Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
+                        if (productWeightedAPA.isPresent()) {
+                            productStatService.addBuyingCountProduct(productWeightedAPA.get(), 1);
+                            productWeightedRepository.save(productWeightedAPA.get());
+                        }
                     }
                 }
             }

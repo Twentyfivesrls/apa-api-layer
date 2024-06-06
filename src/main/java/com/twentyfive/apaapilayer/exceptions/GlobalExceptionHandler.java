@@ -38,7 +38,11 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "la categoria non esiste"+ex);
         return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
-
+    @ExceptionHandler(ExistingFieldException.class)
+    public ResponseEntity<ApiError> handleExistingField (ExistingFieldException ex){
+        ApiError apiError = new ApiError(HttpStatus.NOT_ACCEPTABLE, "Uno dei campi è unico e non può essere duplicato! "+ex.getClass().getSimpleName());
+        return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
     @Data
     @AllArgsConstructor
     public static class ApiError {

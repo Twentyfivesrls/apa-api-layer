@@ -2,6 +2,8 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.TrayAPADTO;
 import com.twentyfive.apaapilayer.dtos.TrayDetailsAPADTO;
+import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
+import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.models.Tray;
 import com.twentyfive.apaapilayer.services.TrayService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,12 @@ public class TrayController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Tray> save(@RequestBody Tray tray) {
-        return ResponseEntity.ok().body(trayService.save(tray));
+    public ResponseEntity<Tray> save(@RequestBody Tray t) {
+        try {
+            return ResponseEntity.ok().body(trayService.save(t));
+        } catch (Exception e){
+            throw new ExistingFieldException();
+        }
     }
 
     @GetMapping("/activateOrDisable/{id}")
