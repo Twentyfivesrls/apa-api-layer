@@ -366,11 +366,13 @@ public class CustomerService {
     public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
-        if (cart == null) {
-            cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
-            customer.setCart(cart);
+        for (ItemInPurchase pip: cart.getPurchases()){
+            if (pip.equals(product)){
+                pip.setQuantity(pip.getQuantity()+product.getQuantity());
+                customerRepository.save(customer);
+                return convertCartToDTO(customer);
+            }
         }
-        System.out.println(cart);
         cart.getPurchases().add(product);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
@@ -380,9 +382,12 @@ public class CustomerService {
     public CartDTO addToCartBundle(String customerId, BundleInPurchase bundle) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
         Cart cart = customer.getCart();
-        if (cart == null) {
-            cart = new Cart();  // Assumi che Cart abbia un costruttore che inizializza le liste
-            customer.setCart(cart);
+        for (ItemInPurchase bip: cart.getPurchases()){
+            if (bip.equals(bundle)){
+                bip.setQuantity(bip.getQuantity()+bundle.getQuantity());
+                customerRepository.save(customer);
+                return convertCartToDTO(customer);
+            }
         }
         cart.getPurchases().add(bundle);
         customerRepository.save(customer);
