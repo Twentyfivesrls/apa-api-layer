@@ -151,7 +151,7 @@ public class ActiveOrderService {
 
 
         dto.setProducts(productDTOs);
-
+        dto.setTotalPrice(order.getTotalPrice());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
 
 

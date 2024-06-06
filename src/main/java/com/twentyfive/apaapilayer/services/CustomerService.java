@@ -365,14 +365,17 @@ public class CustomerService {
     @Transactional
     public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
+        ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(InvalidItemException::new);
         Cart cart = customer.getCart();
         for (ItemInPurchase pip: cart.getPurchases()){
             if (pip.equals(product)){
                 pip.setQuantity(pip.getQuantity()+product.getQuantity());
+                pip.setTotalPrice(pip.getQuantity()*(productKg.getPricePerKg()*((ProductInPurchase) pip).getWeight()));
                 customerRepository.save(customer);
                 return convertCartToDTO(customer);
             }
         }
+        product.setTotalPrice(product.getQuantity()*(productKg.getPricePerKg()*product.getWeight()));
         cart.getPurchases().add(product);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
@@ -381,14 +384,17 @@ public class CustomerService {
     @Transactional
     public CartDTO addToCartBundle(String customerId, BundleInPurchase bundle) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        Tray tray = trayRepository.findById(bundle.getId()).orElseThrow(InvalidItemException::new);
         Cart cart = customer.getCart();
         for (ItemInPurchase bip: cart.getPurchases()){
             if (bip.equals(bundle)){
                 bip.setQuantity(bip.getQuantity()+bundle.getQuantity());
+                bip.setTotalPrice(bip.getQuantity()*(tray.getPricePerKg()*((BundleInPurchase) bip).getMeasure().getWeight()));
                 customerRepository.save(customer);
                 return convertCartToDTO(customer);
             }
         }
+        bundle.setTotalPrice(bundle.getQuantity()*(tray.getPricePerKg()*bundle.getTotalWeight()));
         cart.getPurchases().add(bundle);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
