@@ -77,7 +77,7 @@ public class CompletedOrderService {
         dto.setId(order.getId());
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
-        dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
         dto.setStatus(order.getStatus().getStatus());
@@ -104,7 +104,7 @@ public class CompletedOrderService {
         dto.setProducts(productDTOs);
         dto.setNote(order.getNote());
 
-        dto.setPickupDateTime(order.getPickupTime().toString());
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
 
         List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
                 .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
@@ -113,7 +113,7 @@ public class CompletedOrderService {
         // Assumi che esista un getter che restituisca i bundle
         dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
         dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
-        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()).toString());
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setTotalPrice(order.getTotalPrice());
         return dto;
     }
@@ -204,7 +204,7 @@ public class CompletedOrderService {
         dto.setId(order.getId());
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
-        dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
         dto.setStatus(order.getStatus().getStatus());

@@ -120,7 +120,7 @@ public class ActiveOrderService {
         dto.setId(order.getId());
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
-        dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
         dto.setRealPrice(order.getTotalPrice());
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().getStatus());
@@ -152,7 +152,7 @@ public class ActiveOrderService {
 
         dto.setProducts(productDTOs);
 
-        dto.setPickupDateTime(order.getPickupTime().toString());
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
 
 
 
