@@ -389,7 +389,7 @@ public class ActiveOrderService {
             Optional<CustomerAPA> customer = customerRepository.findById(order.get().getCustomerId());
             if(customer.isPresent()){
                 order.get().setCreatedDate(LocalDateTime.now());
-                String in =StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()),customer.get().getId());
+                String in =StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()),customer.get().getIdKeycloak());
                 producerPool.send(in,1,NOTIFICATION_TOPIC);
                 switch(OrderStatus.valueOf(status.toUpperCase())) {
                     case ANNULLATO -> {
