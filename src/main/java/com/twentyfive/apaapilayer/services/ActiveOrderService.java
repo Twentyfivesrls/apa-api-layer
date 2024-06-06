@@ -238,7 +238,7 @@ public class ActiveOrderService {
 
     public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
         // Supponendo che il repository abbia il metodo findOrdersByCustomerId
-        return activeOrderRepository.findOrdersByCustomerId(customerId, pageable)
+        return activeOrderRepository.findOrdersByCustomerIdOrderByCreatedDateDesc(customerId, pageable)
                 .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
     }
 
