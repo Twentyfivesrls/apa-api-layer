@@ -384,21 +384,30 @@ public class CustomerService {
     @Transactional
     public CartDTO addToCartBundle(String customerId, BundleInPurchase bundle) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-        Tray tray = trayRepository.findById(bundle.getId()).orElseThrow(InvalidItemException::new);
+        Tray tray = trayRepository.findById(bundle.getId()).orElseThrow(() -> new IllegalArgumentException("Tray not found"));
         Cart cart = customer.getCart();
-        for (ItemInPurchase bip: cart.getPurchases()){
-            if (bip.equals(bundle)){
-                bip.setQuantity(bip.getQuantity()+bundle.getQuantity());
-                bip.setTotalPrice(bip.getQuantity()*(tray.getPricePerKg()*((BundleInPurchase) bip).getMeasure().getWeight()));
-                customerRepository.save(customer);
-                return convertCartToDTO(customer);
-            }
+
+        Optional<ItemInPurchase> existingItem = cart.getPurchases().stream()
+                .filter(bip -> bip.equals(bundle))
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            BundleInPurchase existingBundle = (BundleInPurchase) existingItem.get();
+            existingBundle.setQuantity(existingBundle.getQuantity() + bundle.getQuantity());
+            existingBundle.setTotalPrice(calculateTotalPrice(existingBundle, tray));
+        } else {
+            bundle.setTotalPrice(calculateTotalPrice(bundle, tray));
+            cart.getPurchases().add(bundle);
         }
-        bundle.setTotalPrice(bundle.getQuantity()*(tray.getPricePerKg()*bundle.getMeasure().getWeight()));
-        cart.getPurchases().add(bundle);
+
         customerRepository.save(customer);
         return convertCartToDTO(customer);
     }
+
+    private double calculateTotalPrice(BundleInPurchase bundle, Tray tray) {
+        return bundle.getQuantity() * (tray.getPricePerKg() * bundle.getMeasure().getWeight());
+    }
+
 
     /*private LocalDateTime next(int hour){
         LocalDateTime now= LocalDateTime.now();
