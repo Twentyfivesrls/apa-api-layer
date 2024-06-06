@@ -105,6 +105,7 @@ public class CompletedOrderService {
         dto.setNote(order.getNote());
 
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setStatus(order.getStatus().getStatus());
 
         List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
                 .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
