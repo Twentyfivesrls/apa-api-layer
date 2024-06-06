@@ -394,7 +394,7 @@ public class CustomerService {
                 return convertCartToDTO(customer);
             }
         }
-        bundle.setTotalPrice(bundle.getQuantity()*(tray.getPricePerKg()*bundle.getTotalWeight()));
+        bundle.setTotalPrice(bundle.getQuantity()*(tray.getPricePerKg()*bundle.getMeasure().getWeight()));
         cart.getPurchases().add(bundle);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
