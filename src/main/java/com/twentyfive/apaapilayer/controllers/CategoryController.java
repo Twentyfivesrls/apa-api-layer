@@ -23,7 +23,6 @@ public class CategoryController {
 
     @GetMapping("/getAllDisabled")
     public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndDisable(@RequestParam List<String> types) {
-        System.out.println("prova");
         return ResponseEntity.ok().body(categoryService.getDisabledCategories(types));
     }
     @GetMapping("/getById/{id}")
