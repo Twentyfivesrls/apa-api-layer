@@ -60,4 +60,4 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /actions/dist_tomcat/${{ secrets.SSH_PROJECT_NAME }}
-            docker cp ./ ${{ secrets.SSH_CONTAINER }}:/usr/local/tomcat/webapps
+            docker cp ./ tomcat-apa-be:/usr/local/tomcat/webapps
