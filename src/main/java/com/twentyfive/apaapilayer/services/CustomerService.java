@@ -364,19 +364,23 @@ public class CustomerService {
 
     @Transactional
     public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(InvalidItemException::new);
+        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
         Cart cart = customer.getCart();
-        for (ItemInPurchase pip: cart.getPurchases()){
-            if (pip.equals(product)){
-                pip.setQuantity(pip.getQuantity()+product.getQuantity());
-                pip.setTotalPrice(pip.getQuantity()*(productKg.getPricePerKg()*((ProductInPurchase) pip).getWeight()));
-                customerRepository.save(customer);
-                return convertCartToDTO(customer);
-            }
+
+        Optional<ItemInPurchase> existingItem = cart.getPurchases().stream()
+                .filter(pip -> pip.equals(product))
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            ProductInPurchase existingProduct = (ProductInPurchase) existingItem.get();
+            existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
+            existingProduct.setTotalPrice(calculateTotalPrice(existingProduct, productKg.getPricePerKg()));
+        } else {
+            product.setTotalPrice(calculateTotalPrice(product, productKg.getPricePerKg()));
+            cart.getPurchases().add(product);
         }
-        product.setTotalPrice(product.getQuantity()*(productKg.getPricePerKg()*product.getWeight()));
-        cart.getPurchases().add(product);
+
         customerRepository.save(customer);
         return convertCartToDTO(customer);
     }
@@ -394,9 +398,9 @@ public class CustomerService {
         if (existingItem.isPresent()) {
             BundleInPurchase existingBundle = (BundleInPurchase) existingItem.get();
             existingBundle.setQuantity(existingBundle.getQuantity() + bundle.getQuantity());
-            existingBundle.setTotalPrice(calculateTotalPrice(existingBundle, tray));
+            existingBundle.setTotalPrice(calculateTotalPrice(existingBundle, tray.getPricePerKg()));
         } else {
-            bundle.setTotalPrice(calculateTotalPrice(bundle, tray));
+            bundle.setTotalPrice(calculateTotalPrice(bundle, tray.getPricePerKg()));
             cart.getPurchases().add(bundle);
         }
 
@@ -404,8 +408,15 @@ public class CustomerService {
         return convertCartToDTO(customer);
     }
 
-    private double calculateTotalPrice(BundleInPurchase bundle, Tray tray) {
-        return bundle.getQuantity() * (tray.getPricePerKg() * bundle.getMeasure().getWeight());
+    public double calculateTotalPrice(ItemInPurchase item, double pricePerKg) {
+        if (item instanceof ProductInPurchase) {
+            ProductInPurchase product = (ProductInPurchase) item;
+            return product.getQuantity() * (pricePerKg * product.getWeight());
+        } else if (item instanceof BundleInPurchase) {
+            BundleInPurchase bundle = (BundleInPurchase) item;
+            return bundle.getQuantity() * (pricePerKg * bundle.getMeasure().getWeight());
+        }
+        throw new IllegalArgumentException("Unknown item type");
     }
 
 
