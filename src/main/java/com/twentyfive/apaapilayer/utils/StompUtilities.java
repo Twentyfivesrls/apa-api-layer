@@ -28,8 +28,8 @@ public class StompUtilities {
         return gson.toJson(twentyfiveMessage);
     }
 
-    public static String sendChangedStatusNotification(OrderStatus status, String idKeycloak){
-        String customerMessage = String.format(CUSTOMER_ORDER_CHANNEL,idKeycloak);
+    public static String sendChangedStatusNotification(OrderStatus status, String customerId){
+        String customerMessage = String.format(CUSTOMER_ORDER_CHANNEL,customerId);
         TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(customerMessage,"");
         switch(status){
             case ANNULLATO -> twentyfiveMessage.setContent("ANNULLATO");
