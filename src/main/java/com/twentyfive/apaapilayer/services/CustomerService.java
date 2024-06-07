@@ -58,11 +58,11 @@ public class CustomerService {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
                 .orElseThrow(() -> new RuntimeException("No customer found with idKeycloak: " + idKeycloak));
 
-        List<OrderAPA> completedOrders = completedOrderRepository.findByCustomerId(customer.getId());
+        List<CompletedOrderAPA> completedOrders = completedOrderRepository.findByCustomerIdOrderByCreatedDateDesc(customer.getId());
 
         // Calcola il totale speso e il numero di ordini
         String totalSpent = String.format("%.2f", completedOrders.stream()
-                .mapToDouble(OrderAPA::getTotalPrice)
+                .mapToDouble(CompletedOrderAPA::getTotalPrice)
                 .sum());
         String completedOrdersCount = String.valueOf(completedOrders.size());
 
@@ -136,11 +136,11 @@ public class CustomerService {
         if (customer.getCart()==null) customer.setCart(new Cart());
 
 
-        List<OrderAPA> comletedOrders = completedOrderRepository.findByCustomerId(customerId);
+        List<CompletedOrderAPA> comletedOrders = completedOrderRepository.findByCustomerIdOrderByCreatedDateDesc(customerId);
 
         // Calcola il totale speso e il numero di ordini
         String totalSpent = String.format("%.2f", comletedOrders.stream()
-                .mapToDouble(OrderAPA::getTotalPrice)
+                .mapToDouble(CompletedOrderAPA::getTotalPrice)
                 .sum());
         String completedOrdersCount = String.valueOf(comletedOrders.size());
 

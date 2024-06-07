@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.repositories;
 
 import com.twentyfive.apaapilayer.models.CompletedOrderAPA;
-import com.twentyfive.apaapilayer.models.OrderAPA;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -11,6 +10,8 @@ import java.util.List;
 
 @Repository
 public interface CompletedOrderRepository extends MongoRepository<CompletedOrderAPA,String> {
-    List<OrderAPA> findByCustomerId(String customerId);
-    Page<OrderAPA> findOrdersByCustomerId(String customerId, Pageable pageable);
+
+    List<CompletedOrderAPA> findAllByOrderByCreatedDateDesc();
+    List<CompletedOrderAPA> findByCustomerIdOrderByCreatedDateDesc(String customerId);
+    Page<CompletedOrderAPA> findOrdersByCustomerIdOrderByCreatedDateDesc(String customerId, Pageable pageable);
 }

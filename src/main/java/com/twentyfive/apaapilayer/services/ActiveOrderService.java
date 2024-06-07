@@ -278,6 +278,7 @@ public class ActiveOrderService {
             completedOrder.setBundlesInPurchase(new ArrayList<>(order.getBundlesInPurchase()));
         }
 
+        completedOrder.setCreatedDate(LocalDateTime.now());
         // Altri campi specifici dell'ordine possono essere aggiunti qui
     }
     @Transactional

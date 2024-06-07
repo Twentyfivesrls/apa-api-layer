@@ -46,7 +46,7 @@ public class CompletedOrderService {
 
     public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
         // Fetching paginated orders from the database
-        List<CompletedOrderAPA> orderList= completedOrderRepository.findAll();
+        List<CompletedOrderAPA> orderList= completedOrderRepository.findAllByOrderByCreatedDateDesc();
         List<OrderAPADTO> realOrder= new ArrayList<>();
         for(CompletedOrderAPA order:orderList){
             OrderAPADTO orderAPA= convertToOrderAPADTO(order);
@@ -193,7 +193,7 @@ public class CompletedOrderService {
 
     public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
         // Supponendo che il repository abbia il metodo findOrdersByCustomerId
-        return completedOrderRepository.findOrdersByCustomerId(customerId, pageable)
+        return completedOrderRepository.findOrdersByCustomerIdOrderByCreatedDateDesc(customerId, pageable)
                 .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
     }
 
