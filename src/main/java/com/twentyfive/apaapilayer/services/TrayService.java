@@ -60,14 +60,14 @@ public class TrayService {
         return false;
     }
 
-    public List<TrayAPADTO> getAllActive(String idCategory) {
-        List<Tray> trays = trayRepository.findAllByCategoryIdAndCustomizedFalseAndActiveTrue(idCategory);
+    public Page<TrayAPADTO> getAllActive(String idCategory,int page, int size) {
+        List<Tray> trays = trayRepository.findAllByCategoryIdAndCustomizedFalseAndActiveTrueOrderByNameAsc(idCategory);
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
         }
-        realTrays.sort(Comparator.comparing(TrayAPADTO::getName));
-        return realTrays;
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realTrays,pageable);
     }
 
     public String getImageUrl(String id) {

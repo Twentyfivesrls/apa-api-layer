@@ -129,8 +129,8 @@ public class ProductKgService {
     }
 
 
-    public List<ProductKgAPADTO> getAllActive(String idCategory) {
-        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalse(idCategory);
+    public Page<ProductKgAPADTO> getAllActive(String idCategory, int page, int size) {
+        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalseOrderByNameAsc(idCategory);
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
         for(ProductKgAPA p : productsKg){
             if(p!=null) {
@@ -138,8 +138,8 @@ public class ProductKgService {
                 realProductsKg.add(dto);
             }
         }
-        realProductsKg.sort(Comparator.comparing(ProductKgAPADTO::getName));
-        return realProductsKg;
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realProductsKg,pageable);
     }
 
     public String getImageUrl(String id) {
