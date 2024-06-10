@@ -16,11 +16,6 @@ public class KeycloakUtilities {
         attributes.put("phoneNumber", Collections.singletonList(customerAPA.getPhoneNumber()));
         attributes.put("note", Collections.singletonList(customerAPA.getNote()));
         user.setAttributes(attributes);
-        CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setType("password");
-        credential.setValue(String.valueOf(UUID.randomUUID()));
-        credential.setTemporary(true);
-        user.setCredentials(List.of(credential));
         user.setEnabled(true);
         return user;
     }
