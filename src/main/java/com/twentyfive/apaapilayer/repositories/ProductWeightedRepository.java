@@ -14,6 +14,7 @@ public interface ProductWeightedRepository extends MongoRepository<ProductWeight
 
     List<ProductWeightedAPA> findAllByIngredientIdsContaining(String ingredientId);
     List<ProductWeightedAPA> findAllByCategoryId(String categoryId);
+    List<ProductWeightedAPA> findByStats_BuyingCount(int buyingCount);
     List<ProductWeightedAPA> findAllByCategoryIdAndActiveTrue(String categoryId);
 
     Page<ProductWeightedAPA> findAllByCategoryIdAndActiveTrue(String categoryId, Pageable pageable);

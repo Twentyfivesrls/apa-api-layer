@@ -1,8 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
-import com.twentyfive.apaapilayer.models.CategoryAPA;
-import com.twentyfive.apaapilayer.models.ProductStatAPA;
-import com.twentyfive.apaapilayer.models.Tray;
+import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import lombok.Data;
@@ -20,16 +18,21 @@ public class ProductStatService {
     private final CategoryRepository categoryRepository;
 
     public void addBuyingCountProduct(Product product, int n) {
-        Optional<ProductStatAPA> productStat = productStatRepository.findById(product.getId());
+        Optional<ProductStatAPA> productStat;
+        if (product instanceof ProductWeightedAPA){
+            ProductWeightedAPA productWeightedAPA=(ProductWeightedAPA) product;
+            productStat = productStatRepository.findById(productWeightedAPA.getStats().getId());
+        } else {
+            ProductKgAPA productKgAPA=(ProductKgAPA) product;
+            productStat = productStatRepository.findById(productKgAPA.getStats().getId());
+        }
         if (productStat.isPresent()){
             productStat.get().setBuyingCount(productStat.get().getBuyingCount()+n);
             productStatRepository.save(productStat.get());
         } else {
             Optional<CategoryAPA> category = categoryRepository.findById(product.getCategoryId());
             if (category.isPresent()){
-                ProductStatAPA newProductStat = new ProductStatAPA();
-                newProductStat.setId(product.getId());
-                newProductStat.setType(category.get().getType());
+                ProductStatAPA newProductStat = new ProductStatAPA(category.get().getType());
                 newProductStat.setBuyingCount(n);
                 productStatRepository.save(newProductStat);
             }
@@ -37,16 +40,14 @@ public class ProductStatService {
     }
 
     public void addBuyingCountTray(Tray tray, int n) {
-        Optional<ProductStatAPA> productStat = productStatRepository.findById(tray.getId());
+        Optional<ProductStatAPA> productStat = productStatRepository.findById(tray.getStats().getId());
         if (productStat.isPresent()){
             productStat.get().setBuyingCount(productStat.get().getBuyingCount()+n);
             productStatRepository.save(productStat.get());
         } else {
             Optional<CategoryAPA> category = categoryRepository.findById(tray.getCategoryId());
             if (category.isPresent()){
-                ProductStatAPA newProductStat = new ProductStatAPA();
-                newProductStat.setId(tray.getId());
-                newProductStat.setType(category.get().getType());
+                ProductStatAPA newProductStat = new ProductStatAPA(category.get().getType());
                 newProductStat.setBuyingCount(n);
                 productStatRepository.save(newProductStat);
             }

@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
+import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
@@ -17,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -87,6 +88,8 @@ public class ProductKgService {
 
     @Transactional
     public ProductKgAPA save(ProductKgAPA p) {
+        ProductStatAPA pStat=new ProductStatAPA("productKg");
+        p.setStats(pStat);
         return productKgRepository.save(p);
     }
 
@@ -130,7 +133,18 @@ public class ProductKgService {
 
 
     public Page<ProductKgAPADTO> getAllActive(String idCategory, int page, int size) {
-        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalseOrderByNameAsc(idCategory);
+        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalse(idCategory);
+        // Ordinare prima per buyingCount e poi per name
+        productsKg = productsKg.stream()
+                .filter(product -> product.getStats() != null) // Filtra i prodotti con stats null
+                .sorted((p1, p2) -> {
+                    int cmp = Integer.compare(p2.getStats().getBuyingCount(), p1.getStats().getBuyingCount()); // Ordine desc
+                    if (cmp == 0) {
+                        cmp = p1.getName().compareTo(p2.getName()); // Ordine asc
+                    }
+                    return cmp;
+                })
+                .collect(Collectors.toList());
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
         for(ProductKgAPA p : productsKg){
             if(p!=null) {

@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.TrayAPADTO;
 import com.twentyfive.apaapilayer.dtos.TrayDetailsAPADTO;
+import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.models.Tray;
 import com.twentyfive.apaapilayer.repositories.TrayRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
@@ -47,6 +48,8 @@ public class TrayService {
     }
 
     public Tray save(Tray tray) {
+        ProductStatAPA pStat=new ProductStatAPA("tray");
+        tray.setStats(pStat);
         return trayRepository.save(tray);
     }
 

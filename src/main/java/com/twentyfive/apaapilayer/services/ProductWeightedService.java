@@ -2,9 +2,11 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
+import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
@@ -31,9 +34,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 public class ProductWeightedService {
 
     private final ProductWeightedRepository productWeightedRepository;
+    private final ProductStatRepository productStatRepository;
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
-    private final MongoTemplate mongoTemplate;
 
     private ProductWeightedAPADTO productsWeightedToDTO(ProductWeightedAPA product){
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
@@ -86,6 +89,7 @@ public class ProductWeightedService {
 
 
     public ProductWeightedAPADTO getById(String id) {
+        List<ProductWeightedAPA> productWeightedAPAS =productWeightedRepository.findByStats_BuyingCount(0);
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         if(productWeightedAPA==null)
             return null;
@@ -94,6 +98,9 @@ public class ProductWeightedService {
 
     @Transactional
     public ProductWeightedAPA save(ProductWeightedAPA p) {
+        ProductStatAPA pStat=new ProductStatAPA("productWeighted");
+        p.setStats(pStat);
+        productStatRepository.save(pStat);
         return productWeightedRepository.save(p);
     }
 
@@ -142,13 +149,25 @@ public class ProductWeightedService {
     }
 
     public Page<ProductWeightedAPADTO> getAllForCustomizedTray(String idCategory, int page, int size) {
+        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryId(idCategory);
+
+        // Ordinare prima per buyingCount e poi per name
+        products = products.stream()
+                .filter(product -> product.getStats() != null) // Filtra i prodotti con stats null
+                .sorted((p1, p2) -> {
+                    int cmp = Integer.compare(p2.getStats().getBuyingCount(), p1.getStats().getBuyingCount()); // Ordine desc
+                    if (cmp == 0) {
+                        cmp = p1.getName().compareTo(p2.getName()); // Ordine asc
+                    }
+                    return cmp;
+                })
+                .collect(Collectors.toList());
+
         Pageable pageable = PageRequest.of(page, size);
-        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryIdAndActiveTrueOrderByStats_BuyingCountDescNameAsc(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = products.stream()
                 .map(this::productsWeightedToDTO) // Converti i risultati direttamente in DTO
                 .collect(Collectors.toList());
 
         return PageUtilities.convertListToPage(realProductsWeighted, pageable);
     }
-
 }
