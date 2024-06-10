@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.dtos.TrayAPADTO;
 import com.twentyfive.apaapilayer.dtos.TrayDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.models.Tray;
+import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import com.twentyfive.apaapilayer.repositories.TrayRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import com.twentyfive.apaapilayer.utils.TrayUtilities;
@@ -23,6 +24,7 @@ import java.util.List;
 public class TrayService {
 
     private final TrayRepository trayRepository;
+    private final ProductStatRepository productStatRepository;
 
     public Page<TrayAPADTO> findByIdCategory(String idCategory,int page, int size, String sortColumn, String sortDirection) {
         List<Tray> trays = trayRepository.findAllByCategoryId(idCategory);
@@ -48,8 +50,11 @@ public class TrayService {
     }
 
     public Tray save(Tray tray) {
-        ProductStatAPA pStat=new ProductStatAPA("tray");
-        tray.setStats(pStat);
+        if(trayRepository.findById(tray.getId()).isEmpty()){
+            ProductStatAPA pStat=new ProductStatAPA("tray");
+            tray.setStats(pStat);
+            productStatRepository.save(pStat);
+        }
         return trayRepository.save(tray);
     }
 

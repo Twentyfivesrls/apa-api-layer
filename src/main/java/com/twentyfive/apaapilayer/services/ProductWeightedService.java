@@ -98,9 +98,11 @@ public class ProductWeightedService {
 
     @Transactional
     public ProductWeightedAPA save(ProductWeightedAPA p) {
-        ProductStatAPA pStat=new ProductStatAPA("productWeighted");
-        p.setStats(pStat);
-        productStatRepository.save(pStat);
+        if(productWeightedRepository.findById(p.getId()).isEmpty()){
+            ProductStatAPA pStat=new ProductStatAPA("productWeighted");
+            p.setStats(pStat);
+            productStatRepository.save(pStat);
+        }
         return productWeightedRepository.save(p);
     }
 

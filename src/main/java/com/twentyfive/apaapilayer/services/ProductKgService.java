@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
+import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class ProductKgService {
     private final ProductKgRepository productKgRepository;
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
+    private final ProductStatRepository productStatRepository;
 
     private ProductKgAPADTO productsKgToDTO(ProductKgAPA product){
         ProductKgAPADTO dto = new ProductKgAPADTO();
@@ -88,8 +90,11 @@ public class ProductKgService {
 
     @Transactional
     public ProductKgAPA save(ProductKgAPA p) {
-        ProductStatAPA pStat=new ProductStatAPA("productKg");
-        p.setStats(pStat);
+        if(productKgRepository.findById(p.getId()).isEmpty()){
+            ProductStatAPA pStat=new ProductStatAPA("productKg");
+            p.setStats(pStat);
+            productStatRepository.save(pStat);
+        }
         return productKgRepository.save(p);
     }
 
