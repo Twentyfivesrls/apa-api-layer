@@ -5,9 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class AutoCompleteRes {
+@NoArgsConstructor
+public class AutoCompleteProductWeighted extends ProductWeightedAPADTO{
     private String value;
-
 }

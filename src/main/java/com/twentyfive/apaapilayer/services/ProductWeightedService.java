@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.AutoCompleteProductWeighted;
 import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductStatAPA;
@@ -67,6 +68,35 @@ public class ProductWeightedService {
         return dto;
     }
 
+    private AutoCompleteProductWeighted productsWeightedToAutoCompleteDTO(ProductWeightedAPA product){
+        AutoCompleteProductWeighted dto = new AutoCompleteProductWeighted();
+        dto.setActive(product.isActive());
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setImageUrl(product.getImageUrl());
+        dto.setRealWeight(product.getWeight());
+        dto.setWeight("Kg " +product.getWeight());
+        dto.setDescription(product.getDescription());
+        List<String> idingredienti = product.getIngredientIds();
+        List<String> nomeIngredienti = new ArrayList<>();
+        List<Allergen> allergeni = new ArrayList<>();
+        for(String id : idingredienti){
+            IngredientAPA ingrediente = ingredientRepository.findById(id).orElse(null);
+            if(ingrediente!=null) {
+                nomeIngredienti.add(ingrediente.getName());
+                List<String> nomiAllergeni = ingrediente.getAllergenNames();
+                for(String nomeAllergene: nomiAllergeni){
+                    Allergen allergene = allergenRepository.findByName(nomeAllergene).orElse(null);
+                    if(allergene!=null && !allergeni.contains(allergene))
+                        allergeni.add(allergene);
+                }
+            }
+        }
+        dto.setIngredients(nomeIngredienti);
+        dto.setAllergens(allergeni);
+        dto.setValue(product.getName());
+        return dto;
+    }
 
     public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
         List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
@@ -89,7 +119,6 @@ public class ProductWeightedService {
 
 
     public ProductWeightedAPADTO getById(String id) {
-        List<ProductWeightedAPA> productWeightedAPAS =productWeightedRepository.findByStats_BuyingCount(0);
         ProductWeightedAPA productWeightedAPA = productWeightedRepository.findById(id).orElse(null);
         if(productWeightedAPA==null)
             return null;
@@ -150,9 +179,8 @@ public class ProductWeightedService {
         return productWeightedAPA.getImageUrl();
     }
 
-    public Page<ProductWeightedAPADTO> getAllForCustomizedTray(String idCategory, int page, int size) {
-        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryId(idCategory);
-
+    public List<AutoCompleteProductWeighted> getAllForCustomizedTray(String value) {
+        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryIdAndNameContainsIgnoreCase("664361ed09aa3a0e1b249988",value);
         // Ordinare prima per buyingCount e poi per name
         products = products.stream()
                 .filter(product -> product.getStats() != null) // Filtra i prodotti con stats null
@@ -165,11 +193,10 @@ public class ProductWeightedService {
                 })
                 .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(page, size);
-        List<ProductWeightedAPADTO> realProductsWeighted = products.stream()
-                .map(this::productsWeightedToDTO) // Converti i risultati direttamente in DTO
+        List<AutoCompleteProductWeighted> autoCompleteProductWeighted = products.stream()
+                .map(this::productsWeightedToAutoCompleteDTO) // Converti i risultati direttamente in DTO
                 .collect(Collectors.toList());
 
-        return PageUtilities.convertListToPage(realProductsWeighted, pageable);
+        return autoCompleteProductWeighted;
     }
 }
