@@ -63,6 +63,7 @@ public class ProductWeightedService {
                 }
             }
         }
+        dto.setStats(product.getStats());
         dto.setIngredients(nomeIngredienti);
         dto.setAllergens(allergeni);
         return dto;

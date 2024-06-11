@@ -15,6 +15,7 @@ public class TrayUtilities {
         dto.setDescription(tray.getDescription());
         dto.setCustomized(tray.isCustomized());
         dto.setPersonalized(tray.isCustomized() ? "Personalizzato" : "Standard");
+        dto.setStats(tray.getStats());
         dto.setMeasures(concatMeasureString(tray.getMeasures()));
         dto.setMeasuresList(tray.getMeasures());
         dto.setPricePerKg(tray.getPricePerKg());

@@ -54,6 +54,7 @@ public class ProductKgService {
             }
         }
         dto.setIngredients(nomeIngredienti);
+        dto.setStats(product.getStats());
         dto.setAllergens(allergeni);
         dto.setDescription(product.getDescription());
         dto.setWeightRange(product.getWeightRange());

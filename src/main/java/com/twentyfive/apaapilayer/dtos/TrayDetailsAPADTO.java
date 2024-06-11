@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.dtos;
 
+import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,8 @@ public class TrayDetailsAPADTO {
     private boolean customized;
     private String personalized;
     private String measures;
+    private ProductStatAPA stats;
+
     private List<Measure> measuresList;
     private String description;
     private String imageUrl;
