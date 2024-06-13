@@ -14,10 +14,6 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class EmailUtilities {
     private final KeycloakService keycloakService;
-    public static String readHtmlFile(ClassPathResource htmlFileResource) throws IOException {
-        byte[] htmlBytes = htmlFileResource.getInputStream().readAllBytes();
-        return new String(htmlBytes, StandardCharsets.UTF_8);
-    }
     public EmailSendRequest toEmailSendRequest(String template, String subject, String email) throws IOException {
         EmailSendRequest emailSendRequest = new EmailSendRequest();
         emailSendRequest.setTo(email);

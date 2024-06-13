@@ -22,41 +22,45 @@ public class EmailService {
     private final TemplateEngine templateEngine;
 
     private final String templateReceived = "orderReceived";
-    private final String subjectReceived = "Il tuo ordine è arrivato!";
+    private final String subjectReceived = " Abbiamo ricevuto il tuo ordine n.%s! ";
 
     private final String templateCanceled = "orderCanceled";
-    private final String subjectCanceled = "Il tuo ordine è stato cancellato!";
+    private final String subjectCanceled = "Abbiamo annullato il tuo ordine n.%s!";
 
     private final String templatePreparation = "orderPreparation";
-    private final String subjectPreparation = "Il tuo ordine è in preparazione!";
+    private final String subjectPreparation = "Il tuo ordine n.%s è in preparazione!";
 
     private final String templateReady = "orderReady";
-    private final String subjectReady = "Il tuo ordine è pronto!";
+    private final String subjectReady = "Il tuo ordine n.%s è pronto!";
 
     public void sendEmail(String email, OrderStatus type, Map<String, Object> variables) throws IOException {
         String token = keycloakService.getAccessTokenTF();
         String authorizationHeader = "Bearer " + token;
         String content;
+        String subject;
+        String templateName;
         EmailSendRequest emailSendRequest;
         switch (type) {
             case ANNULLATO -> {
-                content = generateContent(templateCanceled, variables);
-                emailSendRequest = emailUtilities.toEmailSendRequest(content, subjectCanceled, email);
+                subject = String.format(subjectCanceled,variables.get("orderId"));
+                templateName=templateCanceled;
             }
             case RICEVUTO -> {
-                content = generateContent(templateReceived, variables);
-                emailSendRequest = emailUtilities.toEmailSendRequest(content, subjectReceived, email);
+                subject = String.format(subjectReceived,variables.get("orderId"));
+                templateName=templateReceived;
             }
             case IN_PREPARAZIONE -> {
-                content = generateContent(templatePreparation, variables);
-                emailSendRequest = emailUtilities.toEmailSendRequest(content, subjectPreparation, email);
+                subject = String.format(subjectPreparation,variables.get("orderId"));
+                templateName=templatePreparation;
             }
             case PRONTO -> {
-                content = generateContent(templateReady, variables);
-                emailSendRequest = emailUtilities.toEmailSendRequest(content, subjectReady, email);
+                subject = String.format(subjectReady,variables.get("orderId"));
+                templateName=templateReady;
             }
             default -> throw new IllegalArgumentException("Unknown order status: " + type);
         }
+        content = generateContent(templateName, variables); //FIXME
+        emailSendRequest = emailUtilities.toEmailSendRequest(content, subject, email);
         emailClientController.sendMail(authorizationHeader, emailSendRequest);
     }
 
