@@ -1,11 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Il tuo ordine è arrivato!</title>
+  <title>Ordine annullato</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
-<p>Il tuo ordine è stato ricevuto.</p>
-<p>Numero d'ordine: <span th:text="${orderId}"></span></p>
-<p>Nome cliente: <span th:text="${customerName}"></span></p>
+<body style="background-color: #6C6029; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;">
+<div style="width: 100%; max-width: 600px; margin: auto; padding: 10px; box-sizing: border-box;">
+  <div class="logo" style="margin-top: 15px; margin-bottom: 20px; text-align: center;">
+    <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/Logo.png" alt="Antica Pasticceria" style="max-width: 100%; height: auto;">
+  </div>
+  <div class="container" style="background-color: white; border: 1px solid white; width: 100%; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center; margin-bottom: 20px;">
+    <div class="content" style="margin: 20px 0;">
+      <h1 style="color: #333;">Ordine in preparazione</h1>
+      <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/order-in-preparation.png" alt="Ordine annullato" style="width: 100px; height: auto; margin: 5px 0;">
+      <p style="color: #666;">Ciao <strong><span th:text="${customerName}"></span></strong>,</p>
+      <p style="color: #666;">Il tuo ordine n.<strong><span th:text="${orderId}"></span></strong> &egrave; in preparazione! Il nostro team sta lavorando con cura per garantire che tutto sia perfetto.</p>
+      <p style="color: #666;">Ti avviseremo non appena l'ordine sar&agrave; pronto per il ritiro.</p>
+      <p style="color: #666;">Grazie per aver scelto Antica Pasticceria!</p>
+      <p style="color: #666;">Cordiali saluti,<br>
+        Il Team di Antica Pasticceria</p>
+      <a href="http://80.211.123.141:5564/catalogo">Torna al sito</a>
+    </div>
+  </div>
+  <div class="info" style="color: white; font-size: 14px; text-align: center; margin: 10px 0;">
+    <div class="info-icons" style="margin-bottom: 10px;">
+      <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-location.png" style="width: 14px; height: 14.5px;">
+        Via Fratelli Bandiera, 15, 87036 Quattromiglia CS</p><br>
+      <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-phone.png" style="width: 14px; height: 14.5px;">
+        0984 464331</p><br>
+      <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-mail.png" style="width: 14px; height: 14.5px;">
+        info&#64;antica-pasticceria.com</p>
+    </div>
+    <div class="footer-icons" style="margin: 10px 0;">
+      <a href="https://www.facebook.com/anticapasticceriarende/" style="color: white; text-decoration: none; margin: 0 10px;">
+        <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-fb.png" style="width: 14px; height: 14.5px;">
+      </a>
+      <a href="https://www.instagram.com/anticapasticceriarende/" style="color: white; text-decoration: none; margin: 0 10px;">
+        <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-insta.png" style="width: 14px; height: 14.5px;">
+      </a>
+    </div>
+  </div>
+  <footer style="font-size: 14px; text-align: center; margin-top: 5px;">
+    <hr>
+    <p style="color: white">Antica Pasticceria - Copyright 2024</p>
+  </footer>
+</div>
 </body>
 </html>
