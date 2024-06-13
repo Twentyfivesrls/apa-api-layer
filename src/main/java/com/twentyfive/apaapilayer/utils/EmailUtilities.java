@@ -21,7 +21,7 @@ public class EmailUtilities {
     public EmailSendRequest toEmailSendRequest(String template, String subject, String email) throws IOException {
         EmailSendRequest emailSendRequest = new EmailSendRequest();
         emailSendRequest.setTo(email);
-        emailSendRequest.setText(template);
+        emailSendRequest.setText(template); //da indagare
         emailSendRequest.setHtmlContent(template);
         emailSendRequest.setSubject(subject);
         emailSendRequest.setAttributes(keycloakService.getEmailSettings());
