@@ -1,22 +1,11 @@
 <!DOCTYPE html>
-<html lang="it">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Ordine</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .message { margin: 20px; padding: 20px; border: 1px solid #f0f0f0; background-color: #f9f9f9; }
-    .header { color: #333; }
-    .content { margin-top: 20px; }
-    .footer { margin-top: 40px; font-size: 0.9em; color: #777; }
-  </style>
+  <title>Il tuo ordine è arrivato!</title>
 </head>
 <body>
-<div class="message">
-  <h2 class="header">Ordine in preparazione</h2>
-  <div class="content">
-    TEMP ORDINE IN PREPARAZIONE
-  </div>
-</div>
+<p>Il tuo ordine è stato ricevuto.</p>
+<p>Numero d'ordine: <span th:text="${orderId}"></span></p>
+<p>Nome cliente: <span th:text="${customerName}"></span></p>
 </body>
 </html>

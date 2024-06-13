@@ -11,6 +11,7 @@ import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import com.twentyfive.apaapilayer.utils.PdfUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
+import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -409,10 +410,11 @@ public class ActiveOrderService {
                         }
                         activeOrderRepository.delete(order.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                         completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
-                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()));
+                        Map<String, Object> variables = new HashMap<>();
+                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(customer.get().getFirstName(),order.get().getCustomerId()));
                     }
                     case IN_PREPARAZIONE, PRONTO -> {
-                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()));
+                        emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(customer.get().getFirstName(),order.get().getCustomerId()));
                         order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
                         activeOrderRepository.save(order.get());
                     }

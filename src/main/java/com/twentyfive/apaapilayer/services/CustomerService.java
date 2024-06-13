@@ -9,6 +9,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
+import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -237,7 +238,7 @@ public class CustomerService {
             customerRepository.save(customer);
             String in= StompUtilities.sendNewOrderNotification();
             producerPool.send(in,1,NOTIFICATION_TOPIC);
-            emailService.sendEmail(customer.getEmail(),OrderStatus.RICEVUTO);
+            emailService.sendEmail(customer.getEmail(),OrderStatus.RICEVUTO, TemplateUtilities.populateEmail(customer.getFirstName(),order.getId()));
             return true;
         }
         return false;

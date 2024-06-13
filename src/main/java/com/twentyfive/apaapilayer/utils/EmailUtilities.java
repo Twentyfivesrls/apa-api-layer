@@ -19,12 +19,10 @@ public class EmailUtilities {
         return new String(htmlBytes, StandardCharsets.UTF_8);
     }
     public EmailSendRequest toEmailSendRequest(String template, String subject, String email) throws IOException {
-        ClassPathResource htmlFileResource = new ClassPathResource(template);
-        String htmlContent = readHtmlFile(htmlFileResource);
         EmailSendRequest emailSendRequest = new EmailSendRequest();
         emailSendRequest.setTo(email);
-        emailSendRequest.setText(htmlContent);
-        emailSendRequest.setHtmlContent(htmlContent);
+        emailSendRequest.setText(template);
+        emailSendRequest.setHtmlContent(template);
         emailSendRequest.setSubject(subject);
         emailSendRequest.setAttributes(keycloakService.getEmailSettings());
         return emailSendRequest;
