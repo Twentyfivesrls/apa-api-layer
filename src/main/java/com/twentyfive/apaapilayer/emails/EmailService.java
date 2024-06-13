@@ -25,7 +25,7 @@ public class EmailService {
     private final String subjectReceived = " Abbiamo ricevuto il tuo ordine n.%s! ";
 
     private final String templateCanceled = "orderCanceled";
-    private final String subjectCanceled = "Abbiamo annullato il tuo ordine n.%s!";
+    private final String subjectCanceled = "Il tuo ordine n.%s è stato annullato!";
 
     private final String templatePreparation = "orderPreparation";
     private final String subjectPreparation = "Il tuo ordine n.%s è in preparazione!";
