@@ -10,13 +10,13 @@
     <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/Logo.png" alt="Antica Pasticceria" style="max-width: 100%; height: auto;">
   </div>
   <div class="container" style="background-color: white; border: 1px solid white; width: 100%; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center; margin-bottom: 20px;">
-    <div class="content" style="margin: 20px 0;">
-      <h1 style="color: #333;">Ordine in preparazione</h1>
+    <div class="content" style="margin: 20px 0; padding: 0 20px;">
+      <h1 style="color: #333;">Ordine in preparazione!</h1>
       <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/order-in-preparation.png" alt="Ordine annullato" style="width: 100px; height: auto; margin: 5px 0;">
       <p style="color: #666;">Ciao <strong><span th:text="${customerName}"></span></strong>,</p>
-      <p style="color: #666;">Il tuo ordine n.<strong><span th:text="${orderId}"></span></strong> &egrave; in preparazione! Il nostro team sta lavorando con cura per garantire che tutto sia perfetto.</p>
-      <p style="color: #666;">Ti avviseremo non appena l'ordine sar&agrave; pronto per il ritiro.</p>
-      <p style="color: #666;">Grazie per aver scelto Antica Pasticceria!</p>
+      <p style="color: #666;">Il tuo ordine n.<strong><span th:text="${orderId}"></span></strong> &egrave; in preparazione!</p>
+      <p style="color: #666;">Riceverai un'email non appena l'ordine sar&agrave; pronto per il ritiro.</p>
+      <p style="color: #666;"><strong>Grazie per aver scelto Antica Pasticceria!</strong></p>
       <p style="color: #666;">Cordiali saluti,<br>
         Il Team di Antica Pasticceria</p>
       <a href="http://80.211.123.141:5564/catalogo">Torna al sito</a>
@@ -25,9 +25,11 @@
   <div class="info" style="color: white; font-size: 14px; text-align: center; margin: 10px 0;">
     <div class="info-icons" style="margin-bottom: 10px;">
       <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-location.png" style="width: 14px; height: 14.5px;">
-        Via Fratelli Bandiera, 15, 87036 Quattromiglia CS</p><br>
-      <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-phone.png" style="width: 14px; height: 14.5px;">
-        0984 464331</p><br>
+        Via Fratelli Bandiera, 15, 87036 Quattromiglia CS</p>
+      <a href="tel:0984464331" style="color: white; text-decoration: none;">
+        <img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-phone.png" style="width: 14px; height: 14.5px;">
+        0984 464331
+      </a>
       <p style="margin: 0"><img src="http://80.211.123.141:8087/TwentyfiveMediaManager/twentyfiveserver/downloadkkk/apa/email/ico-mail.png" style="width: 14px; height: 14.5px;">
         info&#64;antica-pasticceria.com</p>
     </div>
