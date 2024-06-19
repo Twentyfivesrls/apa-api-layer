@@ -91,10 +91,12 @@ public class ProductKgService {
 
     @Transactional
     public ProductKgAPA save(ProductKgAPA p) {
-        if(productKgRepository.findById(p.getId()).isEmpty()){
-            ProductStatAPA pStat=new ProductStatAPA("productKg");
-            p.setStats(pStat);
-            productStatRepository.save(pStat);
+        if(p.getId()!=null){
+            if(productKgRepository.findById(p.getId()).isEmpty()){
+                ProductStatAPA pStat=new ProductStatAPA("productKg");
+                p.setStats(pStat);
+                productStatRepository.save(pStat);
+            }
         }
         return productKgRepository.save(p);
     }
