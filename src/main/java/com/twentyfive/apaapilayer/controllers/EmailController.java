@@ -19,7 +19,7 @@ public class EmailController {
 
     @PostMapping("/send/{email}")
     public ResponseEntity<String> sendEmail(@PathVariable String email) throws IOException {
-        emailService.sendEmail(email, OrderStatus.RICEVUTO, TemplateUtilities.populateEmail("TEST","1234"));
+        emailService.sendEmail(email, OrderStatus.IN_PREPARAZIONE, TemplateUtilities.populateEmail("sonoscemo","wgildaiotifoperte"));
         return ResponseEntity.ok().body("email inviata!");
     }
 }

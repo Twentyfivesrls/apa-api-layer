@@ -24,7 +24,7 @@ public class IngredientController {
     @GetMapping("/getAll")
     public ResponseEntity<Page<IngredientsAPADTO>> findByIdCategory(@RequestParam("idCategory")String idCategory,
                                                                     @RequestParam(value = "page", defaultValue = "0") int page,
-                                                                    @RequestParam(value = "size", defaultValue = "10") int size,
+                                                                    @RequestParam(value = "size", defaultValue = "25") int size,
                                                                     @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
                                                                     @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(ingredientService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));

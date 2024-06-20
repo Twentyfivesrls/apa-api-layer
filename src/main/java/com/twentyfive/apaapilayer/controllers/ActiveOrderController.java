@@ -31,7 +31,7 @@ public class ActiveOrderController {
     @GetMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection));
