@@ -102,7 +102,8 @@ public class CompletedOrderService {
                 .collect(Collectors.toList());
 
         dto.setProducts(productDTOs);
-        dto.setNote(order.getNote());
+        dto.setOrderNote(order.getNote());
+        dto.setCustomerNote(customer.getNote());
 
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());

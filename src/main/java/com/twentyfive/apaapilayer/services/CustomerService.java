@@ -170,14 +170,15 @@ public class CustomerService {
     public CustomerAPA register(CustomerAPA customerAPA) {
         return customerRepository.save(customerAPA);
     }
+
     public CustomerAPA saveCustomer(CustomerAPA customer) throws IOException {
         if(customer.getIdKeycloak()!=null){
             keycloakService.update(customer);
             return customerRepository.save(customer);
         } else {
             keycloakService.add(customer);
+            keycloakService.sendPasswordResetEmail(customer.getIdKeycloak());
             CustomerAPA newCustomer = customerRepository.save(customer);
-            keycloakService.sendPasswordResetEmail(newCustomer.getIdKeycloak());
             return newCustomer;
         }
         // Salva il nuovo cliente nel database o gli faccio update

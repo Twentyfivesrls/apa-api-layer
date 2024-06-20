@@ -17,7 +17,8 @@ public class OrderDetailsAPADTO {
     private List<ProductInPurchaseDTO> products;
     private List<BundleInPurchaseDTO> bundles;
     private String email;
-    private String note;
+    private String orderNote;
+    private String customerNote;
     private String phoneNumber;
     private LocalDateTime pickupDateTime;
     private double totalPrice;

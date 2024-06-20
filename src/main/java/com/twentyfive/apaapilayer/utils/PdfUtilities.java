@@ -55,7 +55,6 @@ public class PdfUtilities {
                         document.add(createParagraph(entry.getKey() + ": ", entry.getValue(), boldFont, normalFont));
                     }
                 }
-                document.add(createParagraph("Gocce di cioccolato: ", String.valueOf(product.isChocolateChips()), boldFont, normalFont));
                 document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
 
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
