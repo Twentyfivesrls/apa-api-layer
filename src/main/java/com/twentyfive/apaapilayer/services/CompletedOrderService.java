@@ -57,7 +57,7 @@ public class CompletedOrderService {
             if (sortColumn.equals("price")) {
                 sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
             } else if (sortColumn.equals("formattedPickupDate")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDate");
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
             } else {
                 sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
             }
