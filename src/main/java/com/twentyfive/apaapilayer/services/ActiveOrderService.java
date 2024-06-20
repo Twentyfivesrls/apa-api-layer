@@ -411,7 +411,6 @@ public class ActiveOrderService {
                         }
                         activeOrderRepository.delete(order.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                         completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
-                        Map<String, Object> variables = new HashMap<>();
                         emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(customer.get().getFirstName(),order.get().getCustomerId()));
                     }
                     case IN_PREPARAZIONE, PRONTO -> {

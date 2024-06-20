@@ -2,12 +2,16 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.CompletedOrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.RedoOrderReq;
+
+import java.io.IOException;
 
 
 @RestController
@@ -57,5 +61,10 @@ public class CompletedOrderController {
         } else {
             return ResponseEntity.noContent().build(); // Restituisce 204 No Content se non ci sono ordini
         }
+    }
+
+    @PostMapping("/redo-order")
+    public ResponseEntity<OrderAPA> redoOrder(@RequestBody RedoOrderReq redoOrder) throws IOException {
+        return ResponseEntity.ok().body(completedOrderService.redoOrder(redoOrder));
     }
 }

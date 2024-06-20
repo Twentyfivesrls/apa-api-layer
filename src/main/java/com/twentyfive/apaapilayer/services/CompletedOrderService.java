@@ -1,10 +1,12 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.*;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.OrderRestoringNotAllowedException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,9 +16,12 @@ import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.RedoOrderReq;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,17 +34,19 @@ public class CompletedOrderService {
     private final ActiveOrderRepository activeOrderRepository;
     private final CustomerRepository customerRepository;
     private final ProductWeightedRepository productWeightedRepository;
+    private final EmailService emailService;
 
     private final ProductKgRepository productKgRepository;
 
     private final TrayRepository trayRepository;
 
     @Autowired
-    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, ProductKgRepository productKgRepository, TrayRepository trayRepository) {
+    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, EmailService emailService, ProductKgRepository productKgRepository, TrayRepository trayRepository) {
         this.completedOrderRepository= completedOrderRepository;
         this.customerRepository=customerRepository;
         this.activeOrderRepository=activeOrderRepository;
         this.productWeightedRepository = productWeightedRepository;
+        this.emailService = emailService;
         this.productKgRepository=productKgRepository;
         this.trayRepository=trayRepository;
     }
@@ -213,11 +220,45 @@ public class CompletedOrderService {
         return dto;
     }
 
+    private OrderAPA convertCompleteToActiveOrderWithoutId(CompletedOrderAPA completedOrder){
+        OrderAPA activeOrder = new OrderAPA();
+        activeOrder.setCreatedDate(completedOrder.getCreatedDate());
+        activeOrder.setNote(completedOrder.getNote());
+        activeOrder.setStatus(completedOrder.getStatus());
+        activeOrder.setCustomerId(completedOrder.getCustomerId());
+        activeOrder.setTotalPrice(completedOrder.getTotalPrice());
+        activeOrder.setBundlesInPurchase(completedOrder.getBundlesInPurchase());
+        activeOrder.setProductsInPurchase(completedOrder.getProductsInPurchase());
+        activeOrder.setPickupDate(completedOrder.getPickupDate());
+        activeOrder.setPickupTime(completedOrder.getPickupTime());
+        return activeOrder;
+    }
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {
         Optional<ProductWeightedAPA> pWght = productWeightedRepository.findById(piece.getId());
         String name = pWght.map(ProductWeightedAPA::getName).orElse("No registered product");
         double weight = pWght.map(ProductWeightedAPA::getWeight).orElseThrow(() -> new IllegalArgumentException());
         return new PieceInPurchaseDTO(piece, name, weight);
+    }
+
+    public OrderAPA redoOrder(RedoOrderReq redoOrder) throws IOException {
+        Optional<CompletedOrderAPA> optCompletedOrder=completedOrderRepository.findById(redoOrder.getId());
+        if (optCompletedOrder.isPresent()){
+            CompletedOrderAPA completedOrder = optCompletedOrder.get();
+            Optional<CustomerAPA> optCustomer =customerRepository.findById(completedOrder.getCustomerId());
+            completedOrder.setStatus(OrderStatus.RICEVUTO);
+            completedOrder.setPickupDate(redoOrder.getPickupDate());
+            completedOrder.setPickupTime(redoOrder.getPickupTime());
+            completedOrder.setNote(redoOrder.getNote());
+            completedOrder.setCreatedDate(LocalDateTime.now());
+            OrderAPA orderAPA= convertCompleteToActiveOrderWithoutId(completedOrder);
+            activeOrderRepository.save(orderAPA);
+            if(optCompletedOrder.isPresent()){
+                CustomerAPA customer = optCustomer.get();
+                emailService.sendEmail(customer.getEmail(), orderAPA.getStatus(), TemplateUtilities.populateEmail(customer.getFirstName(), orderAPA.getId()));
+            }
+            return orderAPA;
+        }
+        return null;
     }
 }
 
