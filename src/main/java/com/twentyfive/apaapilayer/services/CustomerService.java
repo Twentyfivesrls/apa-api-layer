@@ -580,4 +580,17 @@ public class CustomerService {
 
         return new BundleInPurchaseDTO(bundleInPurchase, name,weightedProductsDTOs);
     }
+
+    @Transactional
+    public boolean deleteUser(String id) {
+        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+        if (optCustomer.isPresent()){
+            CustomerAPA customerAPA = optCustomer.get();
+            keycloakService.deleteUser(customerAPA.getIdKeycloak());
+            customerAPA.setIdKeycloak(null);
+            customerRepository.save(customerAPA);
+            return true;
+        }
+        return false;
+    }
 }

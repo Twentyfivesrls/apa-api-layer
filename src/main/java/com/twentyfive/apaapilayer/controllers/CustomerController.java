@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.services.KeycloakService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -108,14 +109,21 @@ public class CustomerController {
     @PostMapping("/reset-password/{userId}")
     public ResponseEntity<String> resetPassword(@PathVariable String userId) {
         try {
-            System.out.println("recived reset pass");
             keycloakService.sendPasswordResetEmail(userId);
             return ResponseEntity.ok("Password reset email sent successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to send password reset email: " + e.getMessage());
         }
     }
-
+    @DeleteMapping("/delete-from-user/{id}")
+    public ResponseEntity<String> deleteAccount(@PathVariable String id) {
+        try {
+            customerService.deleteUser(id);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete account.");
+        }
+        return ResponseEntity.ok("user cancellato con successo");
+    }
 
 
 }
