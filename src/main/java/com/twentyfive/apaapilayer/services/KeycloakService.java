@@ -39,6 +39,9 @@ public class KeycloakService {
     protected String passwordAdmin;
     @Value("${twenty.username}")
     protected String username;
+    @Value("${keycloak.realm}")
+    protected String realm;
+
     public String getAccessTokenTF() {
         // Creazione dei parametri x-www-form-urlencoded
         Map<String, String> params = new HashMap<>();
@@ -114,5 +117,11 @@ public class KeycloakService {
 
         // Call the Feign client method to send the reset email
         keycloakExtClient.resetPassword("Bearer " + accessToken, userId, actions);
+    }
+
+    public void deleteUser(String idKeycloak) {
+        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+        String authorizationHeader = "Bearer " + accessToken;
+        keycloakExtClient.deleteUser(realm,idKeycloak,authorizationHeader);
     }
 }

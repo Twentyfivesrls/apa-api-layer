@@ -67,5 +67,8 @@ public interface KeycloakExtClient {
     @RequestMapping(method = RequestMethod.PUT, value = "/admin/realms/${keycloak.realm}/users/{userId}/execute-actions-email", produces = "application/json")
     ResponseEntity<Object> resetPassword(@RequestHeader("Authorization") String accessToken, @PathVariable("userId") String userId, @RequestBody List<String> actions);
 
+    @DeleteMapping("/admin/realms/{realm}/users/{id}")
+    void deleteUser(@PathVariable("realm") String realm, @PathVariable("id") String userId, @RequestHeader("Authorization") String authorization);
+
 
 }
