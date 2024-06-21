@@ -13,6 +13,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -28,6 +32,7 @@ public class IngredientService {
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final CategoryRepository categoryRepository;
+    private final MongoTemplate mongoTemplate;
 
 
     private IngredientsAPADTO ingredientsToDTO(IngredientAPA ingredient){
@@ -175,5 +180,18 @@ public class IngredientService {
     public List<AutoCompleteRes> getIngredientsAutocomplete(String name) {
         List<IngredientAPA> ingredients = ingredientRepository.findByNameContainsIgnoreCase(name);
         return ingredients.stream().map(ingredient -> new AutoCompleteRes(ingredient.getName())).toList();
+    }
+
+    public boolean deleteById(String id) {
+        Optional<IngredientAPA> optIngredient = ingredientRepository.findById(id);
+        if (optIngredient.isPresent()) {
+            ingredientRepository.deleteById(id);
+            Query query = new Query(Criteria.where("ingredientiIds").in(id));
+            Update update = new Update().pull("ingredientiIds", id);
+            mongoTemplate.updateMulti(query, update, ProductKgAPA.class);
+            mongoTemplate.updateMulti(query, update, ProductWeightedAPA.class);
+            return true;
+        }
+        return false;
     }
 }

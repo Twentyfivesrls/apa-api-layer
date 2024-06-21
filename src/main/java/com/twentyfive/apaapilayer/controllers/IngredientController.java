@@ -62,6 +62,10 @@ public class IngredientController {
        return ResponseEntity.ok().body(ingredientService.disableById(id));
     }
 
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id){
+        return ResponseEntity.ok(ingredientService.deleteById(id));
+    }
     @GetMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id) {
         return ResponseEntity.ok().body(ingredientService.activateById(id));
