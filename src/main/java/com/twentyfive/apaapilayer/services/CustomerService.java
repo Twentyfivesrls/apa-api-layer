@@ -125,11 +125,11 @@ public class CustomerService {
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAll(pageable);
+            return customerRepository.findAllByIdKeycloakIsNotNull(pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAll(pageable);
+        return customerRepository.findAllByIdKeycloakIsNotNull(pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {
