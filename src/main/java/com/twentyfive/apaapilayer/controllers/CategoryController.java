@@ -45,7 +45,7 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.activateById(id));
     }
 
-    @GetMapping("/delete/{id}")
+    @GetMapping("/deleteById/{id}")
     public ResponseEntity<Boolean> delateById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.deleteById(id));
     }
