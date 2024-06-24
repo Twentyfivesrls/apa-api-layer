@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.util.List;
+import java.util.Map;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/categories")
@@ -19,7 +21,6 @@ public class CategoryController {
     public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndEnable(@RequestParam List<String> types) {
         return ResponseEntity.ok().body(categoryService.getEnabledCategories(types));
     }
-
 
     @GetMapping("/getAllDisabled")
     public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndDisable(@RequestParam List<String> types) {
@@ -44,5 +45,15 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.activateById(id));
     }
 
+    @GetMapping("/delete/{id}")
+    public ResponseEntity<Boolean> delateById(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.deleteById(id));
+    }
+
+    @PostMapping("/setOrderPriorities")
+    public ResponseEntity<Boolean> setOrder(@RequestBody Map<String,Integer> priorities){
+        return ResponseEntity.ok().body(categoryService.setOrderPriorities(priorities));
+
+    }
 
 }

@@ -155,7 +155,7 @@ public class IngredientService {
     }
 
     public List<IngredientAPA> getAllByTypeCategories(String type) {
-        List<CategoryAPA> categories = categoryRepository.findAllByTypeAndEnabledTrue(type);
+        List<CategoryAPA> categories = categoryRepository.findAllByTypeAndEnabledTrueAndSoftDeletedFalse(type);
         List<IngredientAPA> ingredients= new ArrayList<>();
         for (CategoryAPA category: categories){
             ingredients.addAll(ingredientRepository.findAllByCategoryIdAndActiveTrueOrderByNameAsc(category.getId()));

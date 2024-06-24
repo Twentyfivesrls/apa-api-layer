@@ -1,9 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.models.CategoryAPA;
-import com.twentyfive.apaapilayer.models.IngredientAPA;
-import com.twentyfive.apaapilayer.models.ProductKgAPA;
-import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
@@ -13,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -26,11 +24,11 @@ public class CategoryService {
 
 
     public List<CategoryAPA> getEnabledCategories(List<String> types) {
-        return categoryRepository.findAllByTypeInAndEnabledTrueOrderByNameAsc(types);
+        return categoryRepository.findAllByTypeInAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(types);
     }
 
     public List<CategoryAPA> getDisabledCategories(List<String> types) {
-        return categoryRepository.findAllByTypeInAndEnabledFalseOrderByNameAsc(types);
+        return categoryRepository.findAllByTypeInAndEnabledFalseAndSoftDeletedFalseOrderByNameAsc(types);
     }
     public CategoryAPA getById(String id){
         return categoryRepository.findById(id).orElse(null);
@@ -67,4 +65,32 @@ public class CategoryService {
         return false;
     }
 
+    @Transactional
+    public boolean deleteById(String id) {
+        CategoryAPA c = categoryRepository.findById(id).orElse(null);
+        if(c!=null) {
+            c.setEnabled(false);
+            c.setSoftDeleted(true);
+            categoryRepository.save(c);
+            return true;
+        }
+        return false;
+
+    }
+
+    @Transactional
+    public boolean setOrderPriorities(Map<String, Integer> priorities) {
+        for (Map.Entry<String, Integer> entry : priorities.entrySet()) {
+            if(!categoryRepository.existsById(entry.getKey()))return false;
+        }
+
+        for (Map.Entry<String, Integer> entry : priorities.entrySet()) {
+            CategoryAPA c = categoryRepository.findById(entry.getKey()).orElse(null);
+            if(c!=null){
+                c.setOrderPriority(entry.getValue());
+                categoryRepository.save(c);
+            }
+        }
+        return true;
+    }
 }
