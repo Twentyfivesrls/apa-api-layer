@@ -15,20 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @RequiredArgsConstructor
 @Service
@@ -100,7 +94,7 @@ public class ProductWeightedService {
     }
 
     public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryId(idCategory);
+        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
         List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
         for(ProductWeightedAPA p : productsWeighted){
             if(p!=null) {
@@ -181,7 +175,7 @@ public class ProductWeightedService {
     }
 
     public List<AutoCompleteProductWeighted> getAllForCustomizedTray(String value) {
-        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryIdAndNameContainsIgnoreCase("664361ed09aa3a0e1b249988",value);
+        List<ProductWeightedAPA> products = productWeightedRepository.findAllByCategoryIdAndSoftDeletedFalseAndNameContainsIgnoreCase("664361ed09aa3a0e1b249988",value);
         // Ordinare prima per buyingCount e poi per name
         products = products.stream()
                 .filter(product -> product.getStats() != null) // Filtra i prodotti con stats null
@@ -199,5 +193,16 @@ public class ProductWeightedService {
                 .collect(Collectors.toList());
 
         return autoCompleteProductWeighted;
+    }
+
+    public boolean deleteById(String id) {
+        Optional<ProductWeightedAPA> optProduct = productWeightedRepository.findById(id);
+        if (optProduct.isPresent()){
+            ProductWeightedAPA product = optProduct.get();
+            product.setSoftDeleted(true);
+            productWeightedRepository.save(product);
+            return true;
+        }
+        return false;
     }
 }

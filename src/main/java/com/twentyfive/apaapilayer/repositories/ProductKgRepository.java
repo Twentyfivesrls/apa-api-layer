@@ -11,8 +11,9 @@ public interface ProductKgRepository extends MongoRepository<ProductKgAPA,String
 
     List<ProductKgAPA> findAllByIngredientIdsContaining(String ingredientId);
 
+    List<ProductKgAPA> findAllByCategoryIdAndSoftDeletedFalse(String categoryId);
     List<ProductKgAPA> findAllByCategoryId(String categoryId);
 
-    List<ProductKgAPA> findAllByCategoryIdAndActiveTrueAndCustomizedFalse(String categoryId);
+    List<ProductKgAPA> findAllByCategoryIdAndActiveTrueAndCustomizedFalseAndSoftDeletedFalse(String categoryId);
 
 }

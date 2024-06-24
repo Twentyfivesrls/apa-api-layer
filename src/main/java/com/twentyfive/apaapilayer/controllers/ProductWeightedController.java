@@ -33,7 +33,7 @@ public class ProductWeightedController {
 
     @GetMapping("/getAllForCustomizedTray")
     public ResponseEntity<List<AutoCompleteProductWeighted>> getAllForCustomizedTray(
-            @RequestParam("value") String value){
+            @RequestParam(value = "value", defaultValue = "") String value){
         return ResponseEntity.ok().body(productWeightedService.getAllForCustomizedTray(value));
     }
     @GetMapping("/getById/{id}")
@@ -61,6 +61,10 @@ public class ProductWeightedController {
         return ResponseEntity.ok().body(productWeightedService.activateById(id, booleanModal));
     }
 
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id){
+        return ResponseEntity.ok().body(productWeightedService.deleteById(id));
+    }
     @GetMapping("/imageById/{id}")
     public ResponseEntity<String> imageUrlById(@PathVariable String id){
         return ResponseEntity.ok().body(productWeightedService.getImageUrl(id));

@@ -53,6 +53,10 @@ public class TrayController {
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(trayService.activateOrDisableById(id));
     }
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id) {
+        return ResponseEntity.ok().body(trayService.deleteById(id));
+    }
 
     @GetMapping("/imageById/{id}")
     public ResponseEntity<String> imageUrlById(@PathVariable String id){

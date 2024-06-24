@@ -16,8 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class TrayService {
     private final ProductStatRepository productStatRepository;
 
     public Page<TrayAPADTO> findByIdCategory(String idCategory,int page, int size, String sortColumn, String sortDirection) {
-        List<Tray> trays = trayRepository.findAllByCategoryId(idCategory);
+        List<Tray> trays = trayRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
@@ -69,7 +69,7 @@ public class TrayService {
     }
 
     public Page<TrayAPADTO> getAllActive(String idCategory,int page, int size) {
-        List<Tray> trays = trayRepository.findAllByCategoryIdAndCustomizedFalseAndActiveTrueOrderByNameAsc(idCategory);
+        List<Tray> trays = trayRepository.findAllByCategoryIdAndCustomizedFalseAndActiveTrueAndSoftDeletedFalseOrderByNameAsc(idCategory);
         List<TrayAPADTO> realTrays = new ArrayList<>();
         for(Tray tray : trays){
             realTrays.add(TrayUtilities.mapToTrayAPADTO(tray));
@@ -82,5 +82,16 @@ public class TrayService {
         Tray tray=trayRepository.findById(id).orElse(null);
         return tray.getImageUrl();
 
+    }
+
+    public boolean deleteById(String id) {
+        Optional<Tray> optTray = trayRepository.findById(id);
+        if (optTray.isPresent()){
+            Tray tray = optTray.get();
+            tray.setSoftDeleted(true);
+            trayRepository.save(tray);
+            return true;
+        }
+        return false;
     }
 }

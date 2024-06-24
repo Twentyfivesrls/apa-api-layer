@@ -59,6 +59,10 @@ public class ProductKgController {
         return ResponseEntity.ok().body(productkgService.activateById(id, booleanModal));
     }
 
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id){
+        return ResponseEntity.ok().body(productkgService.deleteById(id));
+    }
     @GetMapping("/imageById/{id}")
     public ResponseEntity<String> imageUrlById(@PathVariable String id){
         return ResponseEntity.ok().body(productkgService.getImageUrl(id));

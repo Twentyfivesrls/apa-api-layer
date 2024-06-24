@@ -20,6 +20,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -63,7 +64,7 @@ public class ProductKgService {
     }
 
     public Page<ProductKgAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryId(idCategory);
+        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
         for(ProductKgAPA p : productsKg){
             if(p!=null) {
@@ -139,7 +140,7 @@ public class ProductKgService {
 
 
     public Page<ProductKgAPADTO> getAllActive(String idCategory, int page, int size) {
-        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalse(idCategory);
+        List<ProductKgAPA> productsKg = productKgRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalseAndSoftDeletedFalse(idCategory);
         // Ordinare prima per buyingCount e poi per name
         productsKg = productsKg.stream()
                 .filter(product -> product.getStats() != null) // Filtra i prodotti con stats null
@@ -166,5 +167,16 @@ public class ProductKgService {
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         return productKgAPA.getImageUrl();
 
+    }
+
+    public boolean deleteById(String id) {
+        Optional<ProductKgAPA> optProductKg = productKgRepository.findById(id);
+        if(optProductKg.isPresent()){
+            ProductKgAPA product = optProductKg.get();
+            product.setSoftDeleted(true);
+            productKgRepository.save(product);
+            return true;
+        }
+        return false;
     }
 }
