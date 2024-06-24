@@ -50,7 +50,7 @@ public class TrayService {
     }
 
     public Tray save(Tray tray) {
-        if(trayRepository.findById(tray.getId()).isEmpty()){
+        if(tray.getId()==null){
             ProductStatAPA pStat=new ProductStatAPA("tray");
             tray.setStats(pStat);
             productStatRepository.save(pStat);
