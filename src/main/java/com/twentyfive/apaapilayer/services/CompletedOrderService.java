@@ -186,7 +186,7 @@ public class CompletedOrderService {
         activeOrder.setNote(completedOrder.getNote()); // Copia le note se presenti
         activeOrder.setPickupDate(completedOrder.getPickupDate()); // Data di creazione dell'ordine originale
         activeOrder.setPickupTime(completedOrder.getPickupTime()); // Data di ultima modifica come data corrente
-
+        activeOrder.setCreatedDate(LocalDateTime.now());
         // Copia dettagli specifici del prodotto, assicurati di approfondire la logica di clonazione o referenza
         if (completedOrder.getProductsInPurchase() != null) {
             activeOrder.setProductsInPurchase(new ArrayList<>(completedOrder.getProductsInPurchase()));
