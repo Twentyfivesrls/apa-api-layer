@@ -7,12 +7,15 @@ import com.twentyfive.apaapilayer.dtos.BundleInPurchaseDTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsPrintAPADTO;
 import com.twentyfive.apaapilayer.dtos.PieceInPurchaseDTO;
 import com.twentyfive.apaapilayer.dtos.ProductInPurchaseDTO;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Customization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PdfUtilities {
     public static ByteArrayOutputStream generatePdfStream(OrderDetailsPrintAPADTO orderDetails) throws DocumentException, IOException {
@@ -20,6 +23,16 @@ public class PdfUtilities {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, outputStream);
         document.open();
+
+        // Add image at the top left
+        try {
+            Image logo = Image.getInstance("src/main/resources/static/apa-logo.png"); // Path to your image
+            logo.scaleToFit(100, 100); // Resize the image to fit the top left corner
+            logo.setAbsolutePosition(36, 750); // Position the image
+            document.add(logo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Write order details
         Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
@@ -46,17 +59,21 @@ public class PdfUtilities {
             for (ProductInPurchaseDTO product : orderDetails.getProducts()) {
                 document.add(createParagraph("Nome: ", product.getName(), boldFont, normalFont));
                 document.add(createParagraph("Quantità: ", String.valueOf(product.getQuantity()), boldFont, normalFont));
-                document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
-                document.add(createParagraph("Peso: ", String.valueOf(product.getWeight()), boldFont, normalFont));
-                //TODO aggiustare con il nuovo PDF
-                /*if (product.getCustomization() != null && !product.getCustomization().isEmpty()) {
-                    document.add(new Paragraph("Personalizzazioni:", boldFont));
-                    for (Map.Entry<String, String> entry : product.getCustomization().entrySet()) {
-                        document.add(createParagraph(entry.getKey() + ": ", entry.getValue(), boldFont, normalFont));
+                if (product.getCustomization() == null || product.getCustomization().isEmpty()) {
+                    document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
+                    document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                } else {
+                    for(Customization customization : product.getCustomization()){
+                        document.add(createParagraph(customization.getName() + ": ", Arrays.stream(customization.getValue())
+                                .sequential()
+                                .collect(Collectors.joining(", ")), boldFont, normalFont));
+                        if(customization.getName().equals("Base")) {
+                            document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
+                            document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                        }
                     }
-                }*/
+                }
                 document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
-
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
                     try {
                         Image image = Image.getInstance(new URL(product.getAttachment()));
@@ -64,10 +81,10 @@ public class PdfUtilities {
                         document.add(image);
                     } catch (MalformedURLException e) {
                         // Handle URL exception
-                        document.add(createParagraph("Invalid attachment URL: ", product.getAttachment(), boldFont, normalFont));
+                        document.add(createParagraph("Url di riferimento non valido: ", product.getAttachment(), boldFont, normalFont));
                     } catch (IOException e) {
                         // Handle image fetching exception
-                        document.add(createParagraph("Error fetching attachment image: ", product.getAttachment(), boldFont, normalFont));
+                        document.add(createParagraph("Problemi a caricare l'immagine: ", product.getAttachment(), boldFont, normalFont));
                     }
                 }
                 document.add(new Paragraph("\n"));
