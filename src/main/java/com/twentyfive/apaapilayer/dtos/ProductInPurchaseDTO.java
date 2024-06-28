@@ -38,7 +38,6 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.attachment = product.getAttachment();
         this.deliveryDate = product.getDeliveryDate();
         this.totalPrice = product.getTotalPrice();
-        //POM
     }
 
 
