@@ -48,13 +48,13 @@ public class PdfUtilities {
                 document.add(createParagraph("Quantità: ", String.valueOf(product.getQuantity()), boldFont, normalFont));
                 document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
                 document.add(createParagraph("Peso: ", String.valueOf(product.getWeight()), boldFont, normalFont));
-
-                if (product.getCustomization() != null && !product.getCustomization().isEmpty()) {
+                //TODO aggiustare con il nuovo PDF
+                /*if (product.getCustomization() != null && !product.getCustomization().isEmpty()) {
                     document.add(new Paragraph("Personalizzazioni:", boldFont));
                     for (Map.Entry<String, String> entry : product.getCustomization().entrySet()) {
                         document.add(createParagraph(entry.getKey() + ": ", entry.getValue(), boldFont, normalFont));
                     }
-                }
+                }*/
                 document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
 
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
