@@ -369,7 +369,7 @@ public class CustomerService {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
         ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
         Cart cart = customer.getCart();
-
+        System.out.println();
         Optional<ItemInPurchase> existingItem = cart.getPurchases().stream()
                 .filter(pip -> pip.equals(product))
                 .findFirst();
