@@ -39,6 +39,7 @@ public class PdfUtilities {
         Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL);
         Font boldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         Font normalFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
+        Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
         Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
 
         // Customer info aligned to the right and smaller
@@ -52,16 +53,20 @@ public class PdfUtilities {
         document.add(new LineSeparator());
         document.add(new Paragraph("\n"));
 
+        document.add(new Paragraph("Ordine:", largeBoldFont));
+        document.add(new Paragraph("\n"));
         // Write product details if available
         if (orderDetails.getProducts() != null && !orderDetails.getProducts().isEmpty()) {
-            document.add(new Paragraph("Ordine:", largeBoldFont));
-            document.add(new Paragraph("\n"));
+
             for (ProductInPurchaseDTO product : orderDetails.getProducts()) {
-                document.add(createParagraph("Nome: ", product.getName(), boldFont, normalFont));
+                document.add(new Paragraph(product.getName().toUpperCase(), normalBoldFont));
+                document.add(new Paragraph("\n"));
                 document.add(createParagraph("Quantità: ", String.valueOf(product.getQuantity()), boldFont, normalFont));
                 if (product.getCustomization() == null || product.getCustomization().isEmpty()) {
                     document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
-                    document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                    if(product.getShape()!=null){
+                        document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                    }
                 } else {
                     for(Customization customization : product.getCustomization()){
                         document.add(createParagraph(customization.getName() + ": ", Arrays.stream(customization.getValue())
@@ -73,7 +78,9 @@ public class PdfUtilities {
                         }
                     }
                 }
-                document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
+                if(product.getNotes()!=null){
+                    document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
+                }
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
                     try {
                         Image image = Image.getInstance(new URL(product.getAttachment()));
@@ -95,12 +102,12 @@ public class PdfUtilities {
 
         // Write bundle details if available
         if (orderDetails.getBundles() != null && !orderDetails.getBundles().isEmpty()) {
-            document.add(new Paragraph("Vassoi:", boldFont));
             for (BundleInPurchaseDTO bundle : orderDetails.getBundles()) {
-                document.add(createParagraph("Nome: ", bundle.getName(), boldFont, normalFont));
+                document.add(new Paragraph(bundle.getName().toUpperCase(), normalBoldFont));
+                document.add(new Paragraph("\n"));
                 document.add(createParagraph("Quantità: ", String.valueOf(bundle.getQuantity()), boldFont, normalFont));
                 document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
-                if (bundle.getWeightedProducts().size()>0){
+                if (bundle.getWeightedProducts()!=null){
                     document.add(new Paragraph("Mignon: ", boldFont));
                     for (PieceInPurchaseDTO piece: bundle.getWeightedProducts()){
                         document.add(new Paragraph("x"+piece.getQuantity()+" "+piece.getName(), normalFont));
