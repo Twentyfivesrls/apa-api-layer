@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.IOException;
@@ -45,8 +46,8 @@ public class CustomerService {
 
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
-
-
+    private final IngredientRepository ingredientRepository;
+    private final AllergenRepository allergenRepository;
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     private final CategoryRepository categoryRepository;
@@ -103,7 +104,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -113,6 +114,8 @@ public class CustomerService {
         this.settingRepository=settingRepository;
         this.productKgRepository = productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
+        this.ingredientRepository = ingredientRepository;
+        this.allergenRepository = allergenRepository;
         this.timeSlotAPARepository = timeSlotAPARepository;
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
@@ -378,6 +381,19 @@ public class CustomerService {
             existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
             existingProduct.setTotalPrice(calculateTotalPrice(existingProduct, productKg.getPricePerKg()));
         } else {
+            if(productKg.isCustomized()){
+                List<Allergen> allergens = new ArrayList<>();
+                for(Customization customization : product.getCustomization()){
+                    for(String value: customization.getValue()){
+                        Optional<IngredientAPA> optIngredient = ingredientRepository.findByName(value);
+                        if(optIngredient.isPresent()){
+                            IngredientAPA ingredient = optIngredient.get();
+                            getAllergenFromIngredient(allergens,ingredient);
+                        }
+                    }
+                }
+                product.setAllergens(allergens);
+            }
             product.setTotalPrice(calculateTotalPrice(product, productKg.getPricePerKg()));
             cart.getPurchases().add(product);
         }
@@ -401,6 +417,26 @@ public class CustomerService {
             existingBundle.setQuantity(existingBundle.getQuantity() + bundle.getQuantity());
             existingBundle.setTotalPrice(calculateTotalPrice(existingBundle, tray.getPricePerKg()));
         } else {
+            if(tray.isCustomized()){
+                List<Allergen> allergens = new ArrayList<>();
+                for(PieceInPurchase piece : bundle.getWeightedProducts()){
+                    Optional<ProductWeightedAPA> optPiece = productWeightedRepository.findById(piece.getId());
+                    if(optPiece.isPresent()){
+                        ProductWeightedAPA productWeighted = optPiece.get();
+                        List<String> ingredentIds=productWeighted.getIngredientIds();
+                        for (String id: ingredentIds){
+                            IngredientAPA ingredient = ingredientRepository.findById(id).orElse(null);
+                            List<String> allergenNames = ingredient.getAllergenNames();
+                            for(String allergenName: allergenNames){
+                                Allergen allergen = allergenRepository.findByName(allergenName).orElse(null);
+                                if(allergen!=null && !allergens.contains(allergen))
+                                    allergens.add(allergen);
+                            }
+                        }
+                    }
+                }
+                bundle.setAllergens(allergens);
+            }
             bundle.setTotalPrice(calculateTotalPrice(bundle, tray.getPricePerKg()));
             cart.getPurchases().add(bundle);
         }
@@ -591,5 +627,14 @@ public class CustomerService {
             return true;
         }
         return false;
+    }
+
+    private void getAllergenFromIngredient(List<Allergen> allergens,IngredientAPA ingredient){
+        List<String> allergenNames = ingredient.getAllergenNames();
+        for(String allergenName: allergenNames){
+            Allergen allergen = allergenRepository.findByName(allergenName).orElse(null);
+            if(allergen!=null && !allergens.contains(allergen))
+                allergens.add(allergen);
+        }
     }
 }

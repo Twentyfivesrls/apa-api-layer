@@ -189,10 +189,10 @@ public class CompletedOrderService {
         activeOrder.setCreatedDate(LocalDateTime.now());
         // Copia dettagli specifici del prodotto, assicurati di approfondire la logica di clonazione o referenza
         if (completedOrder.getProductsInPurchase() != null) {
-            activeOrder.setProductsInPurchase(new ArrayList<>(completedOrder.getProductsInPurchase()));
+            activeOrder.setProductsInPurchase(completedOrder.getProductsInPurchase());
         }
         if (completedOrder.getBundlesInPurchase() != null) {
-            activeOrder.setBundlesInPurchase(new ArrayList<>(completedOrder.getBundlesInPurchase()));
+            activeOrder.setBundlesInPurchase(completedOrder.getBundlesInPurchase());
         }
 
         // Altri campi specifici dell'ordine possono essere aggiunti qui
@@ -244,6 +244,7 @@ public class CompletedOrderService {
         if (optCompletedOrder.isPresent()){
             CompletedOrderAPA completedOrder = optCompletedOrder.get();
             Optional<CustomerAPA> optCustomer =customerRepository.findById(completedOrder.getCustomerId());
+            completedOrder.setId(null);
             completedOrder.setStatus(OrderStatus.RICEVUTO);
             completedOrder.setPickupDate(redoOrder.getPickupDate());
             completedOrder.setPickupTime(redoOrder.getPickupTime());
