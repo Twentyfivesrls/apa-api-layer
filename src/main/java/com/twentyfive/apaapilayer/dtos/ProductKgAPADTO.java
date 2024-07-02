@@ -16,7 +16,7 @@ import java.util.List;
 public class ProductKgAPADTO {
     private String id;
     private String name;
-    private List<Allergen> allergens = new ArrayList<>();
+    private List<Allergen> allergens;
     private ProductStatAPA stats;
     private List<String> ingredients;
     private String pricePerKg;

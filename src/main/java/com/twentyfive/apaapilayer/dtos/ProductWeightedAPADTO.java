@@ -15,7 +15,7 @@ import java.util.List;
 public class ProductWeightedAPADTO {
     private String id;
     private String name;
-    private List<Allergen> allergens = new ArrayList<>();
+    private List<Allergen> allergens;
     private List<String> ingredients;
     private ProductStatAPA stats;
 
