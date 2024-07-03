@@ -16,6 +16,7 @@ public class CustomerDTO {
     private String lastName;          // Last name of the customer
     private String email;             // Email address of the customer
     private String phoneNumber;       // Phone number of the customer
+    private String role;              // Customer's role
     private String note;
     private boolean enabled;
 
@@ -26,21 +27,8 @@ public class CustomerDTO {
         this.lastName=capa.getLastName();
         this.email=capa.getEmail();
         this.phoneNumber=capa.getPhoneNumber();
+        this.role=capa.getRole();
         this.note=capa.getNote();
         this.enabled=capa.isEnabled();
-    }
-
-    public CustomerAPA toCustomerAPA (){
-        CustomerAPA capa= new CustomerAPA();
-        capa.setId(this.getId());
-        capa.setIdKeycloak(this.idKeycloak);
-        capa.setFirstName(this.getFirstName());
-        capa.setLastName(this.getLastName());
-        capa.setEmail(this.getEmail());
-        capa.setPhoneNumber(this.getPhoneNumber());
-        capa.setEnabled(this.enabled);
-        capa.setNote(this.note);
-        capa.setCart(new Cart());
-        return capa;
     }
 }

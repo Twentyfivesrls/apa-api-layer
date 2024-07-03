@@ -123,16 +123,17 @@ public class CustomerService {
         this.activeOrdersRepository= activeOrderRepository;
     }
 
-    public Page<CustomerAPA> getAll(int page, int size,String sortColumn,String sortDirection) {
+    public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection) {
+        String customer="customer";
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByIdKeycloakIsNotNull(pageable);
+            return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByIdKeycloakIsNotNull(pageable);
+        return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {
@@ -171,6 +172,7 @@ public class CustomerService {
     }
 
     public CustomerAPA register(CustomerAPA customerAPA) {
+        customerAPA.setRole("customer"); //Si possono registrare solo customer.
         return customerRepository.save(customerAPA);
     }
 

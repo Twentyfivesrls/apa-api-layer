@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends MongoRepository<CustomerAPA,String> {
     Optional<CustomerAPA> findByIdKeycloak(String idKeycloak);
-    Page<CustomerAPA> findAllByIdKeycloakIsNotNull(Pageable pageable);
+    Page<CustomerAPA> findAllByRoleAndIdKeycloakIsNotNull(String role,Pageable pageable);
 
 }

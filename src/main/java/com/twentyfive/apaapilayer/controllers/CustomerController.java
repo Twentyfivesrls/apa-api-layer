@@ -29,12 +29,12 @@ public class CustomerController {
         this.keycloakService= keycloakService;
     }
 
-    @GetMapping("/getAll")
-    public ResponseEntity<Page<CustomerDTO>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                    @RequestParam(value = "size", defaultValue = "25") int size,
-                                                    @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                    @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        Page<CustomerDTO> customerDTOs = customerService.getAll(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
+    @GetMapping("/getAllCustomers")
+    public ResponseEntity<Page<CustomerDTO>> getAllCustomers(@RequestParam(value = "page", defaultValue = "0") int page,
+                                                             @RequestParam(value = "size", defaultValue = "25") int size,
+                                                             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+        Page<CustomerDTO> customerDTOs = customerService.getAllCustomers(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
         return ResponseEntity.ok(customerDTOs);
     }
 
@@ -75,7 +75,6 @@ public class CustomerController {
 
     @PostMapping("/register")
     public ResponseEntity<CustomerDTO> register(@RequestBody CustomerAPA customerAPA) {
-        System.out.println("dehjufejhg!!!");
         try {
             CustomerAPA savedCustomer = customerService.register(customerAPA);
             return ResponseEntity.ok(new CustomerDTO(savedCustomer));
@@ -94,8 +93,6 @@ public class CustomerController {
         }
     }
 
-    @GetMapping("/test")
-    public void test(){System.out.println("ok");}
     @GetMapping("/changeStatus/{id}")
     public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
         boolean changed = customerService.changeStatusById(id);
