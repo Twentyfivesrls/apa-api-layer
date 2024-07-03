@@ -57,8 +57,10 @@ public class ActiveOrderController {
             return ResponseEntity.notFound().build();
         }
     }
-
-
+    @PostMapping("/save")
+    public ResponseEntity<OrderAPA> save(@RequestBody OrderAPA orderAPA){
+        return ResponseEntity.ok().body(activeOrderService.createOrder(orderAPA));
+    }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteById(@PathVariable String id) {
         boolean deleted = activeOrderService.deleteById(id);
@@ -68,13 +70,6 @@ public class ActiveOrderController {
             return ResponseEntity.notFound().build(); // Restituisce 404 Not Found se l'ordine non esiste
         }
     }
-
-
-    @PostMapping("/save")
-    public void saveOrder(@RequestBody OrderAPA order){
-        activeOrderService.createOrder(order);
-    }
-
 
     @GetMapping("/by-customer/{customerId}")
     public ResponseEntity<Page<OrderAPADTO>> getByCustomerId(
