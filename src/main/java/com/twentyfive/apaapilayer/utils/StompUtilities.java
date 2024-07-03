@@ -9,8 +9,11 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 public class StompUtilities {
     private static final String NEW_ORDER_MESSAGE="Un nuovo ordine è arrivato!";
     private static final String CANCEL_ORDER_MESSAGE="l'ordine con ID %s è stato cancellato!";
+    private static final String IN_PREPARATION_ORDER_MESSAGE ="Un nuovo ordine da preparare è arrivato!";
+    private static final String BAKER_FINISHED_MESSAGE="Un ordine dalla pasticceria è stato completato!";
     private static final String NEW_ORDER_CHANNEL ="/new_apa_order";
     private static final String CANCEL_ORDER_CHANNEL ="/cancel_apa_order";
+    private static final String IN_PREPARATION_ORDER_CHANNEL ="/in_preparation_apa_order";
 
 
     private static final String CUSTOMER_ORDER_CHANNEL ="/%s";
@@ -28,6 +31,12 @@ public class StompUtilities {
         return gson.toJson(twentyfiveMessage);
     }
 
+    public static String sendBakerNotification(){
+        TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(IN_PREPARATION_ORDER_CHANNEL, IN_PREPARATION_ORDER_MESSAGE);
+        Gson gson = new Gson();
+        return gson.toJson(twentyfiveMessage);
+    }
+
     public static String sendChangedStatusNotification(OrderStatus status, String customerId){
         String customerMessage = String.format(CUSTOMER_ORDER_CHANNEL,customerId);
         TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(customerMessage,"");
@@ -38,6 +47,12 @@ public class StompUtilities {
             case PRONTO -> twentyfiveMessage.setContent("PRONTO");
             case COMPLETO -> twentyfiveMessage.setContent("COMPLETO");
         }
+        Gson gson = new Gson();
+        return gson.toJson(twentyfiveMessage);
+    }
+
+    public static String sendAdminNotification() {
+        TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(NEW_ORDER_CHANNEL,BAKER_FINISHED_MESSAGE);
         Gson gson = new Gson();
         return gson.toJson(twentyfiveMessage);
     }

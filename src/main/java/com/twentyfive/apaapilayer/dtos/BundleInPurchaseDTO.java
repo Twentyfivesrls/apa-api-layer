@@ -26,12 +26,14 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
     private double totalWeight;
     private List<Allergen> allergens;
     private List<PieceInPurchaseDTO> weightedProducts;
+    private String location; // Luogo in cui è depositato il prodotto
 
     public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<PieceInPurchaseDTO> weightedProducts) {
         this.id = bundle.getId();
         this.name = name;
         this.measure = bundle.getMeasure();
         this.quantity = bundle.getQuantity();
+        this.location = bundle.getLocation();
         this.totalWeight = bundle.getTotalWeight();
         this.totalPrice = bundle.getTotalPrice();
         this.weightedProducts = weightedProducts;

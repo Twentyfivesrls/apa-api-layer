@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.ANNULLATO;
+import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.MODIFICATO_DA_PASTICCERIA;
 
 @Service
 public class ActiveOrderService {
@@ -113,6 +114,29 @@ public class ActiveOrderService {
         return PageUtilities.convertListToPage(realOrder,pageable);
     }
 
+    public Page<OrderAPADTO> getAllWithStatus(int page, int size, String sortColumn, String sortDirection, OrderStatus status) {
+        // Fetching paginated orders from the database
+        List<OrderAPA> orderList= activeOrderRepository.findAllByStatusOrderByCreatedDateDesc(status);
+        List<OrderAPADTO> realOrder= new ArrayList<>();
+        for(OrderAPA order:orderList){
+            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
+            realOrder.add(orderAPA);
+        }
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            Sort sort;
+            if (sortColumn.equals("price")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
+            } else if (sortColumn.equals("formattedPickupDate")) {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
+            } else {
+                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
+            }
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
+        }
+        Pageable pageable=PageRequest.of(page,size);
+        return PageUtilities.convertListToPage(realOrder,pageable);
+    }
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
         CustomerAPA customer = customerRepository.findById(order.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
@@ -380,8 +404,10 @@ public class ActiveOrderService {
 
     public OrderStatus[] getAllStatuses() {
         OrderStatus[] orderStatuses = OrderStatus.values();
-        List<OrderStatus> ordersList = Arrays.asList(orderStatuses);
-        ordersList.sort(Comparator.comparing(status -> status.name()));
+        List<OrderStatus> ordersList = Arrays.stream(orderStatuses)
+                .filter(status -> !status.equals(OrderStatus.MODIFICATO_DA_PASTICCERIA))
+                .sorted(Comparator.comparing(Enum::name))
+                .collect(Collectors.toList());
         return ordersList.toArray(new OrderStatus[0]);
     }
 
@@ -392,8 +418,10 @@ public class ActiveOrderService {
             Optional<CustomerAPA> customer = customerRepository.findById(order.get().getCustomerId());
             if(customer.isPresent()){
                 order.get().setCreatedDate(LocalDateTime.now());
-                String in =StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()),customer.get().getId());
-                producerPool.send(in,1,NOTIFICATION_TOPIC);
+                if(!(status.toUpperCase().equals(MODIFICATO_DA_PASTICCERIA))){
+                    String customerNotification =StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()),customer.get().getId());
+                    producerPool.send(customerNotification,1,NOTIFICATION_TOPIC);
+                }
                 switch(OrderStatus.valueOf(status.toUpperCase())) {
                     case ANNULLATO -> {
                         LocalDate pickupDate = order.get().getPickupDate();
@@ -414,7 +442,15 @@ public class ActiveOrderService {
                         emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(customer.get().getFirstName(),order.get().getCustomerId()));
                     }
                     case IN_PREPARAZIONE, PRONTO -> {
+                        String bakerNotification =StompUtilities.sendBakerNotification();
+                        producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
                         emailService.sendEmail(customer.get().getEmail(), OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(customer.get().getFirstName(),order.get().getCustomerId()));
+                        order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                        activeOrderRepository.save(order.get());
+                    }
+                    case MODIFICATO_DA_PASTICCERIA -> {
+                        String adminNotification = StompUtilities.sendAdminNotification();
+                        producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
                         order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
                         activeOrderRepository.save(order.get());
                     }

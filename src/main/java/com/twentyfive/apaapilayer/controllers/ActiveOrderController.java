@@ -37,6 +37,15 @@ public class ActiveOrderController {
         return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection));
     }
 
+    @GetMapping("/getAllWithStatus")
+    public ResponseEntity<Page<OrderAPADTO>> getAll(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "25") int size,
+            @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+            @RequestParam(value = "status") OrderStatus status) {
+        return ResponseEntity.ok().body(activeOrderService.getAllWithStatus(page,size,sortColumn,sortDirection,status));
+    }
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
 
