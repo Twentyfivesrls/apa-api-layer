@@ -136,6 +136,19 @@ public class CustomerService {
         return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
     }
 
+    public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection) {
+        String customer="customer";
+        Pageable pageable;
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            pageable=PageRequest.of(page,size,sort);
+            return customerRepository.findAllByRoleNotAndIdKeycloakIsNotNull(customer,pageable);
+        }
+        Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
+        pageable=PageRequest.of(page,size,sort);
+        return customerRepository.findAllByRoleNotAndIdKeycloakIsNotNull(customer,pageable);
+    }
+
     public CustomerDetailsDTO getById(String customerId) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         if (customer.getCart()==null) customer.setCart(new Cart());

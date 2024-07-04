@@ -38,6 +38,15 @@ public class CustomerController {
         return ResponseEntity.ok(customerDTOs);
     }
 
+    @GetMapping("/getAllEmployees")
+    public ResponseEntity<Page<CustomerDTO>> getAllEmployees(@RequestParam(value = "page", defaultValue = "0") int page,
+                                                             @RequestParam(value = "size", defaultValue = "25") int size,
+                                                             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+        Page<CustomerDTO> customerDTOs = customerService.getAllEmployees(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
+        return ResponseEntity.ok(customerDTOs);
+    }
+
     // Get a single customer by ID with added infos
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDetailsDTO> getById(@PathVariable String id) {
