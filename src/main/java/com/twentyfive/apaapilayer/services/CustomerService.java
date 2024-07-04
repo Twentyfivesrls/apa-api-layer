@@ -243,7 +243,7 @@ public class CustomerService {
                 customerRepository.save(customer);
                 String in= StompUtilities.sendNewOrderNotification();
                 producerPool.send(in,1,NOTIFICATION_TOPIC);
-                if(buyInfos.getCustomInfo()!=null){
+                if(buyInfos.getCustomInfo().getFirstName()!=null){
                     email = buyInfos.getCustomInfo().getEmail();
                     firstName = buyInfos.getCustomInfo().getFirstName();
                 } else {
@@ -291,7 +291,7 @@ public class CustomerService {
 
     private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items) {
         OrderAPA order = new OrderAPA();
-        if (buyInfos.getCustomInfo()!=null){
+        if (buyInfos.getCustomInfo().getFirstName()!=null){
             order.setCustomInfo(buyInfos.getCustomInfo());
         } else {
             order.setCustomerId(customer.getId());
