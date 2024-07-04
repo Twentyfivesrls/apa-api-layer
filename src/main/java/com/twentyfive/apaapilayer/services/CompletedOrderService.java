@@ -76,17 +76,24 @@ public class CompletedOrderService {
     }
 
     private OrderAPADTO convertToOrderAPADTO(CompletedOrderAPA order) {
-        CustomerAPA customer = customerRepository.findById(order.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
-
         OrderAPADTO dto = new OrderAPADTO();
         dto.setId(order.getId());
-        dto.setFirstName(customer.getFirstName());
-        dto.setLastName(customer.getLastName());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
         dto.setStatus(order.getStatus().getStatus());
+
+        if(order.getCustomerId()!=null){
+            Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
+            if(optCustomer.isPresent()){
+                CustomerAPA customer = optCustomer.get();
+                dto.setFirstName(customer.getFirstName());
+                dto.setLastName(customer.getLastName());
+            }
+        } else {
+            dto.setFirstName(order.getCustomInfo().getFirstName());
+            dto.setLastName(order.getCustomInfo().getLastName());
+        }
         return dto;
     }
 
@@ -98,31 +105,39 @@ public class CompletedOrderService {
 
 
     private OrderDetailsAPADTO convertToOrderDetailsAPADTO(CompletedOrderAPA order) {
-        CustomerAPA customer = customerRepository.findById(order.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
-
         OrderDetailsAPADTO dto = new OrderDetailsAPADTO();
         dto.setId(order.getId());
+
         List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
                 .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());
-
         dto.setProducts(productDTOs);
-        dto.setOrderNote(order.getNote());
-        dto.setCustomerNote(customer.getNote());
-
-        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setStatus(order.getStatus().getStatus());
 
         List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
                 .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());
         dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
         // Assumi che esista un getter che restituisca i bundle
-        dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
-        dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+
+        dto.setOrderNote(order.getNote());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setTotalPrice(order.getTotalPrice());
+        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
+        dto.setStatus(order.getStatus().getStatus());
+
+        if(order.getCustomerId()!=null){
+            Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
+            if(optCustomer.isPresent()){
+                CustomerAPA customer = optCustomer.get();
+                dto.setCustomerNote(customer.getNote());
+                dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
+                dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+            }
+            } else {
+                dto.setCustomerNote(order.getCustomInfo().getNote());
+                dto.setEmail(order.getCustomInfo().getEmail()); // Assumi una relazione uno-a-uno con Customer
+                dto.setPhoneNumber(order.getCustomInfo().getPhoneNumber()); // Assumi che il telefono sia disponibile
+            }
         return dto;
     }
 
@@ -174,7 +189,11 @@ public class CompletedOrderService {
         activeOrder.setId(completedOrder.getId());
 
         // Informazioni base dell'ordine
-        activeOrder.setCustomerId(completedOrder.getCustomerId()); // Assumendo che ci sia un campo customerId
+        if(activeOrder.getCustomerId()!=null){
+            activeOrder.setCustomerId(completedOrder.getCustomerId()); // Assumendo che ci sia un campo customerId
+        } else {
+            activeOrder.setCustomInfo(completedOrder.getCustomInfo());
+        }
         activeOrder.setTotalPrice(completedOrder.getTotalPrice());
         activeOrder.setStatus(completedOrder.getStatus()); // Imposta lo stato a COMPLETO
 
@@ -204,27 +223,16 @@ public class CompletedOrderService {
                 .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
     }
 
-    private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
-        CustomerAPA customer = customerRepository.findById(order.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + order.getCustomerId()));
-
-        OrderAPADTO dto = new OrderAPADTO();
-        dto.setId(order.getId());
-        dto.setFirstName(customer.getFirstName());
-        dto.setLastName(customer.getLastName());
-        dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
-        dto.setRealPrice(order.getTotalPrice());
-        dto.setStatus(order.getStatus().getStatus());
-        return dto;
-    }
-
     private OrderAPA convertCompleteToActiveOrderWithoutId(CompletedOrderAPA completedOrder){
         OrderAPA activeOrder = new OrderAPA();
         activeOrder.setCreatedDate(completedOrder.getCreatedDate());
         activeOrder.setNote(completedOrder.getNote());
         activeOrder.setStatus(completedOrder.getStatus());
-        activeOrder.setCustomerId(completedOrder.getCustomerId());
+        if(completedOrder.getCustomerId()!=null){
+            activeOrder.setCustomerId(completedOrder.getCustomerId());
+        } else {
+            activeOrder.setCustomInfo(completedOrder.getCustomInfo());
+        }
         activeOrder.setTotalPrice(completedOrder.getTotalPrice());
         activeOrder.setBundlesInPurchase(completedOrder.getBundlesInPurchase());
         activeOrder.setProductsInPurchase(completedOrder.getProductsInPurchase());
@@ -240,11 +248,11 @@ public class CompletedOrderService {
     }
 
     public OrderAPA redoOrder(RedoOrderReq redoOrder) throws IOException {
+        String email="";
+        String firstName="";
         Optional<CompletedOrderAPA> optCompletedOrder=completedOrderRepository.findById(redoOrder.getId());
         if (optCompletedOrder.isPresent()){
             CompletedOrderAPA completedOrder = optCompletedOrder.get();
-            Optional<CustomerAPA> optCustomer =customerRepository.findById(completedOrder.getCustomerId());
-            completedOrder.setId(null);
             completedOrder.setStatus(OrderStatus.RICEVUTO);
             completedOrder.setPickupDate(redoOrder.getPickupDate());
             completedOrder.setPickupTime(redoOrder.getPickupTime());
@@ -252,10 +260,18 @@ public class CompletedOrderService {
             completedOrder.setCreatedDate(LocalDateTime.now());
             OrderAPA orderAPA= convertCompleteToActiveOrderWithoutId(completedOrder);
             activeOrderRepository.save(orderAPA);
-            if(optCompletedOrder.isPresent()){
-                CustomerAPA customer = optCustomer.get();
-                emailService.sendEmail(customer.getEmail(), orderAPA.getStatus(), TemplateUtilities.populateEmail(customer.getFirstName(), orderAPA.getId()));
+            if(orderAPA.getCustomerId()!=null){
+                Optional<CustomerAPA> optCustomer = customerRepository.findById(orderAPA.getCustomerId());
+                if(optCustomer.isPresent()){
+                    CustomerAPA customer = optCustomer.get();
+                    email = customer.getEmail();
+                    firstName = customer.getFirstName();
+                }
+            } else {
+                email = orderAPA.getCustomInfo().getEmail();
+                firstName = orderAPA.getCustomInfo().getFirstName();
             }
+            emailService.sendEmail(email, orderAPA.getStatus(), TemplateUtilities.populateEmail(firstName, orderAPA.getId()));
             return orderAPA;
         }
         return null;
