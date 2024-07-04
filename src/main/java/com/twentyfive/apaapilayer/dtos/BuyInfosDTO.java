@@ -15,5 +15,5 @@ public class BuyInfosDTO {
     private List<Integer> positions;
     private LocalDateTime selectedPickupDateTime;
     private String note;
-
+    private CustomInfo customInfo;
 }
