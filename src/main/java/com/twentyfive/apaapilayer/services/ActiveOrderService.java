@@ -335,7 +335,7 @@ public class ActiveOrderService {
                 Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
                 if(optCustomer.isPresent()){
                     CustomerAPA customer = optCustomer.get();
-                    fullName= customer.getLastName() +" "+ customer.getLastName();
+                    fullName= customer.getLastName() +" "+ customer.getFirstName();
                 } else {
                     fullName = order.getCustomInfo().getLastName() +" "+ order.getCustomInfo().getFirstName();
                 }
