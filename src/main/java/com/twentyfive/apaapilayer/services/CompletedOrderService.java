@@ -189,7 +189,7 @@ public class CompletedOrderService {
         activeOrder.setId(completedOrder.getId());
 
         // Informazioni base dell'ordine
-        if(activeOrder.getCustomerId()!=null){
+        if(completedOrder.getCustomerId()!=null){
             activeOrder.setCustomerId(completedOrder.getCustomerId()); // Assumendo che ci sia un campo customerId
         } else {
             activeOrder.setCustomInfo(completedOrder.getCustomInfo());
