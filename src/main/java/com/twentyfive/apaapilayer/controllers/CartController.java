@@ -59,6 +59,10 @@ public class CartController {
         }
     }
 
+    @GetMapping("/add-from-completed-order/{idCustomer}")
+    public ResponseEntity<Boolean> addFromCompletedOrder(@PathVariable String idCustomer,@RequestParam("idOrder")String idOrder){
+        return ResponseEntity.ok(customerService.addFromCompletedOrder(idCustomer, idOrder));
+    }
     @PatchMapping("/modify-pip-cart/{customerId}")
     public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody ProductInPurchase pIP) {
         try {

@@ -650,4 +650,21 @@ public class CustomerService {
                 allergens.add(allergen);
         }
     }
+
+    public boolean addFromCompletedOrder(String idCustomer,String idOrder) {
+        Optional<CompletedOrderAPA> optOrder = completedOrderRepository.findById(idOrder);
+        if (optOrder.isPresent()){
+            CompletedOrderAPA order = optOrder.get();
+
+            for (BundleInPurchase bIP : order.getBundlesInPurchase()) {
+                addToCartBundle(idCustomer,bIP);
+            }
+
+            for (ProductInPurchase pIP : order.getProductsInPurchase()) {
+                addToCartProduct(idCustomer,pIP);
+            }
+            return true;
+        }
+        return false;
+    }
 }
