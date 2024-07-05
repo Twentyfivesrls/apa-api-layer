@@ -317,6 +317,7 @@ public class ActiveOrderService {
 
 
         if (order != null) {
+            String fullName ="";
             TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
             order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
 
@@ -330,7 +331,16 @@ public class ActiveOrderService {
             }
             activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
             completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
-            String in= StompUtilities.sendCancelOrderNotification(order.getId());
+            if(order.getCustomerId()!=null){
+                Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
+                if(optCustomer.isPresent()){
+                    CustomerAPA customer = optCustomer.get();
+                    fullName= customer.getLastName() +" "+ customer.getLastName();
+                } else {
+                    fullName = order.getCustomInfo().getLastName() +" "+ order.getCustomInfo().getFirstName();
+                }
+            }
+            String in= StompUtilities.sendCancelOrderNotification(fullName,order.getId());
             producerPool.send(in,1,NOTIFICATION_TOPIC);
             return true;
         }

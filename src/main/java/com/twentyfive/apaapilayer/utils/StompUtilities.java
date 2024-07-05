@@ -8,7 +8,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 @AllArgsConstructor
 public class StompUtilities {
     private static final String NEW_ORDER_MESSAGE="Un nuovo ordine è arrivato!";
-    private static final String CANCEL_ORDER_MESSAGE="l'ordine con ID %s è stato cancellato!";
+    private static final String CANCEL_ORDER_MESSAGE="l'ordine di %s con ID %s è stato cancellato!";
     private static final String NEW_ORDER_CHANNEL ="/new_apa_order";
     private static final String CANCEL_ORDER_CHANNEL ="/cancel_apa_order";
 
@@ -21,8 +21,8 @@ public class StompUtilities {
         return gson.toJson(twentyfiveMessage);
     }
 
-    public static String sendCancelOrderNotification(String id){
-        String cancelOrderMessage = String.format(CANCEL_ORDER_MESSAGE, id);
+    public static String sendCancelOrderNotification(String fullName,String id){
+        String cancelOrderMessage = String.format(CANCEL_ORDER_MESSAGE,fullName, id);
         TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(CANCEL_ORDER_CHANNEL,cancelOrderMessage);
         Gson gson = new Gson();
         return gson.toJson(twentyfiveMessage);
