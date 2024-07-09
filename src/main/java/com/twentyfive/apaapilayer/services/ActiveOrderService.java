@@ -8,10 +8,7 @@ import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
-import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.apaapilayer.utils.PdfUtilities;
-import com.twentyfive.apaapilayer.utils.StompUtilities;
-import com.twentyfive.apaapilayer.utils.TemplateUtilities;
+import com.twentyfive.apaapilayer.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -135,12 +132,14 @@ public class ActiveOrderService {
         return dto;
     }
 
-    public OrderDetailsAPADTO getDetailsById(String id, boolean isAdmin) {
+    public OrderDetailsAPADTO getDetailsById(String id) throws IOException {
         Optional<OrderAPA> orderOptional = activeOrderRepository.findById(id);
         if (orderOptional.isPresent()) {
             OrderAPA orderAPA = orderOptional.get();
-            if(isAdmin){
+            List<String> roles =JwtUtilities.getRoles();
+            if(roles.contains("admin")){
                 orderAPA.setUnread(false);
+                activeOrderRepository.save(orderAPA);
             }
             return convertToOrderDetailsAPADTO(orderAPA);
         } else {
