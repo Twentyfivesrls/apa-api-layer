@@ -38,9 +38,9 @@ public class ActiveOrderController {
     }
 
     @GetMapping("/details/{id}")
-    public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
+    public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id,@RequestParam(value = "isAdmin", defaultValue = "false") boolean isAdmin) {
 
-        OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
+        OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id, isAdmin);
         //testing
         if (orderDetails != null) {
             return ResponseEntity.ok(orderDetails);

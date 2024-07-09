@@ -134,10 +134,14 @@ public class ActiveOrderService {
         return dto;
     }
 
-    public OrderDetailsAPADTO getDetailsById(String id) {
+    public OrderDetailsAPADTO getDetailsById(String id, boolean isAdmin) {
         Optional<OrderAPA> orderOptional = activeOrderRepository.findById(id);
         if (orderOptional.isPresent()) {
-            return convertToOrderDetailsAPADTO(orderOptional.get());
+            OrderAPA orderAPA = orderOptional.get();
+            if(isAdmin){
+                orderAPA.setUnread(false);
+            }
+            return convertToOrderDetailsAPADTO(orderAPA);
         } else {
             return null; // Se non viene trovato nessun ordine, ritorna null
         }
@@ -162,6 +166,7 @@ public class ActiveOrderService {
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());
         dto.setOrderNote(order.getNote());
+        dto.setUnread(order.isUnread());
         if(order.getCustomerId()!=null){
             Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
             if(optCustomer.isPresent()){
@@ -184,7 +189,6 @@ public class ActiveOrderService {
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());
         dto.setNote(order.getNote());
-
         List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
                 .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
                 .collect(Collectors.toList());

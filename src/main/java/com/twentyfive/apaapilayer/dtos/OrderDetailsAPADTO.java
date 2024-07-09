@@ -24,6 +24,7 @@ public class OrderDetailsAPADTO {
     private double totalPrice;
     private double totalWeight;
     private String status;
+    private boolean unread;
 
     public String getFormattedPickupDate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", Locale.ITALIAN);
