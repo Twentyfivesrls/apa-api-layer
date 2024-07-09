@@ -438,8 +438,6 @@ public class ActiveOrderService {
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
                     LocalDate pickupDate = order.getPickupDate();
-                    // Calcola la data di "oggi più un giorno"
-                    LocalDate cancelThreshold = pickupDate.minusDays(1);
                     TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
                     order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
                     CompletedOrderAPA completedOrder = new CompletedOrderAPA();
@@ -447,7 +445,7 @@ public class ActiveOrderService {
                     ArrayList<ItemInPurchase> items = new ArrayList<>();
                     items.addAll(optOrder.get().getBundlesInPurchase());
                     items.addAll(optOrder.get().getProductsInPurchase());
-                    if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap()) && LocalDate.now().isBefore(cancelThreshold)) {
+                    if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap())) {
                         timeSlotAPARepository.save(timeSlotAPA);
                     }
                     activeOrderRepository.delete(optOrder.get()); // Rimuove l'ordine dalla repository degli ordini attivi
