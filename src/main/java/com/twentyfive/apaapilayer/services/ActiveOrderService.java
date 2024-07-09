@@ -415,7 +415,6 @@ public class ActiveOrderService {
         Optional<OrderAPA> optOrder = activeOrderRepository.findById(id);
         String email ="";
         String firstName ="";
-        String lastName ="";
         if (optOrder.isPresent()){
             OrderAPA order = optOrder.get();
             order.setCreatedDate(LocalDateTime.now());

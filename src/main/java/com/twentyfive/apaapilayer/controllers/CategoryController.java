@@ -27,7 +27,7 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.getDisabledCategories(types));
     }
     @GetMapping("/getById/{id}")
-    public ResponseEntity<CategoryAPA> getOrderById(@PathVariable String id) {
+    public ResponseEntity<CategoryAPA> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.getById(id));
     }
 
