@@ -120,6 +120,7 @@ public class ActiveOrderService {
         dto.setRealPrice(order.getTotalPrice());
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().getStatus());
+        dto.setUnread(order.isUnread());
         if(order.getCustomerId()!= null){
             Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
             if(optCustomerId.isPresent()){
