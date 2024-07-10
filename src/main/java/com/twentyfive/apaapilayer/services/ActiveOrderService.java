@@ -486,18 +486,24 @@ public class ActiveOrderService {
                         emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
                     }
                 }
-                case IN_PREPARAZIONE, PRONTO -> {
+                case IN_PREPARAZIONE -> {
                     String bakerNotification =StompUtilities.sendBakerNotification();
-                        producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
-                        emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
-                        order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                        activeOrderRepository.save(order);
-                    }
-                    case MODIFICATO_DA_PASTICCERIA -> {
-                        String adminNotification = StompUtilities.sendAdminNotification();
-                        producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
-                    optOrder.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                    activeOrderRepository.save(optOrder.get());
+                    producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
+                    emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
+                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                    activeOrderRepository.save(order);
+                }
+                case PRONTO -> {
+                    emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
+                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                    activeOrderRepository.save(order);
+                }
+                case MODIFICATO_DA_PASTICCERIA -> {
+                    String adminNotification = StompUtilities.sendAdminNotification();
+                    producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
+                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                    order.setUnread(true);
+                    activeOrderRepository.save(order);
                 }
                 case RICEVUTO -> {
                     optOrder.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
@@ -511,6 +517,24 @@ public class ActiveOrderService {
                     completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati
                 }
             }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean SetLocationForKg(LocationReq locationReq) {
+        Optional<OrderAPA> optOrder = activeOrderRepository.findById(locationReq.getOrderId());
+        if(optOrder.isPresent()){
+            OrderAPA order = optOrder.get();
+            List<ProductInPurchase> products = order.getProductsInPurchase();
+            ProductInPurchase pIP = products.get(locationReq.getPosition());
+            String location = locationReq.getLocation();
+            if(location.equals("Nessun Luogo")){
+                pIP.setLocation(null);
+            } else {
+                pIP.setLocation(locationReq.getLocation());
+            }
+            activeOrderRepository.save(order);
             return true;
         }
         return false;

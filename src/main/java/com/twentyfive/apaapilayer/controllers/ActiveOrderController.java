@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.itextpdf.text.DocumentException;
+import com.twentyfive.apaapilayer.dtos.LocationReq;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
@@ -57,7 +58,6 @@ public class ActiveOrderController {
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) throws IOException {
         OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
-        //testing
         if (orderDetails != null) {
             return ResponseEntity.ok(orderDetails);
         } else {
@@ -149,5 +149,10 @@ public class ActiveOrderController {
         return ResponseEntity.ok().body(activeOrderService.getAllStatuses());
     }
 
+    @PutMapping("/setLocationForKg")
+    public ResponseEntity<Boolean> setLocationForKg(@RequestBody LocationReq locationReq){
+        return ResponseEntity.ok().body(activeOrderService.SetLocationForKg(locationReq));
+
+    }
 }
 
