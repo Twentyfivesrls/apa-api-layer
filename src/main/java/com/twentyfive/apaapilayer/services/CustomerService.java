@@ -233,33 +233,43 @@ public class CustomerService {
     }
 
     @Transactional
-    public boolean buyItems(String customerId, List<Integer> positionIds, LocalDateTime selectedPickupDateTime,String note) throws IOException {
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
-        if (customer.getCart()==null) customer.setCart(new Cart());
-
-        Cart cart = customer.getCart();
-        List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positionIds);
-
-        for(Integer positionId: positionIds)
-            if (positionId < 0 || positionId >= cart.getPurchases().size()) {
-                throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
+    public boolean buyItems(String customerId, BuyInfosDTO buyInfos) throws IOException {
+        Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
+        String email="";
+        String firstName="";
+        if(optCustomer.isPresent()){
+            CustomerAPA customer = optCustomer.get();
+            TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
+            Cart cart = customer.getCart();
+            List<Integer> positions = buyInfos.getPositions();
+            List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positions);
+            for(Integer positionId: positions){
+                if (positionId < 0 || positionId >= cart.getPurchases().size()) {
+                    throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
+                }
             }
-
-        if (!selectedItems.isEmpty()) {
-            OrderAPA order = createOrderFromItems(customer, selectedItems, selectedPickupDateTime);
-            order.setNote(note);
-            if(timeSlotAPA.reserveTimeSlots(selectedPickupDateTime,countSlotRequired(selectedItems))) {
-                orderService.createOrder(order);
-                cart.removeItemsAtPositions(positionIds); // Rimuovi gli articoli dal carrello
+            if (!selectedItems.isEmpty()) {
+                OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems);
+                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
+                    orderService.createOrder(order);
+                    cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
+                }
+                timeSlotAPARepository.save(timeSlotAPA);
+                customerRepository.save(customer);
+                String in= StompUtilities.sendNewOrderNotification();
+                producerPool.send(in,1,NOTIFICATION_TOPIC);
+                if(buyInfos.getCustomInfo().getFirstName()!=null){
+                    email = buyInfos.getCustomInfo().getEmail();
+                    firstName = buyInfos.getCustomInfo().getFirstName();
+                } else {
+                    email = customer.getEmail();
+                    firstName = customer.getFirstName();
+                }
+                emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmail(firstName,order.getId()));
+                return true;
             }
-            timeSlotAPARepository.save(timeSlotAPA);
-            customerRepository.save(customer);
-            String in= StompUtilities.sendNewOrderNotification();
-            producerPool.send(in,1,NOTIFICATION_TOPIC);
-            emailService.sendEmail(customer.getEmail(),OrderStatus.RICEVUTO, TemplateUtilities.populateEmail(customer.getFirstName(),order.getId()));
-            return true;
         }
+
         return false;
     }
 
@@ -294,16 +304,19 @@ public class CustomerService {
 
 
 
-    private OrderAPA createOrderFromItems(CustomerAPA customer, List<ItemInPurchase> items, LocalDateTime selectedPickupDateTime) {
+    private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items) {
         OrderAPA order = new OrderAPA();
-        order.setCustomerId(customer.getId());
-        order.setPickupDate(selectedPickupDateTime.toLocalDate());
-        order.setPickupTime(selectedPickupDateTime.toLocalTime());
+        if (buyInfos.getCustomInfo().getFirstName()!=null){
+            order.setCustomInfo(buyInfos.getCustomInfo());
+        } else {
+            order.setCustomerId(customer.getId());
+        }
+        order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
+        order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
         order.setStatus(OrderStatus.RICEVUTO);
-
+        order.setNote(buyInfos.getNote());
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
-
         for (ItemInPurchase item : items) {
             if (item instanceof ProductInPurchase) {
                 products.add((ProductInPurchase) item);
@@ -651,5 +664,22 @@ public class CustomerService {
             if(allergen!=null && !allergens.contains(allergen))
                 allergens.add(allergen);
         }
+    }
+
+    public boolean addFromCompletedOrder(String idCustomer,String idOrder) {
+        Optional<CompletedOrderAPA> optOrder = completedOrderRepository.findById(idOrder);
+        if (optOrder.isPresent()){
+            CompletedOrderAPA order = optOrder.get();
+
+            for (BundleInPurchase bIP : order.getBundlesInPurchase()) {
+                addToCartBundle(idCustomer,bIP);
+            }
+
+            for (ProductInPurchase pIP : order.getProductsInPurchase()) {
+                addToCartProduct(idCustomer,pIP);
+            }
+            return true;
+        }
+        return false;
     }
 }

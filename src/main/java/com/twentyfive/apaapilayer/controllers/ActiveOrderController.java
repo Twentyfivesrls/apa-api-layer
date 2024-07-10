@@ -1,11 +1,15 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
+import com.twentyfive.authorizationflow.services.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
@@ -13,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.ByteArrayOutputStream;
@@ -23,9 +29,11 @@ import java.io.IOException;
 public class ActiveOrderController {
 
     private final ActiveOrderService activeOrderService; // Assumi che OrderService sia iniettato correttamente
+    private final AuthenticationService authenticationService;
 
-    public ActiveOrderController(ActiveOrderService activeOrderService) {
+    public ActiveOrderController(ActiveOrderService activeOrderService, AuthenticationService authenticationService) {
         this.activeOrderService = activeOrderService;
+        this.authenticationService = authenticationService;
     }
 
     @GetMapping("/getAll")
@@ -47,8 +55,7 @@ public class ActiveOrderController {
         return ResponseEntity.ok().body(activeOrderService.getAllWithStatus(page,size,sortColumn,sortDirection,status));
     }
     @GetMapping("/details/{id}")
-    public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
-
+    public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) throws IOException {
         OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
         //testing
         if (orderDetails != null) {

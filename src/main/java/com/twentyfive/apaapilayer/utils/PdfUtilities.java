@@ -78,9 +78,6 @@ public class PdfUtilities {
                         }
                     }
                 }
-                if(product.getNotes()!=null){
-                    document.add(createParagraph("Note aggiuntive: ", product.getNotes(), boldFont, normalFont));
-                }
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
                     try {
                         Image image = Image.getInstance(new URL(product.getAttachment()));

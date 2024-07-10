@@ -59,6 +59,10 @@ public class CartController {
         }
     }
 
+    @GetMapping("/add-from-completed-order/{idCustomer}")
+    public ResponseEntity<Boolean> addFromCompletedOrder(@PathVariable String idCustomer,@RequestParam("idOrder")String idOrder){
+        return ResponseEntity.ok(customerService.addFromCompletedOrder(idCustomer, idOrder));
+    }
     @PatchMapping("/modify-pip-cart/{customerId}")
     public ResponseEntity<CartDTO> modifyProductInCart(@PathVariable String customerId, @RequestParam("index") int index, @RequestBody ProductInPurchase pIP) {
         try {
@@ -124,7 +128,7 @@ public class CartController {
     public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         try {
             // Converti la lista di stringhe in interi
-            boolean result = customerService.buyItems(id, buyInfos.getPositions(), buyInfos.getSelectedPickupDateTime(),buyInfos.getNote());
+            boolean result = customerService.buyItems(id, buyInfos);
             return ResponseEntity.ok(result);
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(false); // In caso di formato non valido

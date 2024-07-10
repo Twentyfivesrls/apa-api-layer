@@ -5,4 +5,5 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Order;
 
 @Document("orders")
 public class OrderAPA extends Order {
+
 }

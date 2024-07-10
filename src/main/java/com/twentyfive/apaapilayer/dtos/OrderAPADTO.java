@@ -20,6 +20,7 @@ public class OrderAPADTO {
     private double realPrice;
     private String price;
     private String status;
+    private boolean unread;
 
     public String getFormattedPickupDate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", Locale.ITALIAN);

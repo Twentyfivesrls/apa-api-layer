@@ -21,13 +21,9 @@ public class TestController {
     private final ProductWeightedRepository productWeightedRepository;
     private final CategoryRepository categoryRepository;
     private final ProductStatRepository productStatRepository;
-    @GetMapping("/test")
+    @GetMapping("/populateJob")
     public void test(){
-        System.out.println("funziona!");
-
-
-
-        timeSlotRefreshScheduling.createSlotsForNext30Days();
+        timeSlotRefreshScheduling.createSlotsForNext90Days();
     }
 
     @GetMapping("/populateDb")
