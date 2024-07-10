@@ -490,8 +490,8 @@ public class ActiveOrderService {
                     String bakerNotification =StompUtilities.sendBakerNotification();
                         producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
                         emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
-                        order.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                        activeOrderRepository.save(order.get());
+                        order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                        activeOrderRepository.save(order);
                     }
                     case MODIFICATO_DA_PASTICCERIA -> {
                         String adminNotification = StompUtilities.sendAdminNotification();
