@@ -198,10 +198,8 @@ public class CustomerService {
         } else {
             keycloakService.add(customer);
             keycloakService.sendPasswordResetEmail(customer.getIdKeycloak());
-            CustomerAPA newCustomer = customerRepository.save(customer);
-            return newCustomer;
+            return customerRepository.save(customer);
         }
-        // Salva il nuovo cliente nel database o gli faccio update
     }
 
     public boolean changeStatusById(String id) {

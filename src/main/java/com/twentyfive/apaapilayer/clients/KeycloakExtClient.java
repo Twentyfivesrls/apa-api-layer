@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.clients;
 
+import com.twentyfive.apaapilayer.dtos.ApaRole;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -42,7 +43,8 @@ public interface KeycloakExtClient {
                                                          @RequestParam(value = "first", defaultValue = "0") String first,
                                                          @RequestParam(value = "max", defaultValue = "100") String max,
                                                          @RequestParam(value = "search", defaultValue = "") String search);
-
+    @RequestMapping(method = RequestMethod.GET, value ="admin/realms/DEV/clients/${keycloak.apaId}/roles")
+    ResponseEntity<List<ApaRole>> getApaRoles(@RequestHeader("Authorization") String accessToken);
     @RequestMapping(method = RequestMethod.POST, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/clients/{clientIdRole}", produces = "application/json")
     ResponseEntity<Object> addRoleToUser(@RequestHeader("Authorization") String accessToken,
                                          @PathVariable String id,
