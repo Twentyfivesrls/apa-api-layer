@@ -27,4 +27,10 @@ public class SettingController {
     public ResponseEntity<Boolean> isAlertOn(){
         return ResponseEntity.ok().body(settingRepository.existsOrderReceivedAlertById("6628cb0ee48d706a10f32bfa"));
     }
+
+    @GetMapping("/getAllRoles")
+    public ResponseEntity<List<String>> getAllRoles(){
+        return ResponseEntity.ok().body(settingRepository.findById("6628cb0ee48d706a10f32bfa").get().getRoles());
+    }
+
 }

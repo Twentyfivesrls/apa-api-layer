@@ -79,6 +79,7 @@ public class CustomerService {
                 customer.getLastName(),
                 customer.getIdKeycloak(),
                 customer.getEmail(),
+                customer.getRole(),
                 customer.getPhoneNumber(),
                 completedOrdersCount,
                 activeOrdersCount,
@@ -137,16 +138,16 @@ public class CustomerService {
     }
 
     public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection) {
-        String customer="customer";
+        List<String> excludedRoles = Arrays.asList("customer", "admin");
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByRoleNotAndIdKeycloakIsNotNull(customer,pageable);
+            return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByRoleNotAndIdKeycloakIsNotNull(customer,pageable);
+        return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {
@@ -173,6 +174,7 @@ public class CustomerService {
                 customer.getLastName(),
                 customer.getIdKeycloak(),
                 customer.getEmail(),
+                customer.getRole(),
                 customer.getPhoneNumber(),
                 completedOrdersCount,
                 activeOrdersCount,
