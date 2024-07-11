@@ -11,9 +11,12 @@ public class StompUtilities {
     private static final String IN_PREPARATION_ORDER_MESSAGE ="Un nuovo ordine da preparare è arrivato!";
     private static final String BAKER_FINISHED_MESSAGE="Un ordine dalla pasticceria è stato completato!";
     private static final String CANCEL_ORDER_MESSAGE="l'ordine di %s con ID %s è stato cancellato!";
+    private static final String BAKER_CHANGED_MESSAGE="Un ordine ha cambiato stato!";
+
     private static final String NEW_ORDER_CHANNEL ="/new_apa_order";
     private static final String CANCEL_ORDER_CHANNEL ="/cancel_apa_order";
     private static final String IN_PREPARATION_ORDER_CHANNEL ="/in_preparation_apa_order";
+    private static final String CHANGED_ORDER_CHANNEL ="/changed_apa_order";
 
 
     private static final String CUSTOMER_ORDER_CHANNEL ="/%s";
@@ -31,8 +34,16 @@ public class StompUtilities {
         return gson.toJson(twentyfiveMessage);
     }
 
-    public static String sendBakerNotification(){
-        TwentyfiveMessage twentyfiveMessage= new TwentyfiveMessage(IN_PREPARATION_ORDER_CHANNEL, IN_PREPARATION_ORDER_MESSAGE);
+    public static String sendBakerNotification(String type){
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage();
+        switch (type){
+            case "new" -> {
+                twentyfiveMessage= new TwentyfiveMessage(IN_PREPARATION_ORDER_CHANNEL, IN_PREPARATION_ORDER_MESSAGE);
+            }
+            case "changed" -> {
+                twentyfiveMessage= new TwentyfiveMessage(CHANGED_ORDER_CHANNEL, BAKER_CHANGED_MESSAGE);
+            }
+        }
         Gson gson = new Gson();
         return gson.toJson(twentyfiveMessage);
     }

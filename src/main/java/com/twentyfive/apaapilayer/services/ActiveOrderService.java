@@ -467,6 +467,10 @@ public class ActiveOrderService {
                 firstName= order.getCustomInfo().getFirstName();
                 email = order.getCustomInfo().getEmail();
             }
+            if(order.getStatus() == OrderStatus.IN_PREPARAZIONE && !(status.toUpperCase().equals("IN_PREPARAZIONE") || status.toUpperCase().equals("MODIFICATO_DA_PASTICCERIA"))){
+                String bakerNotification =StompUtilities.sendBakerNotification("changed");
+                producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
+            }
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
                     LocalDate pickupDate = order.getPickupDate();
@@ -487,7 +491,7 @@ public class ActiveOrderService {
                     }
                 }
                 case IN_PREPARAZIONE -> {
-                    String bakerNotification =StompUtilities.sendBakerNotification();
+                    String bakerNotification =StompUtilities.sendBakerNotification("new");
                     producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
