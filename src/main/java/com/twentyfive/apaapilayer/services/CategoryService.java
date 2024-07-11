@@ -93,4 +93,8 @@ public class CategoryService {
         }
         return true;
     }
+
+    public List<CategoryAPA> getByIdSection(String id) {
+        return categoryRepository.findAllByIdSection(id);
+    }
 }

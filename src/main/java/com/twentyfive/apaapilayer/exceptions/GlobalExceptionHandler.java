@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
@@ -42,6 +44,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleExistingField (ExistingFieldException ex){
         ApiError apiError = new ApiError(HttpStatus.NOT_ACCEPTABLE, "Uno dei campi è unico e non può essere duplicato! "+ex.getClass().getSimpleName());
         return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiError> handleNoSuchElementException (NoSuchElementException ex){
+        ApiError apiError = new ApiError(HttpStatus.NO_CONTENT, ex.getMessage()+ex.getClass().getSimpleName());
+        return new ResponseEntity<>(apiError,HttpStatus.NO_CONTENT);
     }
     @Data
     @AllArgsConstructor
