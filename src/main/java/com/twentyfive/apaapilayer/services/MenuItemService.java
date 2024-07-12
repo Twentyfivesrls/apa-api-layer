@@ -41,6 +41,18 @@ public class MenuItemService {
         throw new NoSuchElementException("Nessun prodotto con questo id!");
     }
 
+    public List<MenuItemDTO> getAllByIdCategory(String id) {
+        List<MenuItemAPA> menuItems = menuItemRepository.findAllByCategoryId(id);
+        List<MenuItemDTO> menuItemsDTO = new ArrayList<>();
+
+        for (MenuItemAPA menuItem : menuItems) {
+            List<Allergen> allergens = getAllergensFromMenuItem(menuItem);
+            MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem,allergens);
+            menuItemsDTO.add(menuItemDTO);
+        }
+        return menuItemsDTO;
+    }
+
     public MenuItemAPA save(MenuItemAPA menuItemAPA) {
         return menuItemRepository.save(menuItemAPA);
     }

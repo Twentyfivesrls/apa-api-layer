@@ -25,6 +25,12 @@ public class MenuItemController {
     public ResponseEntity<MenuItemDTO> getById(@PathVariable("id")String id){
         return ResponseEntity.ok().body(menuItemService.getById(id));
     }
+
+    @GetMapping("/getAllByIdCategory/{id}")
+    public ResponseEntity<List<MenuItemDTO>> getByIdCategory(@PathVariable("id")String id) {
+        return ResponseEntity.ok().body(menuItemService.getAllByIdCategory(id));
+    }
+
     @PostMapping("/save")
     public ResponseEntity<MenuItemAPA> save(@RequestBody MenuItemAPA menuItemAPA){
         return ResponseEntity.ok().body(menuItemService.save(menuItemAPA));
