@@ -20,5 +20,5 @@ public interface CategoryRepository extends MongoRepository<CategoryAPA,String> 
 
     List<CategoryAPA> findAllByTypeAndNameAndEnabledTrue(String type, String name);
 
-    List<CategoryAPA> findAllByIdSection(String id);
+    List<CategoryAPA> findAllByIdSectionAndEnabledTrue(String id);
 }

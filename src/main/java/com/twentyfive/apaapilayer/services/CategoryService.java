@@ -94,7 +94,7 @@ public class CategoryService {
         return true;
     }
 
-    public List<CategoryAPA> getByIdSection(String id) {
-        return categoryRepository.findAllByIdSection(id);
+    public List<CategoryAPA> getAllActiveByIdSection(String id) {
+        return categoryRepository.findAllByIdSectionAndEnabledTrue(id);
     }
 }

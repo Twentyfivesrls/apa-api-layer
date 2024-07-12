@@ -30,9 +30,9 @@ public class CategoryController {
     public ResponseEntity<CategoryAPA> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.getById(id));
     }
-    @GetMapping("/getByIdSection/{id}")
-    public ResponseEntity<List<CategoryAPA>> getByIdSection(@PathVariable String id) {
-        return ResponseEntity.ok().body(categoryService.getByIdSection(id));
+    @GetMapping("/getAllByIdSection/{id}")
+    public ResponseEntity<List<CategoryAPA>> getAllByIdSection(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.getAllActiveByIdSection(id));
     }
     @PostMapping("/save")
     public ResponseEntity<CategoryAPA> save(@RequestBody CategoryAPA c) {
