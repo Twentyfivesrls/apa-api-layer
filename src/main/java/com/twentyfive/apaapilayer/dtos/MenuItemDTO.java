@@ -17,7 +17,7 @@ public class MenuItemDTO {
     private String name;
     private String categoryId;
     private String description;
-    private double price;
+    private String price;
     private List<Allergen> allergens;
     private String imageUrl;
 
@@ -26,7 +26,7 @@ public class MenuItemDTO {
         this.name=menuItemAPA.getName();
         this.categoryId=menuItemAPA.getCategoryId();
         this.description=menuItemAPA.getDescription();
-        this.price=menuItemAPA.getPrice();
+        this.price="€ "+menuItemAPA.getPrice();
         this.allergens=allergens;
         this.imageUrl=menuItemAPA.getImageUrl();
     }
