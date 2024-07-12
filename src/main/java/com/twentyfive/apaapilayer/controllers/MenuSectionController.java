@@ -22,12 +22,12 @@ public class MenuSectionController {
         return ResponseEntity.ok().body(menuSectionService.getById(id));
     }
     @PostMapping("/save")
-    public ResponseEntity<MenuSectionAPA> save(@RequestBody MenuSectionAPA menuSectionAPA){
-        return ResponseEntity.ok().body(menuSectionService.save(menuSectionAPA));
+    public ResponseEntity<MenuSectionAPA> save(@RequestBody MenuSectionAPA menuSection){
+        return ResponseEntity.ok().body(menuSectionService.save(menuSection));
     }
     @PatchMapping("/updateById/{id}")
-    public ResponseEntity<MenuSectionAPA> updateById(@PathVariable("id")String id,@RequestBody MenuSectionAPA menuSectionAPA){
-        return ResponseEntity.ok().body(menuSectionService.updateById(id,menuSectionAPA));
+    public ResponseEntity<MenuSectionAPA> updateById(@PathVariable("id")String id,@RequestBody MenuSectionAPA menuSection){
+        return ResponseEntity.ok().body(menuSectionService.updateById(id,menuSection));
     }
     @DeleteMapping("/deleteById/{id}")
     public ResponseEntity<Boolean> deleteById(@PathVariable("id")String id){

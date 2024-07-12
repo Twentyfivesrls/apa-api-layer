@@ -37,12 +37,6 @@ public interface KeycloakExtClient {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/admin/realms/${keycloak.realm}/users/{id}/reset-password", produces = "application/json")
     ResponseEntity<Object> updatePassword(@RequestHeader("Authorization") String accessToken, @PathVariable String id, @RequestBody PasswordUpdateKeycloak newPassword);
-    @RequestMapping(method = RequestMethod.GET, value = "/admin/realms/${keycloak.realm}/ui-ext/available-roles/users/{id}", produces = "application/json")
-    ResponseEntity<List<KeycloakRole >> getAvailableRoles(@RequestHeader("Authorization") String accessToken,
-                                                         @PathVariable String id,
-                                                         @RequestParam(value = "first", defaultValue = "0") String first,
-                                                         @RequestParam(value = "max", defaultValue = "100") String max,
-                                                         @RequestParam(value = "search", defaultValue = "") String search);
     @RequestMapping(method = RequestMethod.GET, value ="admin/realms/DEV/clients/${keycloak.apaId}/roles")
     ResponseEntity<List<ApaRole>> getApaRoles(@RequestHeader("Authorization") String accessToken);
     @RequestMapping(method = RequestMethod.POST, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/clients/{clientIdRole}", produces = "application/json")
