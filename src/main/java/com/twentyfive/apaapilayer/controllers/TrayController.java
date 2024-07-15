@@ -3,15 +3,12 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.dtos.TrayAPADTO;
 import com.twentyfive.apaapilayer.dtos.TrayDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
-import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.models.Tray;
 import com.twentyfive.apaapilayer.services.TrayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -50,7 +47,7 @@ public class TrayController {
     }
 
     @GetMapping("/activateOrDisable/{id}")
-    public ResponseEntity<Boolean> disableById(@PathVariable String id) {
+    public ResponseEntity<Boolean> activeOrDisableById(@PathVariable String id) {
         return ResponseEntity.ok().body(trayService.activateOrDisableById(id));
     }
     @DeleteMapping("/deleteById/{id}")

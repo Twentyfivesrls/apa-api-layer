@@ -31,8 +31,12 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.getById(id));
     }
     @GetMapping("/getAllByIdSection/{id}")
-    public ResponseEntity<List<CategoryAPA>> getAllByIdSection(@PathVariable String id) {
+    public ResponseEntity<List<CategoryAPA>> getAllByIdSectionEnabledTrueAndSoftDeletedFalse(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.getAllActiveByIdSection(id));
+    }
+    @GetMapping("/getAllDisabledByIdSection/{id}")
+    public ResponseEntity<List<CategoryAPA>> getAllDisabledByIdSectionEnabledTrueAndSoftDeletedFalse(@PathVariable String id) {
+        return ResponseEntity.ok().body(categoryService.getAllDisabledByIdSection(id));
     }
     @PostMapping("/save")
     public ResponseEntity<CategoryAPA> save(@RequestBody CategoryAPA c) {
@@ -49,7 +53,7 @@ public class CategoryController {
     }
 
     @GetMapping("/deleteById/{id}")
-    public ResponseEntity<Boolean> delateById(@PathVariable String id) {
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.deleteById(id));
     }
 

@@ -95,6 +95,11 @@ public class CategoryService {
     }
 
     public List<CategoryAPA> getAllActiveByIdSection(String id) {
-        return categoryRepository.findAllByIdSectionAndEnabledTrue(id);
+        return categoryRepository.findAllByIdSectionAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(id);
+    }
+
+    public List<CategoryAPA> getAllDisabledByIdSection(String id) {
+        return categoryRepository.findAllByIdSectionAndEnabledFalseAndSoftDeletedFalse(id);
+
     }
 }

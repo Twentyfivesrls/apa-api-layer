@@ -4,8 +4,13 @@ import com.twentyfive.apaapilayer.dtos.MenuItemDTO;
 import com.twentyfive.apaapilayer.models.MenuItemAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.MenuItemRepository;
+import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
@@ -41,16 +46,26 @@ public class MenuItemService {
         throw new NoSuchElementException("Nessun prodotto con questo id!");
     }
 
-    public List<MenuItemDTO> getAllByIdCategory(String id) {
-        List<MenuItemAPA> menuItems = menuItemRepository.findAllByCategoryId(id);
-        List<MenuItemDTO> menuItemsDTO = new ArrayList<>();
-
-        for (MenuItemAPA menuItem : menuItems) {
-            List<Allergen> allergens = getAllergensFromMenuItem(menuItem);
-            MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem,allergens);
-            menuItemsDTO.add(menuItemDTO);
-        }
+    public List<MenuItemDTO> getAllByIdCategoryAndActiveTrue(String id) {
+        List<MenuItemAPA> menuItems = menuItemRepository.findAllByCategoryIdAndActiveTrue(id);
+        List<MenuItemDTO> menuItemsDTO = mapListMenuItemsToMenuItemDTO(menuItems);
         return menuItemsDTO;
+    }
+    public Page<MenuItemDTO> getAllByIdCategoryPaginated(String idCategory, int page, int size, String sortColumn, String sortDirection) {
+        List<MenuItemAPA> menuItems = menuItemRepository.findAllByCategoryId(idCategory);
+        List<MenuItemDTO> menuItemsDTO = mapListMenuItemsToMenuItemDTO(menuItems);
+        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
+            if(sortColumn.equals("price")){
+                sortColumn = "realPrice";
+            }
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
+            Pageable pageable= PageRequest.of(page,size,sort);
+            return PageUtilities.convertListToPageWithSorting(menuItemsDTO,pageable);
+        }
+        Sort sort = Sort.by(Sort.Direction.ASC,"name");
+        Pageable pageable=PageRequest.of(page,size,sort);
+        return PageUtilities.convertListToPageWithSorting(menuItemsDTO,pageable);
+
     }
 
     public MenuItemAPA save(MenuItemAPA menuItemAPA) {
@@ -62,6 +77,8 @@ public class MenuItemService {
         if(optMenuItem.isPresent()){
             MenuItemAPA menuItemToPatch = optMenuItem.get();
             BeanUtils.copyProperties(menuItemAPA,menuItemToPatch,"id");
+            return menuItemRepository.save(menuItemToPatch);
+
         }
         throw new NoSuchElementException("Nessun prodotto con questo id!");
     }
@@ -74,6 +91,16 @@ public class MenuItemService {
         throw new NoSuchElementException("Nessun prodotto con questo id");
     }
 
+    public boolean activateOrDisableById(String id) {
+        Optional<MenuItemAPA> optMenuItem = menuItemRepository.findById(id);
+        if(optMenuItem.isPresent()){
+            MenuItemAPA menuItemAPA = optMenuItem.get();
+            menuItemAPA.setActive(!menuItemAPA.isActive());
+            menuItemRepository.save(menuItemAPA);
+            return true;
+        }
+        throw new NoSuchElementException("Nessun prodotto con questo id");
+    }
 
 
     private List<Allergen> getAllergensFromMenuItem(MenuItemAPA menuItem){
@@ -86,5 +113,14 @@ public class MenuItemService {
             }
         }
         return allergens;
+    }
+    private List<MenuItemDTO> mapListMenuItemsToMenuItemDTO(List<MenuItemAPA> menuItems){
+        List<MenuItemDTO> menuItemsDTO = new ArrayList<>();
+        for (MenuItemAPA menuItem : menuItems) {
+            List<Allergen> allergens = getAllergensFromMenuItem(menuItem);
+            MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem,allergens);
+            menuItemsDTO.add(menuItemDTO);
+        }
+        return menuItemsDTO;
     }
 }

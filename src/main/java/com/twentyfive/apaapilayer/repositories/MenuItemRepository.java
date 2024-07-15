@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface MenuItemRepository extends MongoRepository<MenuItemAPA,String> {
 
-    List<MenuItemAPA> findAllByCategoryId(String categoryId);
+    List<MenuItemAPA> findAllByCategoryIdAndActiveTrue(String categoryId);
 
+    List<MenuItemAPA> findAllByCategoryId(String idCategory);
 }
