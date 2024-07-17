@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleItem;
+import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -41,7 +44,7 @@ public class CustomerService {
     private final ActiveOrderService orderService;
     private final EmailService emailService;
     private final KeycloakService keycloakService;
-
+    private final PaymentClientController paymentClientController;
     private final SettingRepository settingRepository;
 
     private final ProductKgRepository productKgRepository;
@@ -105,13 +108,14 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
+        this.paymentClientController = paymentClientController;
         this.settingRepository=settingRepository;
         this.productKgRepository = productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
@@ -273,6 +277,65 @@ public class CustomerService {
         return false;
     }
 
+    public Map<String,Object> prepareBuying(String id, String paymentAppId, PaymentReq paymentReq) {
+        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+        if(optCustomer.isPresent()){
+            CustomerAPA customer = optCustomer.get();
+            Cart cart = customer.getCart();
+            List<Integer> positions = paymentReq.getBuyInfos().getPositions();
+            List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positions);
+            for(Integer positionId: positions){
+                if (positionId < 0 || positionId >= cart.getPurchases().size()) {
+                    throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
+                }
+            }
+            List<SimpleItem> items = new ArrayList<>();
+            double totalValue = 0;
+            if (!selectedItems.isEmpty()) {
+                for (ItemInPurchase selectedItem : selectedItems) {
+                    SimpleItem simpleItem = new SimpleItem();
+                    String name ="";
+                    String category ="";
+                    double value = 0;
+                    if(selectedItem instanceof ProductInPurchase){
+                        Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
+                        if(optProductKg.isPresent()){
+                            ProductKgAPA productKg = optProductKg.get();
+                            name = productKg.getName();
+                            Optional<CategoryAPA> optCategory = categoryRepository.findById(productKg.getCategoryId());
+                            if(optCategory.isPresent()){
+                                category = optCategory.get().getName();
+                            }
+                        }
+                    } else if (selectedItem instanceof BundleInPurchase) {
+                        Optional<Tray> optTray = trayRepository.findById(selectedItem.getId());
+                        if (optTray.isPresent()) {
+                            name = optTray.get().getName();
+                            Optional<CategoryAPA> optCategory = categoryRepository.findById(optTray.get().getCategoryId());
+                            if(optCategory.isPresent()){
+                                category = optCategory.get().getName();
+                            }
+                        }
+                    }
+                    simpleItem.setName(name);
+                    simpleItem.setCategory(category);
+                    simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
+                    simpleItem.setDescription(customer.getLastName() + " " +customer.getFirstName());
+                    SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
+                    simpleUnitAmount.setCurrency_code("EUR");
+                    simpleUnitAmount.setValue(String.valueOf(value));
+                    simpleItem.setUnit_amount(simpleUnitAmount);
+                    totalValue +=selectedItem.getTotalPrice();
+                    items.add(simpleItem);
+                }
+            }
+            String authorization = keycloakService.getAccessTokenTF();
+            paymentReq.getSimpleOrderRequest().setItems(items);
+            paymentReq.getSimpleOrderRequest().setValue(String.valueOf(totalValue));
+            return paymentClientController.pay(authorization,paymentReq.getSimpleOrderRequest(),paymentAppId).getBody();
+        }
+        return null;
+    }
     private int countSlotRequired(List<ItemInPurchase>items) {
         int numSlotRequired = 0;
 

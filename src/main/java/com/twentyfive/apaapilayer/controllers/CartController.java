@@ -2,11 +2,13 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.BuyInfosDTO;
 import com.twentyfive.apaapilayer.dtos.CartDTO;
+import com.twentyfive.apaapilayer.dtos.PaymentReq;
 import com.twentyfive.apaapilayer.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleOrderRequest;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
@@ -124,6 +126,13 @@ public class CartController {
         }
     }
 
+    @PostMapping("/prepare-buying/{id}")
+    ResponseEntity<Map<String,Object>> prepareBuying(@PathVariable String id,
+                                                     @RequestHeader("Payment-App-Id") String paymentId,
+                                                     @RequestBody PaymentReq paymentReq){
+        return ResponseEntity.ok().body(customerService.prepareBuying(id,paymentId,paymentReq));
+
+    }
     @PostMapping("/buy-from-cart/{id}")
     public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         try {
