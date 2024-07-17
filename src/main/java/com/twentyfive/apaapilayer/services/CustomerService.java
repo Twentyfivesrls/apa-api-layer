@@ -294,8 +294,11 @@ public class CustomerService {
             if (!selectedItems.isEmpty()) {
                 for (ItemInPurchase selectedItem : selectedItems) {
                     SimpleItem simpleItem = new SimpleItem();
+                    SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
+                    String totalPrice = String.format(Locale.US,"%.2f", selectedItem.getTotalPrice()/selectedItem.getQuantity());
+                    simpleUnitAmount.setValue(String.valueOf(totalPrice));
+                    simpleUnitAmount.setCurrency_code("EUR");
                     String name ="";
-                    double value = 0;
                     if(selectedItem instanceof ProductInPurchase){
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
                         if(optProductKg.isPresent()){
@@ -310,9 +313,6 @@ public class CustomerService {
                     simpleItem.setName(name);
                     simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
                     simpleItem.setDescription(customer.getLastName() + " " +customer.getFirstName());
-                    SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
-                    simpleUnitAmount.setCurrency_code("EUR");
-                    simpleUnitAmount.setValue(String.valueOf(selectedItem.getTotalPrice()));
                     simpleItem.setUnit_amount(simpleUnitAmount);
                     totalValue +=selectedItem.getTotalPrice();
                     items.add(simpleItem);
@@ -320,7 +320,8 @@ public class CustomerService {
             }
             String authorization = keycloakService.getAccessTokenTF();
             paymentReq.getSimpleOrderRequest().setItems(items);
-            paymentReq.getSimpleOrderRequest().setValue(String.valueOf(totalValue));
+            String formattedValue = String.format(Locale.US,"%.2f", totalValue);
+            paymentReq.getSimpleOrderRequest().setValue(formattedValue);
             return paymentClientController.pay(authorization,paymentReq.getSimpleOrderRequest(),paymentAppId).getBody();
         }
         return null;
