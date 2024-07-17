@@ -326,6 +326,9 @@ public class ActiveOrderService {
         if (order.getBundlesInPurchase() != null) {
             completedOrder.setBundlesInPurchase(new ArrayList<>(order.getBundlesInPurchase()));
         }
+        if (order.getPaymentId()!=null) {
+            completedOrder.setPaymentId(order.getPaymentId());
+        }
 
         completedOrder.setCreatedDate(LocalDateTime.now());
         // Altri campi specifici dell'ordine possono essere aggiunti qui

@@ -312,7 +312,7 @@ public class CustomerService {
                     simpleItem.setDescription(customer.getLastName() + " " +customer.getFirstName());
                     SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
                     simpleUnitAmount.setCurrency_code("EUR");
-                    simpleUnitAmount.setValue(String.valueOf(value));
+                    simpleUnitAmount.setValue(String.valueOf(selectedItem.getTotalPrice()));
                     simpleItem.setUnit_amount(simpleUnitAmount);
                     totalValue +=selectedItem.getTotalPrice();
                     items.add(simpleItem);
@@ -362,6 +362,9 @@ public class CustomerService {
             order.setCustomInfo(buyInfos.getCustomInfo());
         } else {
             order.setCustomerId(customer.getId());
+        }
+        if(buyInfos.getPaymentId()!=null){
+            order.setPaymentId(buyInfos.getPaymentId());
         }
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());

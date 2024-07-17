@@ -17,4 +17,5 @@ public class BuyInfosDTO {
     private LocalDateTime selectedPickupDateTime;
     private String note;
     private CustomInfo customInfo;
+    private String paymentId;
 }
