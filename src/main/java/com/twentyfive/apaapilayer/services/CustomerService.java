@@ -295,30 +295,19 @@ public class CustomerService {
                 for (ItemInPurchase selectedItem : selectedItems) {
                     SimpleItem simpleItem = new SimpleItem();
                     String name ="";
-                    String category ="";
                     double value = 0;
                     if(selectedItem instanceof ProductInPurchase){
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
                         if(optProductKg.isPresent()){
-                            ProductKgAPA productKg = optProductKg.get();
-                            name = productKg.getName();
-                            Optional<CategoryAPA> optCategory = categoryRepository.findById(productKg.getCategoryId());
-                            if(optCategory.isPresent()){
-                                category = optCategory.get().getName();
-                            }
+                            name = optProductKg.get().getName();
                         }
                     } else if (selectedItem instanceof BundleInPurchase) {
                         Optional<Tray> optTray = trayRepository.findById(selectedItem.getId());
                         if (optTray.isPresent()) {
                             name = optTray.get().getName();
-                            Optional<CategoryAPA> optCategory = categoryRepository.findById(optTray.get().getCategoryId());
-                            if(optCategory.isPresent()){
-                                category = optCategory.get().getName();
-                            }
                         }
                     }
                     simpleItem.setName(name);
-                    simpleItem.setCategory(category);
                     simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
                     simpleItem.setDescription(customer.getLastName() + " " +customer.getFirstName());
                     SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
@@ -744,5 +733,10 @@ public class CustomerService {
             return true;
         }
         return false;
+    }
+
+    public Map<String, Object> capture(String orderId) {
+        String authorization=keycloakService.getAccessTokenTF();
+        return paymentClientController.capture(authorization,orderId).getBody();
     }
 }

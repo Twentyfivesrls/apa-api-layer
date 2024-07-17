@@ -131,6 +131,10 @@ public class CartController {
                                                      @RequestHeader("Payment-App-Id") String paymentId,
                                                      @RequestBody PaymentReq paymentReq){
         return ResponseEntity.ok().body(customerService.prepareBuying(id,paymentId,paymentReq));
+    }
+    @GetMapping("/capture/{orderId}")
+    ResponseEntity<Map<String,Object>> capture(@PathVariable String orderId){
+        return ResponseEntity.ok().body(customerService.capture(orderId));
 
     }
     @PostMapping("/buy-from-cart/{id}")
