@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ProductWeightedRepository extends MongoRepository<ProductWeightedAPA,String> {
 
-    List<ProductWeightedAPA> findAllByIngredientIdsContaining(String ingredientId);
+    List<ProductWeightedAPA> findAllByIngredientIdsContainingAndWeightNotNull(String ingredientId);
     List<ProductWeightedAPA> findAllByCategoryId(String categoryId);
     List<ProductWeightedAPA> findAllByCategoryIdAndSoftDeletedFalse(String categoryId);
     List<ProductWeightedAPA> findAllByCategoryIdAndSoftDeletedFalseAndNameContainsIgnoreCase(String categoryId, String name);
