@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ProductKgRepository extends MongoRepository<ProductKgAPA,String> {
 
-    List<ProductKgAPA> findAllByIngredientIdsContaining(String ingredientId);
+    List<ProductKgAPA> findAllByIngredientIdsContainingAndPricePerKgNotNull(String ingredientId);
 
     List<ProductKgAPA> findAllByCategoryIdAndSoftDeletedFalse(String categoryId);
     List<ProductKgAPA> findAllByCategoryId(String categoryId);

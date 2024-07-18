@@ -94,12 +94,12 @@ public class IngredientService {
         if(ingredientAPA!=null){
             ingredientAPA.setActive(false);
             ingredientRepository.save(ingredientAPA);
-            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByIngredientIdsContaining(id);
+            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByIngredientIdsContainingAndPricePerKgNotNull(id);
             for(ProductKgAPA productkg : prodottiAlKg){
                 productkg.setActive(false);
                 productKgRepository.save(productkg);
             }
-            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByIngredientIdsContaining(id);
+            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByIngredientIdsContainingAndWeightNotNull(id);
             for(ProductWeightedAPA productWeighted : prodottiWeighted){
                 productWeighted.setActive(false);
                 productWeightedRepository.save(productWeighted);
@@ -115,8 +115,8 @@ public class IngredientService {
         if(ingredientAPA != null){
 
             // Trova tutti i prodotti che contengono esclusivamente l'ingrediente in questione
-            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByIngredientIdsContaining(id);
-            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByIngredientIdsContaining(id);
+            List<ProductKgAPA> prodottiAlKg = productKgRepository.findAllByIngredientIdsContainingAndPricePerKgNotNull(id);
+            List<ProductWeightedAPA> prodottiWeighted = productWeightedRepository.findAllByIngredientIdsContainingAndWeightNotNull(id);
 
             // Verifica e aggiorna lo stato dei prodotti
             for(ProductKgAPA productKg : prodottiAlKg){
