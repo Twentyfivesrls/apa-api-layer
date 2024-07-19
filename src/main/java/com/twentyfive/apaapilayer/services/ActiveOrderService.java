@@ -143,6 +143,11 @@ public class ActiveOrderService {
         dto.setId(order.getId());
         dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
         dto.setRealPrice(order.getTotalPrice());
+        if(order.getPaymentId()!=null){
+            dto.setMethodPayment("Online");
+        } else {
+            dto.setMethodPayment("Al ritiro");
+        }
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().getStatus());
         dto.setUnread(order.isUnread());
@@ -191,6 +196,7 @@ public class ActiveOrderService {
 
 
         dto.setTotalPrice(order.getTotalPrice());
+        dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());
         dto.setOrderNote(order.getNote());

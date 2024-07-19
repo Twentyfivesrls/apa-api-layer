@@ -81,6 +81,11 @@ public class CompletedOrderService {
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setRealPrice(order.getTotalPrice());
+        if(order.getPaymentId()!=null){
+            dto.setMethodPayment("Online");
+        } else {
+            dto.setMethodPayment("Al ritiro");
+        }
         dto.setStatus(order.getStatus().getStatus());
 
         if(order.getCustomerId()!=null){
@@ -122,6 +127,7 @@ public class CompletedOrderService {
         dto.setOrderNote(order.getNote());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setTotalPrice(order.getTotalPrice());
+        dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());
 

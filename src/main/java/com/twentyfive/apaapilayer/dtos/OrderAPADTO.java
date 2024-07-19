@@ -16,6 +16,7 @@ public class OrderAPADTO {
     private String id;
     private String firstName;
     private String lastName;
+    private String methodPayment;
     private LocalDateTime pickupDateTime;
     private double realPrice;
     private String price;

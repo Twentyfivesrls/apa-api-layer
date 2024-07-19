@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleItem;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
@@ -299,20 +300,23 @@ public class CustomerService {
                     simpleUnitAmount.setValue(String.valueOf(totalPrice));
                     simpleUnitAmount.setCurrency_code("EUR");
                     String name ="";
+                    String description ="";
                     if(selectedItem instanceof ProductInPurchase){
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
                         if(optProductKg.isPresent()){
                             name = optProductKg.get().getName();
+                            description = optProductKg.get().getDescription();
                         }
                     } else if (selectedItem instanceof BundleInPurchase) {
                         Optional<Tray> optTray = trayRepository.findById(selectedItem.getId());
                         if (optTray.isPresent()) {
                             name = optTray.get().getName();
+                            description = optTray.get().getDescription();
                         }
                     }
                     simpleItem.setName(name);
                     simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
-                    simpleItem.setDescription(customer.getLastName() + " " +customer.getFirstName());
+                    simpleItem.setDescription(description);
                     simpleItem.setUnit_amount(simpleUnitAmount);
                     totalValue +=selectedItem.getTotalPrice();
                     items.add(simpleItem);
@@ -322,6 +326,9 @@ public class CustomerService {
             paymentReq.getSimpleOrderRequest().setItems(items);
             String formattedValue = String.format(Locale.US,"%.2f", totalValue);
             paymentReq.getSimpleOrderRequest().setValue(formattedValue);
+            PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
+            paymentReq.getSimpleOrderRequest().setPaypalCredentials(paypalCredentials);
+
             return paymentClientController.pay(authorization,paymentReq.getSimpleOrderRequest(),paymentAppId).getBody();
         }
         return null;
@@ -741,6 +748,7 @@ public class CustomerService {
 
     public Map<String, Object> capture(String orderId) {
         String authorization=keycloakService.getAccessTokenTF();
-        return paymentClientController.capture(authorization,orderId).getBody();
+        PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
+        return paymentClientController.capture(authorization,orderId,paypalCredentials).getBody();
     }
 }

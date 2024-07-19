@@ -21,6 +21,7 @@ public class OrderDetailsAPADTO {
     private String customerNote;
     private String phoneNumber;
     private LocalDateTime pickupDateTime;
+    private String paymentId;
     private double totalPrice;
     private double totalWeight;
     private String status;
