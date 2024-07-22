@@ -495,9 +495,7 @@ public class ActiveOrderService {
                     }
                     activeOrderRepository.delete(optOrder.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                     completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
-                    if(order.getCustomerId()!=null){
-                        emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
-                    }
+                    emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
                 }
                 case IN_PREPARAZIONE -> {
                     String bakerNotification =StompUtilities.sendBakerNotification("new");
