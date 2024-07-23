@@ -237,6 +237,36 @@ public class CustomerService {
         return convertCartToDTO(customer);
     }
 
+    public List<SummarySingleItemDTO> summary(String id, BuyInfosDTO buyInfos) {
+        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+        List<SummarySingleItemDTO> summary = new ArrayList<>();
+        if (optCustomer.isPresent()) {
+            Cart cart = optCustomer.get().getCart();
+            List<Integer> positions = buyInfos.getPositions();
+            List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positions);
+            for (Integer positionId : positions) {
+                if (positionId < 0 || positionId >= cart.getPurchases().size()) {
+                    throw new IndexOutOfBoundsException("Invalid item position: " + positionId);
+                }
+            }
+            if (!selectedItems.isEmpty()) {
+                for (ItemInPurchase item : selectedItems) {
+                    SummarySingleItemDTO singleItem = new SummarySingleItemDTO();
+                    singleItem.setPrice(item.getTotalPrice());
+                    if (item instanceof ProductInPurchase){
+                        ProductKgAPA product = productKgRepository.findById(item.getId()).get();
+                        singleItem.setName(product.getName());
+                    }
+                    if (item instanceof BundleInPurchase){
+                        Tray tray = trayRepository.findById(item.getId()).get();
+                        singleItem.setName(tray.getName());
+                    }
+                    summary.add(singleItem);
+                }
+            }
+        }
+        return summary;
+    }
     @Transactional
     public boolean buyItems(String customerId, BuyInfosDTO buyInfos) throws IOException {
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
@@ -751,4 +781,6 @@ public class CustomerService {
         PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
         return paymentClientController.capture(authorization,orderId,paypalCredentials).getBody();
     }
+
+
 }

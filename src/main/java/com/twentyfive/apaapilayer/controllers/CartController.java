@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.dtos.BuyInfosDTO;
 import com.twentyfive.apaapilayer.dtos.CartDTO;
 import com.twentyfive.apaapilayer.dtos.PaymentReq;
+import com.twentyfive.apaapilayer.dtos.SummarySingleItemDTO;
 import com.twentyfive.apaapilayer.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -127,13 +128,13 @@ public class CartController {
     }
 
     @PostMapping("/prepare-buying/{id}")
-    ResponseEntity<Map<String,Object>> prepareBuying(@PathVariable String id,
+    public ResponseEntity<Map<String,Object>> prepareBuying(@PathVariable String id,
                                                      @RequestHeader("Payment-App-Id") String paymentId,
                                                      @RequestBody PaymentReq paymentReq){
         return ResponseEntity.ok().body(customerService.prepareBuying(id,paymentId,paymentReq));
     }
     @GetMapping("/capture/{orderId}")
-    ResponseEntity<Map<String,Object>> capture(@PathVariable String orderId){
+    public ResponseEntity<Map<String,Object>> capture(@PathVariable String orderId){
         return ResponseEntity.ok().body(customerService.capture(orderId));
 
     }
@@ -150,6 +151,10 @@ public class CartController {
         }
     }
 
+    @PostMapping("/summary/{id}")
+    public ResponseEntity<List<SummarySingleItemDTO>> summary(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
+        return ResponseEntity.ok().body(customerService.summary(id, buyInfos));
+    }
 
 
 }
