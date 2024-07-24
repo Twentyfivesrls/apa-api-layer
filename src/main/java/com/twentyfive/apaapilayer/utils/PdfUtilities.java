@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.dtos.OrderDetailsPrintAPADTO;
 import com.twentyfive.apaapilayer.dtos.PieceInPurchaseDTO;
 import com.twentyfive.apaapilayer.dtos.ProductInPurchaseDTO;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Customization;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.IngredientsWithCategory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -66,6 +67,10 @@ public class PdfUtilities {
                     document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
                     if(product.getShape()!=null){
                         document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                    }
+                    for(IngredientsWithCategory ingredients: product.getIngredients()){
+                        document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
+                                .collect(Collectors.joining(", ")), boldFont, normalFont));
                     }
                 } else {
                     for(Customization customization : product.getCustomization()){

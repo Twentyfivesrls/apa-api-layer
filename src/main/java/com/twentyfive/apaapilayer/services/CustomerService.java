@@ -305,10 +305,13 @@ public class CustomerService {
         for (ItemInPurchase item : items) {
             if (item instanceof ProductInPurchase) {
                 products.add((ProductInPurchase) item);
-                Optional<ProductKgAPA> productKGAPA =productKgRepository.findById(item.getId());
-                if (productKGAPA.isPresent()){
-                    productStatService.addBuyingCountProduct(productKGAPA.get(), 1);
-                    productKgRepository.save(productKGAPA.get());
+                Optional<ProductKgAPA> optProductKg =productKgRepository.findById(item.getId());
+                if (optProductKg.isPresent()){
+                    ProductKgAPA productKgAPA = optProductKg.get();
+                    List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA);
+                    ((ProductInPurchase) item).setIngredients(ingredientsFromProduct);
+                    productStatService.addBuyingCountProduct(productKgAPA, 1);
+                    productKgRepository.save(productKgAPA);
                 }
             } else if (item instanceof BundleInPurchase) {
                 bundles.add((BundleInPurchase) item);
@@ -331,6 +334,35 @@ public class CustomerService {
         order.setTotalPrice(calculateTotalPrice(items));
 
         return order;
+    }
+
+    private List<IngredientsWithCategory> findIngredientsFromProduct(ProductKgAPA productKgAPA) {
+        List<IngredientsWithCategory> ingredients = new ArrayList<>();
+        for (String ingredientId : productKgAPA.getIngredientIds()) {
+            Optional<IngredientAPA> optIngredient = ingredientRepository.findById(ingredientId);
+            if(optIngredient.isPresent()){
+                IngredientAPA ingredient = optIngredient.get();
+                Optional<CategoryAPA> optCategory = categoryRepository.findById(ingredient.getCategoryId());
+                if(optCategory.isPresent()){
+                    CategoryAPA category = optCategory.get();
+                    boolean isPresent = false;
+                    for (IngredientsWithCategory ingredientsWithCategory : ingredients) {
+                        if(ingredientsWithCategory.getCategoryName().equals(category.getName())){
+                            ingredientsWithCategory.getIngredientsName().add(ingredient.getName());
+                            isPresent = true;
+                            break;
+                        }
+                    }
+                    if (!isPresent){
+                        List<String> newCategoryIngredients = new ArrayList<>();
+                        newCategoryIngredients.add(ingredient.getName());
+                        IngredientsWithCategory ingredientsWithCategory = new IngredientsWithCategory(category.getName(),newCategoryIngredients);
+                        ingredients.add(ingredientsWithCategory);
+                    }
+                }
+            }
+        }
+        return ingredients;
     }
 
     private double calculateTotalPrice(List<ItemInPurchase> items) {

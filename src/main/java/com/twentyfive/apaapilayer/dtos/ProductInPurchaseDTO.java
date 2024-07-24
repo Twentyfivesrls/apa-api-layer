@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Customization;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.IngredientsWithCategory;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
@@ -22,6 +23,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private int quantity; // La quantità acquistata del prodotto
     private String shape; // La forma del prodotto, potrebbe essere meglio come Enum se le forme sono predefinite
     private List<Customization> customization = new ArrayList<>(); // Una mappa degli ingredienti personalizzati, dove la chiave è l'ID dell'ingrediente
+    private List<IngredientsWithCategory> ingredients = new ArrayList<>(); // Una mappa degli ingredienti, dove la chiave è l'ID dell'ingrediente
     private List<Allergen> allergens;
     private String attachment; // Un allegato, presumibilmente un URL a un'immagine o a un documento
     private LocalDate deliveryDate; // La data di consegna del prodotto
@@ -35,6 +37,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.quantity = product.getQuantity();
         this.shape = product.getShape();
         this.customization = product.getCustomization();
+        this.ingredients = product.getIngredients();
         this.attachment = product.getAttachment();
         this.deliveryDate = product.getDeliveryDate();
         this.totalPrice = product.getTotalPrice();
