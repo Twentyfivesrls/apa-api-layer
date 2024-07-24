@@ -461,7 +461,11 @@ public class CustomerService {
     public double calculateTotalPrice(ItemInPurchase item, double pricePerKg) {
         if (item instanceof ProductInPurchase) {
             ProductInPurchase product = (ProductInPurchase) item;
-            return product.getQuantity() * (pricePerKg * product.getWeight());
+            double totalPrice = product.getQuantity() * (pricePerKg * product.getWeight());
+            if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
+                totalPrice += 5;
+            }
+            return totalPrice;
         } else if (item instanceof BundleInPurchase) {
             BundleInPurchase bundle = (BundleInPurchase) item;
             return bundle.getQuantity() * (pricePerKg * bundle.getMeasure().getWeight());
