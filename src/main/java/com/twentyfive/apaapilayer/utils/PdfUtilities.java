@@ -63,14 +63,16 @@ public class PdfUtilities {
                 document.add(new Paragraph(product.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
                 document.add(createParagraph("Quantità: ", String.valueOf(product.getQuantity()), boldFont, normalFont));
+                if(product.getIngredients() != null){
+                    for(IngredientsWithCategory ingredients: product.getIngredients()){
+                        document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
+                                .collect(Collectors.joining(", ")), boldFont, normalFont));
+                    }
+                }
                 if (product.getCustomization() == null || product.getCustomization().isEmpty()) {
                     document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
                     if(product.getShape()!=null){
                         document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
-                    }
-                    for(IngredientsWithCategory ingredients: product.getIngredients()){
-                        document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
-                                .collect(Collectors.joining(", ")), boldFont, normalFont));
                     }
                 } else {
                     for(Customization customization : product.getCustomization()){
