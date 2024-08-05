@@ -253,6 +253,7 @@ public class CustomerService {
                 for (ItemInPurchase item : selectedItems) {
                     SummarySingleItemDTO singleItem = new SummarySingleItemDTO();
                     singleItem.setPrice(item.getTotalPrice());
+                    singleItem.setQuantity(item.getQuantity());
                     if (item instanceof ProductInPurchase){
                         ProductKgAPA product = productKgRepository.findById(item.getId()).get();
                         singleItem.setName(product.getName());
