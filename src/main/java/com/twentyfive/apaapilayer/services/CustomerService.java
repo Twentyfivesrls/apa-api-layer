@@ -224,11 +224,6 @@ public class CustomerService {
     public CartDTO modifyProductInCart(String customerId, int index, ProductInPurchase pIP) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
         Cart cart = customer.getCart();
-
-        if (pIP.getAttachment() != null && !pIP.getAttachment().isEmpty()) {
-            pIP.setTotalPrice(pIP.getTotalPrice() + 5);
-        }
-
         cart.getPurchases().set(index,pIP);
         customerRepository.save(customer);
         return convertCartToDTO(customer);
