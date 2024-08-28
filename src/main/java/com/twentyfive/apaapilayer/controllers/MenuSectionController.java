@@ -17,6 +17,10 @@ public class MenuSectionController {
     public ResponseEntity<List<MenuSectionAPA>> getAll(){
         return ResponseEntity.ok().body(menuSectionService.getAll());
     }
+    @GetMapping("/getAllActive")
+    public ResponseEntity<List<MenuSectionAPA>> getAllActive() {
+        return ResponseEntity.ok().body(menuSectionService.getAllActive());
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<MenuSectionAPA> getById(@PathVariable("id")String id){
         return ResponseEntity.ok().body(menuSectionService.getById(id));

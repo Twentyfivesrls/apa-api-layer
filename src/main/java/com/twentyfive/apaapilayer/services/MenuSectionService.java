@@ -26,6 +26,11 @@ public class MenuSectionService {
     public List<MenuSectionAPA> getAll(){
         return menuSectionRepository.findAll();
     }
+
+    public List<MenuSectionAPA> getAllActive() {
+        return menuSectionRepository.findByActiveTrue();
+    }
+
     public MenuSectionAPA getById(String id) {
         Optional<MenuSectionAPA> optMenuSection = menuSectionRepository.findById(id);
         if(optMenuSection.isPresent()){
