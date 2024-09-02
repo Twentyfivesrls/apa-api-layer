@@ -18,4 +18,5 @@ public class BuyInfosDTO {
     private String note;
     private CustomInfo customInfo;
     private String paymentId;
+    private String captureId;
 }

@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.itextpdf.text.DocumentException;
+import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
@@ -47,6 +49,8 @@ public class ActiveOrderService {
 
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
+    private final PaymentClientController paymentClientController;
+    private final KeycloakService keycloakService;
 
     private final TrayRepository trayRepository;
 
@@ -55,7 +59,7 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -63,6 +67,8 @@ public class ActiveOrderService {
         this.producerPool = producerPool;
         this.productKgRepository=productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
+        this.paymentClientController = paymentClientController;
+        this.keycloakService = keycloakService;
         this.trayRepository=trayRepository;
         this.settingRepository=settingRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
@@ -369,6 +375,11 @@ public class ActiveOrderService {
             items.addAll(order.getProductsInPurchase());
             if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
                 timeSlotAPARepository.save(timeSlotAPA);
+            }
+            if (order.getCaptureId() != null){
+                PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
+                String authorization=keycloakService.getAccessTokenTF();
+                paymentClientController.refundPaymentOutside(authorization, order.getCaptureId(), paypalCredentials);
             }
             activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
             completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati

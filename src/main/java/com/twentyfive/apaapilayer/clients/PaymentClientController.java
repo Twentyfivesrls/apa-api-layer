@@ -8,14 +8,18 @@ import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleOrderRequest;
 import twentyfive.twentyfiveadapter.models.twentyfiveEmailModels.EmailSendRequest;
 
+import java.io.IOException;
 import java.util.Map;
 
 @FeignClient(name = "PaymentClientController", url = "${twentyfive.groypal.daemon.url}/payments")
 public interface PaymentClientController {
 
     @PostMapping("/outside")
-    ResponseEntity<Map<String,Object>> pay(@RequestHeader("Authorization") String accessToken, @RequestBody SimpleOrderRequest simpleOrderRequest, @RequestHeader("Payment-App-Id") String paymentAppId);
+    ResponseEntity<Map<String, Object>> pay(@RequestHeader("Authorization") String accessToken, @RequestBody SimpleOrderRequest simpleOrderRequest, @RequestHeader("Payment-App-Id") String paymentAppId);
 
     @PostMapping("/capture-outside/{orderId}")
-    ResponseEntity<Map<String,Object>> capture(@RequestHeader("Authorization")String accessToken, @PathVariable("orderId") String orderId, @RequestBody PaypalCredentials paypalCredentials);
+    ResponseEntity<Map<String, Object>> capture(@RequestHeader("Authorization") String accessToken, @PathVariable("orderId") String orderId, @RequestBody PaypalCredentials paypalCredentials);
+
+    @PostMapping("/refund-outside/{captureId}")
+    ResponseEntity<Map<String, Object>> refundPaymentOutside(@RequestHeader("Authorization") String accessToken, @PathVariable String captureId, @RequestBody PaypalCredentials paypalCredentials);
 }
