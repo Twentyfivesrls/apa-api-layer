@@ -504,6 +504,11 @@ public class ActiveOrderService {
                     if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap())) {
                         timeSlotAPARepository.save(timeSlotAPA);
                     }
+                    if (order.getCaptureId() != null){
+                        PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
+                        String authorization=keycloakService.getAccessTokenTF();
+                        paymentClientController.refundPaymentOutside(authorization, order.getCaptureId(), paypalCredentials);
+                    }
                     activeOrderRepository.delete(optOrder.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                     completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
