@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
 
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,17 @@ public class CategoryService {
 
     @Transactional
     public CategoryAPA save(CategoryAPA c){
-        Optional<CategoryAPA> category = categoryRepository.findByName(c.getName());
-        if (category.isPresent()){
-            c.setId(category.get().getId());
+        if (c.getIdSection()!=null){
+            Optional<CategoryAPA> optCategory = categoryRepository.findByNameAndIdSection(c.getName(),c.getIdSection());
+            if (optCategory.isPresent()){
+                c.setId(optCategory.get().getId());
+            }
+        }
+        if (c.getType()!=null){
+            Optional<CategoryAPA> optCategory = categoryRepository.findByNameAndType(c.getName(),c.getType());
+            if(optCategory.isPresent()){
+                c.setId(optCategory.get().getId());
+            }
         }
         return categoryRepository.save(c);
     }
