@@ -554,6 +554,7 @@ public class ActiveOrderService {
                 case IN_PREPARAZIONE -> {
                     String bakerNotification =StompUtilities.sendBakerNotification("new");
                     producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
+                    //TODO we should send an array of number and set them toPrepare between iIP and bIP
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     activeOrderRepository.save(order);
@@ -566,6 +567,7 @@ public class ActiveOrderService {
                 case MODIFICATO_DA_PASTICCERIA -> {
                     String adminNotification = StompUtilities.sendAdminNotification();
                     producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
+                    //TODO we should make every pIP and bIP with toPrepare = false IF THEY HAVE A LOCATION
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     order.setUnread(true);
                     activeOrderRepository.save(order);
@@ -588,6 +590,7 @@ public class ActiveOrderService {
     }
 
     public boolean SetLocationForKg(LocationReq locationReq) {
+        //TODO WE SHOULD TRANSFORM THIS SERVICE FOR EVERYTHING, BUNDLE TOO
         Optional<OrderAPA> optOrder = activeOrderRepository.findById(locationReq.getOrderId());
         if(optOrder.isPresent()){
             OrderAPA order = optOrder.get();
