@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class PdfUtilities {
     public static ByteArrayOutputStream generatePdfStream(OrderDetailsPrintAPADTO orderDetails) throws DocumentException, IOException {
-        Document document = new Document();
+        Document document = new Document(PageSize.A5);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, outputStream);
         document.open();
@@ -28,20 +28,20 @@ public class PdfUtilities {
         // Add image at the top left
         try {
             Image logo = Image.getInstance("src/main/resources/static/apa-logo.png"); // Path to your image
-            logo.scaleToFit(100, 100); // Resize the image to fit the top left corner
-            logo.setAbsolutePosition(36, 750); // Position the image
+            logo.scaleToFit(80, 80); // Resize the image to fit the top left corner
+            logo.setAbsolutePosition(36, 500); // Position the image
             document.add(logo);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         // Write order details
-        Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
-        Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL);
-        Font boldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
-        Font normalFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
-        Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
-        Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+        Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
+        Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL);
+        Font boldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
+        Font normalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL);
+        Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+        Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
 
         // Customer info aligned to the right and smaller
         addRightAlignedParagraph(document, "ID Ordine: ", orderDetails.getId(), smallBoldFont, smallNormalFont);
@@ -88,7 +88,7 @@ public class PdfUtilities {
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
                     try {
                         Image image = Image.getInstance(new URL(product.getAttachment()));
-                        image.scaleToFit(100, 100); // Fixed small dimensions
+                        image.scaleToFit(80, 80); // Fixed small dimensions
                         document.add(image);
                     } catch (MalformedURLException e) {
                         // Handle URL exception

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
@@ -96,11 +97,17 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
-
-        // Fetching paginated orders from the database
-        List<OrderAPA> orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
-        List<OrderAPADTO> realOrder= new ArrayList<>();
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) throws IOException{
+        List<String> roles = JwtUtilities.getRoles();
+        List<OrderAPA> orderList = new ArrayList<>();
+        List<OrderAPADTO> realOrder = new ArrayList<>();
+        if(roles.contains("admin")){
+            // Fetching paginated orders from the database
+            orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
+        }
+        if (roles.contains("baker")){
+            orderList = activeOrderRepository.findOrdersWithItemsToPrepare();
+        }
         for(OrderAPA order:orderList){
             OrderAPADTO orderAPA= convertToOrderAPADTO(order);
             realOrder.add(orderAPA);
@@ -186,21 +193,10 @@ public class ActiveOrderService {
         }
     }
 
-    private OrderDetailsAPADTO convertToOrderDetailsAPADTO(OrderAPA order) {
+    private OrderDetailsAPADTO convertToOrderDetailsAPADTO(OrderAPA order) throws IOException {
         OrderDetailsAPADTO dto = new OrderDetailsAPADTO();
         dto.setId(order.getId());
-
-        List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
-                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
-                .collect(Collectors.toList());
-        dto.setProducts(productDTOs);
-
-        List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
-                .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
-                .collect(Collectors.toList());
-        dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
-
-
+        mapProductsForOrderDTOs(dto,order);
         dto.setTotalPrice(order.getTotalPrice());
         dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
@@ -221,6 +217,48 @@ public class ActiveOrderService {
             dto.setPhoneNumber(order.getCustomInfo().getPhoneNumber()); // Assumi che il telefono sia disponibile
         }
         return dto;
+    }
+
+    private void mapProductsForOrderDTOs(OrderDetailsAPADTO dto,OrderAPA order) throws IOException {
+        List<String> roles = JwtUtilities.getRoles();
+        List<ProductInPurchaseDTO> productDTOs;
+        List<BundleInPurchaseDTO> bundleDTOs;
+        if (roles.contains("admin")){
+            productDTOs = order.getProductsInPurchase().stream()
+                    .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setProducts(productDTOs);
+
+            bundleDTOs = order.getBundlesInPurchase().stream()
+                    .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
+            return;
+        }
+        if (roles.contains("baker")){
+            // Filtra i prodotti con toPrepare = true
+            productDTOs = order.getProductsInPurchase().stream()
+                    .filter(ProductInPurchase::isToPrepare).map(this::convertProductPurchaseToDTO)
+                    .collect(Collectors.toList());
+            dto.setProducts(productDTOs);
+            // Filtra i bundle con toPrepare = true
+            bundleDTOs = order.getBundlesInPurchase().stream()
+                    .filter(BundleInPurchase::isToPrepare).map(this::convertBundlePurchaseToDTO)
+                    .collect(Collectors.toList());
+            dto.setBundles(bundleDTOs);
+            return;
+        }
+        if (roles.contains("customer")){
+            productDTOs = order.getProductsInPurchase().stream()
+                    .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setProducts(productDTOs);
+
+            bundleDTOs = order.getBundlesInPurchase().stream()
+                    .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
+        }
     }
 
     private OrderDetailsPrintAPADTO convertToOrderDetailsPrintAPADTO(OrderAPA order) {

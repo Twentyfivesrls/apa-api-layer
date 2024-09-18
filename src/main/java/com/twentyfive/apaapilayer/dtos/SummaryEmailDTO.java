@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SummarySingleItemDTO {
-    private String name;
-    private int quantity;
-    private double price;
-
+public class SummaryEmailDTO {
+    private String id;
+    private List<SummarySingleItemDTO> products;
+    private String totalPrice;
 }

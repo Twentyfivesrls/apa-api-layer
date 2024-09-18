@@ -301,7 +301,8 @@ public class CustomerService {
                     email = customer.getEmail();
                     firstName = customer.getFirstName();
                 }
-                emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmail(firstName,order.getId()));
+                SummaryEmailDTO summaryEmailDTO = mapActiveOrderToSummaryEmail(order);
+                emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmailForNewOrder(firstName,summaryEmailDTO));
                 return true;
             }
         }
@@ -375,7 +376,7 @@ public class CustomerService {
                 ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
                 if (product.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
-
+                    //TODO IF Drip Cake or Torta a Forma controllare se ce ne sono massimo 2
                 }
 
 
@@ -830,5 +831,36 @@ public class CustomerService {
         return paymentClientController.capture(authorization,orderId,paypalCredentials).getBody();
     }
 
+    private SummaryEmailDTO mapActiveOrderToSummaryEmail(OrderAPA order) {
+        SummaryEmailDTO summaryEmailDTO = new SummaryEmailDTO();
+        List<SummarySingleItemDTO> summarySingleItemDTOS = new ArrayList<>();
+        summaryEmailDTO.setId(order.getId());
+        summaryEmailDTO.setTotalPrice(order.getTotalPrice() + " €");
+        for (ProductInPurchase productInPurchase : order.getProductsInPurchase()) {
+            SummarySingleItemDTO summarySingleItemDTO = mapItemInSummary(productInPurchase);
+            summarySingleItemDTOS.add(summarySingleItemDTO);
+        }
+        for (BundleInPurchase bundleInPurchase : order.getBundlesInPurchase()) {
+            SummarySingleItemDTO summarySingleItemDTO = mapItemInSummary(bundleInPurchase);
+            summarySingleItemDTOS.add(summarySingleItemDTO);
+        }
+        summaryEmailDTO.setProducts(summarySingleItemDTOS);
+        return summaryEmailDTO;
+    }
+
+    private SummarySingleItemDTO mapItemInSummary(ItemInPurchase item) {
+        SummarySingleItemDTO summarySingleItemDTO = new SummarySingleItemDTO();
+        summarySingleItemDTO.setQuantity(item.getQuantity());
+        summarySingleItemDTO.setPrice(item.getTotalPrice());
+        if (item instanceof ProductInPurchase){
+            ProductKgAPA product = productKgRepository.findById(item.getId()).get();
+            summarySingleItemDTO.setName(product.getName());
+        }
+        if (item instanceof BundleInPurchase){
+            Tray tray = trayRepository.findById(item.getId()).get();
+            summarySingleItemDTO.setName(tray.getName());
+        }
+        return summarySingleItemDTO;
+    }
 
 }

@@ -37,18 +37,16 @@ public interface KeycloakExtClient {
 
     @RequestMapping(method = RequestMethod.PUT, value = "/admin/realms/${keycloak.realm}/users/{id}/reset-password", produces = "application/json")
     ResponseEntity<Object> updatePassword(@RequestHeader("Authorization") String accessToken, @PathVariable String id, @RequestBody PasswordUpdateKeycloak newPassword);
-    @RequestMapping(method = RequestMethod.GET, value ="admin/realms/DEV/clients/${keycloak.apaId}/roles")
+    @RequestMapping(method = RequestMethod.GET, value ="admin/realms/${keycloak.realm}/roles")
     ResponseEntity<List<ApaRole>> getApaRoles(@RequestHeader("Authorization") String accessToken);
-    @RequestMapping(method = RequestMethod.POST, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/clients/{clientIdRole}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.POST, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/realm", produces = "application/json")
     ResponseEntity<Object> addRoleToUser(@RequestHeader("Authorization") String accessToken,
                                          @PathVariable String id,
-                                         @PathVariable String clientIdRole,
                                          @RequestBody List<RoleRepresentation> roles);
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/clients/{clientIdRole}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.DELETE, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings/realm", produces = "application/json")
     ResponseEntity<Object> deleteRoleToUser(@RequestHeader("Authorization") String accessToken,
                                             @PathVariable String id,
-                                            @PathVariable String clientIdRole,
                                             @RequestBody List<RoleRepresentation> roles);
     @RequestMapping(method = RequestMethod.GET, value = "/admin/realms/${keycloak.realm}/users/{id}/role-mappings", produces = "application/json")
     ResponseEntity<Object> getUserRole(@RequestHeader("Authorization") String accessToken, @PathVariable String id);

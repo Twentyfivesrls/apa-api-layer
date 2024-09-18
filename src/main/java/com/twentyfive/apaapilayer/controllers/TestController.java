@@ -21,6 +21,7 @@ public class TestController {
     private final ProductWeightedRepository productWeightedRepository;
     private final CategoryRepository categoryRepository;
     private final ProductStatRepository productStatRepository;
+
     @GetMapping("/populateJob")
     public void test(){
         timeSlotRefreshScheduling.createSlotsForNext90Days();

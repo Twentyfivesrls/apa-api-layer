@@ -23,7 +23,7 @@ public class JwtUtilities {
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(payload);
-        JsonNode apaAppNode = rootNode.path("resource_access").path("apa-app").path("roles");
+        JsonNode apaAppNode = rootNode.path("realm_access").path("roles");
 
         List<String> roles = new ArrayList<>();
         if (apaAppNode.isArray()) {

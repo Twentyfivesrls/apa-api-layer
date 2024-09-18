@@ -1,7 +1,5 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.dtos.LocationReq;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
@@ -10,16 +8,14 @@ import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
 import com.twentyfive.authorizationflow.services.AuthenticationService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.ByteArrayOutputStream;
@@ -27,14 +23,13 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/orders")
+@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
 public class ActiveOrderController {
 
     private final ActiveOrderService activeOrderService; // Assumi che OrderService sia iniettato correttamente
-    private final AuthenticationService authenticationService;
 
     public ActiveOrderController(ActiveOrderService activeOrderService, AuthenticationService authenticationService) {
         this.activeOrderService = activeOrderService;
-        this.authenticationService = authenticationService;
     }
 
     @GetMapping("/getAll")
@@ -42,18 +37,8 @@ public class ActiveOrderController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection)  throws IOException{
         return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection));
-    }
-
-    @GetMapping("/getAllWithStatus")
-    public ResponseEntity<Page<OrderAPADTO>> getAll(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "25") int size,
-            @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
-            @RequestParam(value = "status") OrderStatus status) {
-        return ResponseEntity.ok().body(activeOrderService.getAllWithStatus(page,size,sortColumn,sortDirection,status));
     }
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) throws IOException {
@@ -64,10 +49,12 @@ public class ActiveOrderController {
             return ResponseEntity.notFound().build();
         }
     }
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save")
     public ResponseEntity<OrderAPA> save(@RequestBody OrderAPA orderAPA){
         return ResponseEntity.ok().body(activeOrderService.createOrder(orderAPA));
     }
+    @PreAuthorize("hasRole('ROLE_admin')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteById(@PathVariable String id) {
         boolean deleted = activeOrderService.deleteById(id);
@@ -78,6 +65,7 @@ public class ActiveOrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/by-customer/{customerId}")
     public ResponseEntity<Page<OrderAPADTO>> getByCustomerId(
             @PathVariable String customerId,
@@ -91,7 +79,7 @@ public class ActiveOrderController {
         }
     }
 
-
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
     @PostMapping("/complete/{id}")//per segnare ordine come completato
     public ResponseEntity<OrderAPADTO> completeOrder(@PathVariable String id) {
         try {
@@ -106,6 +94,7 @@ public class ActiveOrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
     @PostMapping("/cancel/{id}") // per annullare ordine lato cliente
     public ResponseEntity<String> cancelOrder(@PathVariable String id) {
         try {
