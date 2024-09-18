@@ -105,7 +105,7 @@ public class ActiveOrderService {
             // Fetching paginated orders from the database
             orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
         }
-        if (roles.contains("baker")){
+        else if (roles.contains("baker")){
             orderList = activeOrderRepository.findOrdersWithItemsToPrepare();
         }
         for(OrderAPA order:orderList){
