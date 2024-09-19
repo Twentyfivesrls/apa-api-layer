@@ -29,6 +29,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private String location; // Luogo in cui è depositato il prodotto
     private LocalDate deliveryDate; // La data di consegna del prodotto
     private double totalPrice;
+    private boolean toPrepare;
 
 
     public ProductInPurchaseDTO(ProductInPurchase product, String name) {
@@ -39,6 +40,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.shape = product.getShape();
         this.customization = product.getCustomization();
         this.ingredients = product.getIngredients();
+        this.toPrepare = product.isToPrepare();
         this.location = product.getLocation();
         this.attachment = product.getAttachment();
         this.deliveryDate = product.getDeliveryDate();

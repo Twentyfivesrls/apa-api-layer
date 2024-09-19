@@ -27,6 +27,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
     private List<Allergen> allergens;
     private List<PieceInPurchaseDTO> weightedProducts;
     private String location; // Luogo in cui è depositato il prodotto
+    private boolean toPrepare;
 
     public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<PieceInPurchaseDTO> weightedProducts) {
         this.id = bundle.getId();
@@ -46,6 +47,8 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.quantity = bundle.getQuantity();
         this.totalPrice = bundle.getTotalPrice();
         this.allergens = bundle.getAllergens();
+        this.location = bundle.getLocation();
+        this.toPrepare = bundle.isToPrepare();
     }
 
 }
