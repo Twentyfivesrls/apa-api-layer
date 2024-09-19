@@ -21,6 +21,7 @@ public class OrderAPADTO {
     private double realPrice;
     private String price;
     private String status;
+    private boolean toPrepare; //if atleast 1 of the products are in toPrepare
     private boolean unread;
 
     public String getFormattedPickupDate() {

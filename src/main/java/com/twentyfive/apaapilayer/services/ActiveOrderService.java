@@ -174,6 +174,8 @@ public class ActiveOrderService {
             dto.setFirstName(order.getCustomInfo().getFirstName());
             dto.setLastName(order.getCustomInfo().getLastName());
         }
+        boolean toPrepare = order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare) || order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare);
+        dto.setToPrepare(toPrepare);
         return dto;
     }
 
