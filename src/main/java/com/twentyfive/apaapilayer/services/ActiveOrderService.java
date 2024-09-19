@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
@@ -552,10 +551,10 @@ public class ActiveOrderService {
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
                 }
                 case IN_PREPARAZIONE -> {
+                    //TODO we should send a product array to set which product is to prepare
                     String bakerNotification =StompUtilities.sendBakerNotification("new");
                     producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
-                    //TODO we should send an array of number and set them toPrepare between iIP and bIP
-                    emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
+                    //emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     activeOrderRepository.save(order);
                 }
@@ -567,7 +566,7 @@ public class ActiveOrderService {
                 case MODIFICATO_DA_PASTICCERIA -> {
                     String adminNotification = StompUtilities.sendAdminNotification();
                     producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
-                    //TODO we should make every pIP and bIP with toPrepare = false IF THEY HAVE A LOCATION
+                    orderIsPrepared(order);
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     order.setUnread(true);
                     activeOrderRepository.save(order);
@@ -589,23 +588,58 @@ public class ActiveOrderService {
         return false;
     }
 
-    public boolean SetLocationForKg(LocationReq locationReq) {
-        //TODO WE SHOULD TRANSFORM THIS SERVICE FOR EVERYTHING, BUNDLE TOO
+    public boolean setLocation(LocationReq locationReq) throws IOException {
+        List<String> roles = JwtUtilities.getRoles();
         Optional<OrderAPA> optOrder = activeOrderRepository.findById(locationReq.getOrderId());
+        int position = locationReq.getPosition();
+        String location = locationReq.getLocation();
+        List<ProductInPurchase> products = new ArrayList<>();
+        List<BundleInPurchase> bundles = new ArrayList<>();
         if(optOrder.isPresent()){
             OrderAPA order = optOrder.get();
-            List<ProductInPurchase> products = order.getProductsInPurchase();
-            ProductInPurchase pIP = products.get(locationReq.getPosition());
-            String location = locationReq.getLocation();
-            if(location.equals("Nessun Luogo")){
-                pIP.setLocation(null);
+            if (roles.contains("admin")){
+                products = order.getProductsInPurchase();
+                bundles = order.getBundlesInPurchase();
+            } else if (roles.contains("baker")){
+                // Filtra i prodotti con toPrepare = true
+                products = order.getProductsInPurchase().stream()
+                        .filter(ProductInPurchase::isToPrepare)
+                        .collect(Collectors.toList());
+
+                // Filtra i bundle con toPrepare = true
+                bundles = order.getBundlesInPurchase().stream()
+                        .filter(BundleInPurchase::isToPrepare)
+                        .collect(Collectors.toList());
+            } //TODO per il bancone, solo toProduce = false
+            if(position>=products.size() ){//è un bundle
+                position = position - products.size();
+                BundleInPurchase bIP = bundles.get(position);
+                if(location.equals("Nessun Luogo")){
+                    bIP.setLocation(null);
+                } else {
+                    bIP.setLocation(location);
+                }
             } else {
-                pIP.setLocation(locationReq.getLocation());
+                ProductInPurchase pIP = products.get(position);
+                if (location.equals("Nessun Luogo")) {
+                    pIP.setLocation(null);
+                } else {
+                    pIP.setLocation(location);
+                }
             }
             activeOrderRepository.save(order);
             return true;
         }
         return false;
     }
+
+    private void orderIsPrepared(OrderAPA order) {
+        // Imposta toPrepare = false per tutti i prodotti
+        order.getProductsInPurchase().forEach(product -> product.setToPrepare(false));
+
+        // Imposta toPrepare = false per tutti i bundle
+        order.getBundlesInPurchase().forEach(bundle -> bundle.setToPrepare(false));
+    }
+
 }
 

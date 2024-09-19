@@ -138,9 +138,9 @@ public class ActiveOrderController {
         return ResponseEntity.ok().body(activeOrderService.getAllStatuses());
     }
 
-    @PutMapping("/setLocationForKg")
-    public ResponseEntity<Boolean> setLocationForKg(@RequestBody LocationReq locationReq){
-        return ResponseEntity.ok().body(activeOrderService.SetLocationForKg(locationReq));
+    @PutMapping("/setLocation")
+    public ResponseEntity<Boolean> setLocation(@RequestBody LocationReq locationReq) throws IOException {
+        return ResponseEntity.ok().body(activeOrderService.setLocation(locationReq));
 
     }
 }
