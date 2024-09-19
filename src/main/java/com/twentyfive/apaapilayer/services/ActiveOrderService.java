@@ -105,7 +105,7 @@ public class ActiveOrderService {
             orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
         }
         else if (roles.contains("baker")){
-            orderList = activeOrderRepository.findOrdersWithItemsToPrepare();
+            orderList = activeOrderRepository.findOrdersWithItemsToPrepareOrderByCreatedDesc();
         }
         for(OrderAPA order:orderList){
             OrderAPADTO orderAPA= convertToOrderAPADTO(order);

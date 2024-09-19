@@ -175,12 +175,9 @@ public class CompletedOrderService {
         if (completedOrder.getPickupDate().isAfter(LocalDate.now()) || completedOrder.getPickupDate().isEqual(LocalDate.now())) {
             if(!(completedOrder.getPickupDate().isEqual(LocalDate.now()) && completedOrder.getPickupTime().isBefore(LocalTime.now()))) {
                 completedOrderRepository.delete(completedOrder);
-                completedOrder.setStatus(OrderStatus.RICEVUTO);
-
                 OrderAPA restoredOrder = new OrderAPA();
                 // copia i dati dell'ordine completato nell'ordine restorato
                 restoreCompletedOrder(completedOrder, restoredOrder);
-
                 activeOrderRepository.save(restoredOrder);
                 // Converti l'ordine in un dto per restituirlo
                 OrderAPADTO orderAPADTO = convertToOrderAPADTO(completedOrder);
@@ -193,7 +190,7 @@ public class CompletedOrderService {
     private void restoreCompletedOrder (CompletedOrderAPA completedOrder, OrderAPA activeOrder) {
         // Copia l'ID se necessario, altrimenti generane uno nuovo se i sistemi devono essere indipendenti
         activeOrder.setId(completedOrder.getId());
-
+        boolean toPrepare = false;
         // Informazioni base dell'ordine
         if(completedOrder.getCustomerId()!=null){
             activeOrder.setCustomerId(completedOrder.getCustomerId()); // Assumendo che ci sia un campo customerId
@@ -201,7 +198,6 @@ public class CompletedOrderService {
             activeOrder.setCustomInfo(completedOrder.getCustomInfo());
         }
         activeOrder.setTotalPrice(completedOrder.getTotalPrice());
-        activeOrder.setStatus(completedOrder.getStatus()); // Imposta lo stato a COMPLETO
 
         // Date e orari di ritiro
         activeOrder.setPickupDate(completedOrder.getPickupDate());
@@ -215,12 +211,31 @@ public class CompletedOrderService {
         // Copia dettagli specifici del prodotto, assicurati di approfondire la logica di clonazione o referenza
         if (completedOrder.getProductsInPurchase() != null) {
             activeOrder.setProductsInPurchase(completedOrder.getProductsInPurchase());
+            toPrepare=findCustomizedCake(completedOrder.getProductsInPurchase());
         }
         if (completedOrder.getBundlesInPurchase() != null) {
             activeOrder.setBundlesInPurchase(completedOrder.getBundlesInPurchase());
         }
 
-        // Altri campi specifici dell'ordine possono essere aggiunti qui
+        if (toPrepare){
+            //TODO nuovo ordine per il pasticcere!
+            activeOrder.setStatus(OrderStatus.IN_PREPARAZIONE);
+        } else {
+            activeOrder.setStatus(OrderStatus.RICEVUTO);
+        }
+    }
+
+    private boolean findCustomizedCake(List<ProductInPurchase> productsInPurchase) {
+        for (ProductInPurchase productInPurchase : productsInPurchase) {
+            Optional<ProductKgAPA> optProduct = productKgRepository.findById(productInPurchase.getId());
+            if(optProduct.isPresent()){
+                ProductKgAPA product = optProduct.get();
+                if (product.isCustomized()){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
@@ -233,7 +248,6 @@ public class CompletedOrderService {
         OrderAPA activeOrder = new OrderAPA();
         activeOrder.setCreatedDate(completedOrder.getCreatedDate());
         activeOrder.setNote(completedOrder.getNote());
-        activeOrder.setStatus(completedOrder.getStatus());
         if(completedOrder.getCustomerId()!=null){
             activeOrder.setCustomerId(completedOrder.getCustomerId());
         } else {
@@ -244,6 +258,13 @@ public class CompletedOrderService {
         activeOrder.setProductsInPurchase(completedOrder.getProductsInPurchase());
         activeOrder.setPickupDate(completedOrder.getPickupDate());
         activeOrder.setPickupTime(completedOrder.getPickupTime());
+        boolean toPrepare = findCustomizedCake(completedOrder.getProductsInPurchase());
+        if (toPrepare) {
+            //TODO Stomp al pasticcere
+            activeOrder.setStatus(OrderStatus.IN_PREPARAZIONE);
+        } else {
+            activeOrder.setStatus(OrderStatus.RICEVUTO);
+        }
         return activeOrder;
     }
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {

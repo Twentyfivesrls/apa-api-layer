@@ -18,6 +18,6 @@ public interface ActiveOrderRepository extends MongoRepository<OrderAPA,String> 
     Page<OrderAPA> findOrdersByCustomerIdOrderByCreatedDateDesc(String customerId, Pageable pageable);
 
     // Trova tutti gli ordini che hanno almeno un prodotto o bundle con toPrepare = true
-    @Query("{$or: [{'productsInPurchase.toPrepare': true}, {'bundlesInPurchase.toPrepare': true}]}")
-    List<OrderAPA> findOrdersWithItemsToPrepare();
+    @Query("{$or: [{'productsInPurchase.toPrepare': true}, {'bundlesInPurchase.toPrepare': true}], $sort: {'createdDate': -1}}")
+    List<OrderAPA> findOrdersWithItemsToPrepareOrderByCreatedDesc();
 }
