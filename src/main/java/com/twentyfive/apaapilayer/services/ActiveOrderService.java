@@ -597,6 +597,7 @@ public class ActiveOrderService {
         List<BundleInPurchase> bundles = new ArrayList<>();
         if(optOrder.isPresent()){
             OrderAPA order = optOrder.get();
+            boolean alreadySomeToPrepare = order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
             if (roles.contains("admin")){
                 products = order.getProductsInPurchase();
                 bundles = order.getBundlesInPurchase();
@@ -613,8 +614,6 @@ public class ActiveOrderService {
                         .filter(BundleInPurchase::isToPrepare)
                         .collect(Collectors.toList());
             }
-            //TODO per il bancone, solo toProduce = false -> stomp baker e admin
-            boolean alreadyExists = products.stream().anyMatch(ProductInPurchase::isToPrepare) || bundles.stream().anyMatch(BundleInPurchase::isToPrepare);
             if (position >= products.size()) {//è un bundle
                 position = position - products.size();
                 BundleInPurchase bIP = bundles.get(position);
@@ -643,12 +642,31 @@ public class ActiveOrderService {
                 if(!roles.contains("admin")){
                     TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminMoveNotification(order.getId(),location);
                     stompClientController.sendObjectMessage(twentyfiveMessage);
+                    order.setUnread(true);
+                    order.setCreatedDate(LocalDateTime.now());
                 }
                 //TODO stomp per in base ai ruoli
                 if (!roles.contains("baker")){
-                    //String bakerNotification = StompUtilities.sendBakerNotification(alreadyExists);
-                    //producerPool.send(bakerNotification, 1, NOTIFICATION_TOPIC);
+                    if(alreadySomeToPrepare){
+                        if(location.equals("In pasticceria")){
+                            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
+                            stompClientController.sendObjectMessage(twentyfiveMessage);
+                        } else {
+                            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerMoveNotification(order.getId(), location);
+                            stompClientController.sendObjectMessage(twentyfiveMessage);
+                        }
+                    } else {
+                        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
+                        stompClientController.sendObjectMessage(twentyfiveMessage);
+                    }
                 }
+            }
+            boolean noMoreToPrepare = order.getProductsInPurchase().stream()
+                    .allMatch(product -> product.getLocation() != null && !"In pasticceria".equals(product.getLocation())) &&
+                    order.getBundlesInPurchase().stream()
+                            .allMatch(bundle -> bundle.getLocation() != null && !"In pasticceria".equals(bundle.getLocation()));
+            if (noMoreToPrepare){
+                order.setStatus(OrderStatus.PRONTO);
             }
             activeOrderRepository.save(order);
             return true;

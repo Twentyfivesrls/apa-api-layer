@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
-import java.util.List;
-
 @AllArgsConstructor
 public class StompUtilities {
 
@@ -19,10 +17,11 @@ public class StompUtilities {
     private static final String DEL_ORDER_MESSAGE="L'ordine di %s con ID %s è stato cancellato!";
     private static final String NEW_ORDER_MESSAGE ="Un nuovo ordine è arrivato!";
 
-    private static final String UPDATE_ADMIN_MESSAGE ="Un prodotto nell'ordine %s è stato spostato in %s!";
+    private static final String UPDATE_MESSAGE ="Un prodotto nell'ordine %s è stato spostato in %s!";
     private static final String UPDATE_BAKER_MESSAGE ="Un prodotto nell'ordine %s è da preparare!";
     private static final String UPDATE_COUNTER_MESSAGE ="Un prodotto nell'ordine %s è stato inserito in un luogo!";
 
+    private static final String MOVE_BAKER_MESSAGE="Un prodotto in preparazione dell'ordine %s è stato spostato in %s!";
     private static final String CUSTOMER_ORDER_CHANNEL ="/%s";
 
     public static String sendChangedStatusNotification(OrderStatus status, String customerId){
@@ -44,21 +43,43 @@ public class StompUtilities {
         TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,stompMessage);
         return twentyfiveMessage;
     }
+
+    public static TwentyfiveMessage sendBakerNewNotification(){
+        StompMessage stompMessage = new StompMessage(NEW_ORDER_MESSAGE,true);
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(BAKER_CHANNEL,stompMessage);
+        return twentyfiveMessage;
+    }
+
+
     public static TwentyfiveMessage sendAdminDeleteNotification(String fullName,String orderId){
         String adminMessage = String.format(DEL_ORDER_MESSAGE,fullName,orderId);
         StompMessage stompMessage = new StompMessage(adminMessage,false);
         TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,stompMessage);
         return twentyfiveMessage;
     }
-    public static TwentyfiveMessage sendAdminMoveNotification(String idOrder, String location){
-        String adminMessage = String.format(UPDATE_ADMIN_MESSAGE,idOrder,location);
-        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,adminMessage);
-        return twentyfiveMessage;
-    }
+
     public static TwentyfiveMessage sendBakerDeleteNotification(String fullName,String orderId){
         String adminMessage = String.format(DEL_ORDER_MESSAGE,fullName,orderId);
         StompMessage stompMessage = new StompMessage(adminMessage,false);
         TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,stompMessage);
+        return twentyfiveMessage;
+    }
+
+    public static TwentyfiveMessage sendAdminMoveNotification(String idOrder, String location){
+        String adminMessage = String.format(UPDATE_MESSAGE,idOrder,location);
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,adminMessage);
+        return twentyfiveMessage;
+    }
+
+    public static TwentyfiveMessage sendBakerMoveNotification(String idOrder, String location){
+        String bakerMessage = String.format(MOVE_BAKER_MESSAGE,idOrder,location);
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(BAKER_CHANNEL,bakerMessage);
+        return twentyfiveMessage;
+    }
+    public static TwentyfiveMessage sendBakerUpdateNotification(String idOrder, String location){
+        String bakerMessage = String.format(UPDATE_BAKER_MESSAGE,idOrder,location);
+        StompMessage stompMessage = new StompMessage(bakerMessage,true);
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(BAKER_CHANNEL,stompMessage);
         return twentyfiveMessage;
     }
 }
