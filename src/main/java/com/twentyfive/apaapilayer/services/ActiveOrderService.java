@@ -622,6 +622,8 @@ public class ActiveOrderService {
                     bIP.setLocation(null);
                 } else if (location.equals("In pasticceria")) {
                     bIP.setToPrepare(true);
+                    bIP.setLocation(location);
+                    order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     bIP.setToPrepare(false);
                     bIP.setLocation(location);
@@ -632,6 +634,7 @@ public class ActiveOrderService {
                     pIP.setLocation(null);
                 } else if (location.equals("In pasticceria")) {
                     pIP.setToPrepare(true);
+                    pIP.setLocation(location);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     pIP.setToPrepare(false);
