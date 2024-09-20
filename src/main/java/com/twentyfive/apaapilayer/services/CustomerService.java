@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.clients.PaymentClientController;
+import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleItem;
+import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
@@ -41,7 +43,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
 
     private final CompletedOrderRepository completedOrderRepository;
-
+    private final StompClientController stompClientController;
     private final ActiveOrderService orderService;
     private final EmailService emailService;
     private final KeycloakService keycloakService;
@@ -109,11 +111,12 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
         this.completedOrderRepository=completedOrderRepository;
+        this.stompClientController = stompClientController;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
         this.paymentClientController = paymentClientController;
@@ -292,14 +295,14 @@ public class CustomerService {
                 }
                 timeSlotAPARepository.save(timeSlotAPA);
                 customerRepository.save(customer);
-                String in= StompUtilities.sendNewOrderNotification();
-                producerPool.send(in,1,NOTIFICATION_TOPIC);
-                if(buyInfos.getCustomInfo().getFirstName()!=null){
+                if(buyInfos.getCustomInfo().getFirstName()!=null){ //Admin sta facendo l'ordine
                     email = buyInfos.getCustomInfo().getEmail();
                     firstName = buyInfos.getCustomInfo().getFirstName();
-                } else {
+                } else { //Cliente sta facendo l'ordine
                     email = customer.getEmail();
                     firstName = customer.getFirstName();
+                    TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminNewNotification();
+                    stompClientController.sendObjectMessage(twentyfiveMessage);
                 }
                 SummaryEmailDTO summaryEmailDTO = mapActiveOrderToSummaryEmail(order);
                 emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmailForNewOrder(firstName,summaryEmailDTO));

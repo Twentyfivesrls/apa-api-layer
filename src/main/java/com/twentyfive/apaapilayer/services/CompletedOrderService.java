@@ -6,6 +6,7 @@ import com.twentyfive.apaapilayer.exceptions.OrderRestoringNotAllowedException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -218,7 +219,7 @@ public class CompletedOrderService {
         }
 
         if (toPrepare){
-            //TODO nuovo ordine per il pasticcere!
+            //StompUtilities.sendBakerNotification(false);
             activeOrder.setStatus(OrderStatus.IN_PREPARAZIONE);
         } else {
             activeOrder.setStatus(OrderStatus.RICEVUTO);
@@ -260,7 +261,7 @@ public class CompletedOrderService {
         activeOrder.setPickupTime(completedOrder.getPickupTime());
         boolean toPrepare = findCustomizedCake(completedOrder.getProductsInPurchase());
         if (toPrepare) {
-            //TODO Stomp al pasticcere
+            //StompUtilities.sendBakerNotification(false);
             activeOrder.setStatus(OrderStatus.IN_PREPARAZIONE);
         } else {
             activeOrder.setStatus(OrderStatus.RICEVUTO);

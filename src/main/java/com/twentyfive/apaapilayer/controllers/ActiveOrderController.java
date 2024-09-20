@@ -65,7 +65,7 @@ public class ActiveOrderController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_admin')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/by-customer/{customerId}")
     public ResponseEntity<Page<OrderAPADTO>> getByCustomerId(
             @PathVariable String customerId,
@@ -94,7 +94,7 @@ public class ActiveOrderController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter') or hasRole('ROLE_customer')")
     @PostMapping("/cancel/{id}") // per annullare ordine lato cliente
     public ResponseEntity<String> cancelOrder(@PathVariable String id) {
         try {

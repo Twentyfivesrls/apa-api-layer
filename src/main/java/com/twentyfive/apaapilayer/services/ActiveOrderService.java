@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.clients.PaymentClientController;
+import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
+import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
@@ -46,7 +48,7 @@ public class ActiveOrderService {
     private final CustomerRepository customerRepository; // Aggiunto il CustomerRepository
     private final CompletedOrderRepository completedOrderRepository;
     private final ProducerPool producerPool;
-
+    private final StompClientController stompClientController;
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final PaymentClientController paymentClientController;
@@ -59,12 +61,13 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
         this.completedOrderRepository= completedOrderRepository;
         this.producerPool = producerPool;
+        this.stompClientController = stompClientController;
         this.productKgRepository=productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
         this.paymentClientController = paymentClientController;
@@ -105,7 +108,7 @@ public class ActiveOrderService {
             orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
         }
         else if (roles.contains("baker")){
-            orderList = activeOrderRepository.findOrdersWithItemsToPrepareOrderByCreatedDesc();
+            orderList = activeOrderRepository.findOrdersWithItemsToPrepareByOrderByCreatedDateDesc();
         }
         for(OrderAPA order:orderList){
             OrderAPADTO orderAPA= convertToOrderAPADTO(order);
@@ -431,8 +434,8 @@ public class ActiveOrderService {
                     fullName = order.getCustomInfo().getLastName() +" "+ order.getCustomInfo().getFirstName();
                 }
             }
-            String in= StompUtilities.sendCancelOrderNotification(fullName,order.getId());
-            producerPool.send(in,1,NOTIFICATION_TOPIC);
+            TwentyfiveMessage message= StompUtilities.sendAdminDeleteNotification(fullName,order.getId());
+            stompClientController.sendObjectMessage(message);
             return true;
         }
         return false;
@@ -526,10 +529,11 @@ public class ActiveOrderService {
                 firstName= order.getCustomInfo().getFirstName();
                 email = order.getCustomInfo().getEmail();
             }
-            if(order.getStatus() == OrderStatus.IN_PREPARAZIONE && !(status.toUpperCase().equals("IN_PREPARAZIONE") || status.toUpperCase().equals("MODIFICATO_DA_PASTICCERIA"))){
+            /*if(order.getStatus() == OrderStatus.IN_PREPARAZIONE && !(status.toUpperCase().equals("IN_PREPARAZIONE") || status.toUpperCase().equals("MODIFICATO_DA_PASTICCERIA"))){
                 String bakerNotification =StompUtilities.sendBakerNotification("changed");
                 producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
             }
+             */
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
                     LocalDate pickupDate = order.getPickupDate();
@@ -553,9 +557,8 @@ public class ActiveOrderService {
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
                 }
                 case IN_PREPARAZIONE -> {
-                    //TODO we should send a product array to set which product is to prepare
-                    String bakerNotification =StompUtilities.sendBakerNotification("new");
-                    producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
+                    //String bakerNotification =StompUtilities.sendBakerNotification("new");
+                    //producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
                     //emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     activeOrderRepository.save(order);
@@ -566,8 +569,8 @@ public class ActiveOrderService {
                     activeOrderRepository.save(order);
                 }
                 case MODIFICATO_DA_PASTICCERIA -> {
-                    String adminNotification = StompUtilities.sendAdminNotification();
-                    producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
+                    //String adminNotification = StompUtilities.sendAdminNotification();
+                    //producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
                     orderIsPrepared(order);
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     order.setUnread(true);
@@ -603,6 +606,8 @@ public class ActiveOrderService {
                 products = order.getProductsInPurchase();
                 bundles = order.getBundlesInPurchase();
             } else if (roles.contains("baker")){
+                //TODO stomp per admin e counter
+
                 // Filtra i prodotti con toPrepare = true
                 products = order.getProductsInPurchase().stream()
                         .filter(ProductInPurchase::isToPrepare)
@@ -612,21 +617,39 @@ public class ActiveOrderService {
                 bundles = order.getBundlesInPurchase().stream()
                         .filter(BundleInPurchase::isToPrepare)
                         .collect(Collectors.toList());
-            } //TODO per il bancone, solo toProduce = false
-            if(position>=products.size() ){//è un bundle
+            }
+            //TODO per il bancone, solo toProduce = false -> stomp baker e admin
+            boolean alreadyExists = products.stream().anyMatch(ProductInPurchase::isToPrepare) || bundles.stream().anyMatch(BundleInPurchase::isToPrepare);
+            if (position >= products.size()) {//è un bundle
                 position = position - products.size();
                 BundleInPurchase bIP = bundles.get(position);
-                if(location.equals("Nessun Luogo")){
+                if (location.equals("Nessun Luogo")) {
                     bIP.setLocation(null);
+                } else if (location.equals("In pasticceria")) {
+                    bIP.setToPrepare(true);
                 } else {
+                    bIP.setToPrepare(false);
                     bIP.setLocation(location);
                 }
-            } else {
+            } else {// è un product
                 ProductInPurchase pIP = products.get(position);
                 if (location.equals("Nessun Luogo")) {
                     pIP.setLocation(null);
+                } else if (location.equals("In pasticceria")) {
+                    pIP.setToPrepare(true);
+                    order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
+                    pIP.setToPrepare(false);
                     pIP.setLocation(location);
+                }
+                if(!roles.contains("admin")){
+                    TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminMoveNotification(order.getId(),location);
+                    stompClientController.sendObjectMessage(twentyfiveMessage);
+                }
+                //TODO stomp per in base ai ruoli
+                if (!roles.contains("baker")){
+                    //String bakerNotification = StompUtilities.sendBakerNotification(alreadyExists);
+                    //producerPool.send(bakerNotification, 1, NOTIFICATION_TOPIC);
                 }
             }
             activeOrderRepository.save(order);
