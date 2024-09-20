@@ -498,12 +498,7 @@ public class ActiveOrderService {
     }
 
     public OrderStatus[] getAllStatuses() {
-        OrderStatus[] orderStatuses = OrderStatus.values();
-        List<OrderStatus> ordersList = Arrays.stream(orderStatuses)
-                .filter(status -> !status.equals(OrderStatus.MODIFICATO_DA_PASTICCERIA))
-                .sorted(Comparator.comparing(Enum::name))
-                .collect(Collectors.toList());
-        return ordersList.toArray(new OrderStatus[0]);
+        return OrderStatus.getStatusEditable();
     }
 
     @Transactional
