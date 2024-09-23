@@ -401,6 +401,7 @@ public class CustomerService {
 
     private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items) {
         OrderAPA order = new OrderAPA();
+        boolean toPrepare = false;
         if (buyInfos.getCustomInfo().getFirstName()!=null){
             order.setCustomInfo(buyInfos.getCustomInfo());
         } else {
@@ -414,7 +415,6 @@ public class CustomerService {
         }
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
-        order.setStatus(OrderStatus.RICEVUTO);
         order.setNote(buyInfos.getNote());
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
@@ -424,6 +424,9 @@ public class CustomerService {
                 Optional<ProductKgAPA> optProductKg =productKgRepository.findById(item.getId());
                 if (optProductKg.isPresent()){
                     ProductKgAPA productKgAPA = optProductKg.get();
+                    if (productKgAPA.isCustomized()){
+                        toPrepare = true;
+                    }
                     List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA);
                     ((ProductInPurchase) item).setIngredients(ingredientsFromProduct);
                     productStatService.addBuyingCountProduct(productKgAPA, 1);
@@ -444,11 +447,16 @@ public class CustomerService {
                 }
             }
         }
-
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
         order.setTotalPrice(calculateTotalPrice(items));
-
+        if (toPrepare){
+            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
+            stompClientController.sendObjectMessage(twentyfiveMessage);
+            order.setStatus(OrderStatus.IN_PREPARAZIONE);
+        } else {
+            order.setStatus(OrderStatus.RICEVUTO);
+        }
         return order;
     }
 
