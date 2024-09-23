@@ -434,6 +434,10 @@ public class ActiveOrderService {
                     fullName = order.getCustomInfo().getLastName() +" "+ order.getCustomInfo().getFirstName();
                 }
             }
+            if(someToPrepare(order)){
+                TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerDeleteNotification(fullName, order.getId());
+                stompClientController.sendObjectMessage(twentyfiveMessage);
+            }
             TwentyfiveMessage message= StompUtilities.sendAdminDeleteNotification(fullName,order.getId());
             stompClientController.sendObjectMessage(message);
             return true;
@@ -682,5 +686,8 @@ public class ActiveOrderService {
         order.getBundlesInPurchase().forEach(bundle -> bundle.setToPrepare(false));
     }
 
+    private boolean someToPrepare(OrderAPA order){
+        return order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
+    }
 }
 

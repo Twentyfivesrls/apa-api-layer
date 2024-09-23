@@ -59,9 +59,9 @@ public class StompUtilities {
     }
 
     public static TwentyfiveMessage sendBakerDeleteNotification(String fullName,String orderId){
-        String adminMessage = String.format(DEL_ORDER_MESSAGE,fullName,orderId);
-        StompMessage stompMessage = new StompMessage(adminMessage,false);
-        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(ADMIN_CHANNEL,stompMessage);
+        String bakerMessage = String.format(DEL_ORDER_MESSAGE,fullName,orderId);
+        StompMessage stompMessage = new StompMessage(bakerMessage,false);
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(BAKER_CHANNEL,stompMessage);
         return twentyfiveMessage;
     }
 
