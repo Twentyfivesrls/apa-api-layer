@@ -71,16 +71,16 @@ public class KeycloakService {
         return userRepresentation.getAttributes();
     }
 
-    public String getAccessToken(String clientId, String clientSecret, String username, String password) {
+    public String getAccessToken() {
         // Creazione dei parametri x-www-form-urlencoded
         Map<String, String> params = new HashMap<>();
         params.put("client_id", clientId);
         params.put("client_secret", clientSecret);
         params.put("grant_type", "password");
-        params.put("username", username);
-        params.put("password", password);
+        params.put("username", usernameAdmin);
+        params.put("password", passwordAdmin);
 
-        TokenRequest request = new TokenRequest(clientId, clientSecret, "password", username, password);
+        TokenRequest request = new TokenRequest(clientId, clientSecret, "password", usernameAdmin, passwordAdmin);
 
         // Chiamata al client Feign per ottenere l'accessToken
         ResponseEntity<Object> response = keycloakExtClient.getToken(request);
@@ -92,14 +92,14 @@ public class KeycloakService {
     }
 
     public void add(CustomerAPA customerAPA) {
-        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+        String accessToken = this.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
         KeycloakUser keycloakUser = KeycloakUtilities.createUserForKeycloak(customerAPA);
         ResponseEntity<Object> result = keycloakExtClient.add(authorizationHeader, keycloakUser);
         String[] stringArray = result.getHeaders().get("location").get(0).split("/");
         String id = stringArray[stringArray.length - 1];
         customerAPA.setIdKeycloak(id);
-        //addRoleToUser(authorizationHeader,id,customerAPA);
+        addRoleToUser(authorizationHeader,id,customerAPA);
         /*ResponseEntity<List<KeycloakRole>> ruoli = keycloakExtClient.getAvailableRoles(authorizationHeader, id, "0", "100", "");
         List<KeycloakRole> listaRuoli = ruoli.getBody();
         List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals(customerAPA.getRole())).toList();
@@ -108,14 +108,14 @@ public class KeycloakService {
          */
     }
     public void update(CustomerAPA customerAPA) {
-        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+        String accessToken = this.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
         addRoleToUser(authorizationHeader, customerAPA.getIdKeycloak(), customerAPA);
         keycloakExtClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
     }
 
     public void sendPasswordResetEmail(String userId) {
-        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+        String accessToken = this.getAccessToken();
 
         // Define the actions to be executed, in this case, UPDATE_PASSWORD
         List<String> actions = Collections.singletonList("UPDATE_PASSWORD");
@@ -125,7 +125,7 @@ public class KeycloakService {
     }
 
     public void deleteUser(String idKeycloak) {
-        String accessToken = this.getAccessToken(clientId, clientSecret, "adminrealm", "password");
+        String accessToken = this.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
         keycloakExtClient.deleteUser(realm,idKeycloak,authorizationHeader);
     }

@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -196,6 +197,9 @@ public class CustomerService {
 
     public CustomerAPA register(CustomerAPA customerAPA) {
         customerAPA.setRole("customer"); //Si possono registrare solo customer.
+        String accessToken = keycloakService.getAccessToken();
+        String authorizationHeader = "Bearer " + accessToken;
+        keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
         return customerRepository.save(customerAPA);
     }
 
