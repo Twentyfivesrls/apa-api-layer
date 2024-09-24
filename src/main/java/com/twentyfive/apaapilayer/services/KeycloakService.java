@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.dtos.ApaRole;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KeycloakService {
     private final KeycloakExtClient keycloakExtClient;
     private final KeycloakIntClient keycloakIntClient;
@@ -131,7 +133,9 @@ public class KeycloakService {
     }
 
     public void addRoleToUser(String authorizationHeader, String id,CustomerAPA customerAPA){
+        log.info(authorizationHeader);
         ResponseEntity<List<ApaRole>> ruoliApa = keycloakExtClient.getApaRoles(authorizationHeader);
+        log.info(String.valueOf(ruoliApa));
         List<ApaRole> listaRuoli = ruoliApa.getBody();
         List<ApaRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getName().equals(customerAPA.getRole())).toList();
         keycloakExtClient.addRoleToUser(authorizationHeader, id, ruoliSelezionati.stream().map(ApaRole::toRoleRepresentation).collect(Collectors.toList()));
