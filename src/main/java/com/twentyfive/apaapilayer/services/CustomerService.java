@@ -199,7 +199,9 @@ public class CustomerService {
         customerAPA.setRole("customer"); //Si possono registrare solo customer.
         String accessToken = keycloakService.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
+        System.out.println("prima dell'aggiunta del ruolo" + customerAPA);
         keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
+        System.out.println("Dopo l'aggiunta del ruolo" + customerAPA);
         return customerRepository.save(customerAPA);
     }
 
