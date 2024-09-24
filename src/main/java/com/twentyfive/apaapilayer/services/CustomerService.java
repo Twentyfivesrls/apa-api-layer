@@ -198,12 +198,16 @@ public class CustomerService {
     }
 
     public CustomerAPA register(CustomerAPA customerAPA) {
-        customerAPA.setRole("customer"); //Si possono registrare solo customer.
-        String accessToken = keycloakService.getAccessToken();
-        String authorizationHeader = "Bearer " + accessToken;
-        log.info("prima dell'aggiunta del ruolo" + customerAPA);
-        keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
-        log.info("dopo dell'aggiunta del ruolo" + customerAPA);
+        try {
+            customerAPA.setRole("customer"); //Si possono registrare solo customer.
+            String accessToken = keycloakService.getAccessToken();
+            String authorizationHeader = "Bearer " + accessToken;
+            log.info("prima dell'aggiunta del ruolo" + customerAPA);
+            keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
+            log.info("dopo dell'aggiunta del ruolo" + customerAPA);
+        } catch (Exception e){
+            log.info("che errore, mannaialà "+e.getMessage());
+        }
         return customerRepository.save(customerAPA);
     }
 
