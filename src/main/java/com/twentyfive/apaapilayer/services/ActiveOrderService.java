@@ -540,6 +540,7 @@ public class ActiveOrderService {
              */
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
+                    String fullName ="";
                     LocalDate pickupDate = order.getPickupDate();
                     TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
                     order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
@@ -559,6 +560,18 @@ public class ActiveOrderService {
                     activeOrderRepository.delete(optOrder.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                     completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()), TemplateUtilities.populateEmail(firstName,order.getId()));
+                    if (someToPrepare(order)) {
+                        if (order.getCustomerId() != null) {
+                            Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
+                            if (optCustomer.isPresent()) {
+                                fullName = optCustomer.get().getFirstName() + optCustomer.get().getLastName();
+                            } else {
+                                fullName = order.getCustomInfo().getFirstName() + order.getCustomInfo().getLastName();
+                            }
+                            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerDeleteNotification(fullName, order.getId());
+                            stompClientController.sendObjectMessage(twentyfiveMessage);
+                        }
+                    }
                 }
                 case IN_PREPARAZIONE -> {
                     //String bakerNotification =StompUtilities.sendBakerNotification("new");

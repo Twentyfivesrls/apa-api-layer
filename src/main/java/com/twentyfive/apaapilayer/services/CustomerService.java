@@ -13,7 +13,6 @@ import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +37,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class CustomerService {
     private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
 
@@ -198,16 +196,7 @@ public class CustomerService {
     }
 
     public CustomerAPA register(CustomerAPA customerAPA) {
-        try {
-            customerAPA.setRole("customer"); //Si possono registrare solo customer.
-            String accessToken = keycloakService.getAccessToken();
-            String authorizationHeader = "Bearer " + accessToken;
-            log.info("prima dell'aggiunta del ruolo" + customerAPA);
-            //keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
-            log.info("dopo dell'aggiunta del ruolo" + customerAPA);
-        } catch (Exception e){
-            log.info("che errore, mannaialà "+e.getMessage());
-        }
+        customerAPA.setRole("customer"); //Si possono registrare solo customer.
         return customerRepository.save(customerAPA);
     }
 
@@ -465,7 +454,6 @@ public class CustomerService {
         if (toPrepare){
             TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
             stompClientController.sendObjectMessage(twentyfiveMessage);
-            order.setBakerUnread(true);
             order.setStatus(OrderStatus.IN_PREPARAZIONE);
         } else {
             order.setStatus(OrderStatus.RICEVUTO);
