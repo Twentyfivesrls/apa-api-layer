@@ -40,6 +40,7 @@ public class ActiveOrderController {
             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection)  throws IOException{
         return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection));
     }
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter') or hasRole('ROLE_customer')")
     @GetMapping("/details/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) throws IOException {
         OrderDetailsAPADTO orderDetails = activeOrderService.getDetailsById(id);
