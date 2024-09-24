@@ -166,6 +166,8 @@ public class ActiveOrderService {
         dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
         dto.setStatus(order.getStatus().getStatus());
         dto.setUnread(order.isUnread());
+        dto.setBakerUnread(order.isBakerUnread());
+        dto.setCounterUnread(order.isCounterUnread());
         if(order.getCustomerId()!= null){
             Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
             if(optCustomerId.isPresent()){
@@ -189,6 +191,9 @@ public class ActiveOrderService {
             List<String> roles =JwtUtilities.getRoles();
             if(roles.contains("admin")){
                 orderAPA.setUnread(false);
+                activeOrderRepository.save(orderAPA);
+            } else if (roles.contains("baker")) {
+                orderAPA.setBakerUnread(false);
                 activeOrderRepository.save(orderAPA);
             }
             return convertToOrderDetailsAPADTO(orderAPA);
@@ -626,6 +631,7 @@ public class ActiveOrderService {
                 } else if (location.equals("In pasticceria")) {
                     bIP.setToPrepare(true);
                     bIP.setLocation(location);
+                    order.setBakerUnread(true);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     bIP.setToPrepare(false);
@@ -638,6 +644,7 @@ public class ActiveOrderService {
                 } else if (location.equals("In pasticceria")) {
                     pIP.setToPrepare(true);
                     pIP.setLocation(location);
+                    order.setBakerUnread(true);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     pIP.setToPrepare(false);

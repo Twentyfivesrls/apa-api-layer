@@ -22,7 +22,9 @@ public class OrderAPADTO {
     private String price;
     private String status;
     private boolean toPrepare; //if atleast 1 of the products are in toPrepare
-    private boolean unread;
+    private boolean unread; //status unread per admin
+    private boolean bakerUnread; //status unread per pasticceria
+    private boolean counterUnread; //status unread per bancone
 
     public String getFormattedPickupDate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", Locale.ITALIAN);

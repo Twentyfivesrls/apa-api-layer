@@ -457,6 +457,7 @@ public class CustomerService {
         if (toPrepare){
             TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
             stompClientController.sendObjectMessage(twentyfiveMessage);
+            order.setBakerUnread(true);
             order.setStatus(OrderStatus.IN_PREPARAZIONE);
         } else {
             order.setStatus(OrderStatus.RICEVUTO);
