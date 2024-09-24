@@ -139,5 +139,6 @@ public class KeycloakService {
         log.info(ruoliSelezionati.toString());
         log.info("id Keycloak"+id);
         keycloakExtClient.addRoleToUser(authorizationHeader, id, ruoliSelezionati.stream().map(ApaRole::toRoleRepresentation).collect(Collectors.toList()));
+        log.info("ruolo messo! evvai!");
     }
 }
