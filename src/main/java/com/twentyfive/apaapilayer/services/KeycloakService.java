@@ -133,11 +133,11 @@ public class KeycloakService {
     }
 
     public void addRoleToUser(String authorizationHeader, String id,CustomerAPA customerAPA){
-        log.info(authorizationHeader);
         ResponseEntity<List<ApaRole>> ruoliApa = keycloakExtClient.getApaRoles(authorizationHeader);
-        log.info(String.valueOf(ruoliApa));
         List<ApaRole> listaRuoli = ruoliApa.getBody();
         List<ApaRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getName().equals(customerAPA.getRole())).toList();
+        log.info(ruoliSelezionati.toString());
+        log.info("id Keycloak"+id);
         keycloakExtClient.addRoleToUser(authorizationHeader, id, ruoliSelezionati.stream().map(ApaRole::toRoleRepresentation).collect(Collectors.toList()));
     }
 }
