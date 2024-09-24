@@ -13,6 +13,7 @@ import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +38,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CustomerService {
     private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
 
@@ -199,9 +201,9 @@ public class CustomerService {
         customerAPA.setRole("customer"); //Si possono registrare solo customer.
         String accessToken = keycloakService.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
-        System.out.println("prima dell'aggiunta del ruolo" + customerAPA);
+        log.info("prima dell'aggiunta del ruolo" + customerAPA);
         keycloakService.addRoleToUser(authorizationHeader,customerAPA.getIdKeycloak(), customerAPA);
-        System.out.println("Dopo l'aggiunta del ruolo" + customerAPA);
+        log.info("dopo dell'aggiunta del ruolo" + customerAPA);
         return customerRepository.save(customerAPA);
     }
 
