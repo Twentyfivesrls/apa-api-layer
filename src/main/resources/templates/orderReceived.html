@@ -31,7 +31,7 @@
                 <div th:each="product : ${productList}" style="width: 100%; padding: 10px; border-bottom: 1px solid #ddd;">
                     <span style="float: left; width: 33%;" th:text="${product.quantity}"></span>
                     <span style="float: left; width: 33%;" th:text="${product.name}"></span>
-                    <span style="float: left; width: 33%;" th:text="${#numbers.formatDecimal(product.price, 2, 'POINT', 2, 'COMMA')}"></span>
+                    <span style="float: left; width: 33%;" th:text="${#numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA')}"></span>
                     <div style="clear: both;"></div>
                 </div>
 

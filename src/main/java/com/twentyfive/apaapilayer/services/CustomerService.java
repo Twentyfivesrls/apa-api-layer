@@ -877,17 +877,46 @@ public class CustomerService {
 
     private SummaryEmailDTO mapActiveOrderToSummaryEmail(OrderAPA order) {
         SummaryEmailDTO summaryEmailDTO = new SummaryEmailDTO();
-        List<SummarySingleItemDTO> summarySingleItemDTOS = new ArrayList<>();
+        Map<String, SummarySingleItemDTO> productMap = new HashMap<>();
         summaryEmailDTO.setId(order.getId());
         summaryEmailDTO.setTotalPrice(order.getTotalPrice() + " €");
+
+        // Processa i prodotti
         for (ProductInPurchase productInPurchase : order.getProductsInPurchase()) {
-            SummarySingleItemDTO summarySingleItemDTO = mapItemInSummary(productInPurchase);
-            summarySingleItemDTOS.add(summarySingleItemDTO);
+            String productName = productKgRepository.findById(productInPurchase.getId()).get().getName();
+
+            // Verifica se l'articolo è già presente nella mappa
+            if (productMap.containsKey(productName)) {
+                SummarySingleItemDTO existingItem = productMap.get(productName);
+                existingItem.setQuantity(existingItem.getQuantity() + 1);
+                existingItem.setPrice(existingItem.getPrice() + productInPurchase.getTotalPrice());
+            } else {
+                SummarySingleItemDTO summarySingleItemDTO = new SummarySingleItemDTO();
+                summarySingleItemDTO.setName(productName);
+                summarySingleItemDTO.setQuantity(1);
+                summarySingleItemDTO.setPrice(productInPurchase.getTotalPrice());
+                productMap.put(productName, summarySingleItemDTO);
+            }
         }
+
         for (BundleInPurchase bundleInPurchase : order.getBundlesInPurchase()) {
-            SummarySingleItemDTO summarySingleItemDTO = mapItemInSummary(bundleInPurchase);
-            summarySingleItemDTOS.add(summarySingleItemDTO);
+            String bundleName = trayRepository.findById(bundleInPurchase.getId()).get().getName();
+
+            if (productMap.containsKey(bundleName)) {
+                SummarySingleItemDTO existingItem = productMap.get(bundleName);
+                existingItem.setQuantity(existingItem.getQuantity() + 1);
+                existingItem.setPrice(existingItem.getPrice() + bundleInPurchase.getTotalPrice());
+            } else {
+                SummarySingleItemDTO summarySingleItemDTO = new SummarySingleItemDTO();
+                summarySingleItemDTO.setName(bundleName);
+                summarySingleItemDTO.setQuantity(1);
+                summarySingleItemDTO.setPrice(bundleInPurchase.getTotalPrice());
+                productMap.put(bundleName, summarySingleItemDTO);
+            }
         }
+
+        // Converte la mappa in una lista
+        List<SummarySingleItemDTO> summarySingleItemDTOS = new ArrayList<>(productMap.values());
         summaryEmailDTO.setProducts(summarySingleItemDTOS);
         return summaryEmailDTO;
     }
