@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleOrderRequest;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
@@ -20,6 +21,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/cart")
+
+@PreAuthorize("hasRole('ROLE_customer')")
 public class CartController {
 
     private final CustomerService customerService;

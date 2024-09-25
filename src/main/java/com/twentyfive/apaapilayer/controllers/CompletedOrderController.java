@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.RedoOrderReq;
 
@@ -24,6 +25,7 @@ public class CompletedOrderController {
         this.completedOrderService = completedOrderService;
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -33,6 +35,8 @@ public class CompletedOrderController {
         return ResponseEntity.ok().body(completedOrderService.getAll(page,size,sortColumn,sortDirection));
     }
 
+
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
         OrderDetailsAPADTO odapa = completedOrderService.getDetailsById(id);
@@ -42,14 +46,14 @@ public class CompletedOrderController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-
-
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/restore/{id}")
     public ResponseEntity<OrderAPADTO> restoreOrder(@PathVariable String id) {
         OrderAPADTO restoredOrder = completedOrderService.restoreOrder(id);
         return ResponseEntity.ok(restoredOrder);
     }
 
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/by-customer/{customerId}")
     public ResponseEntity<Page<OrderAPADTO>> getByCustomerId(
             @PathVariable String customerId,
@@ -63,6 +67,7 @@ public class CompletedOrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/redo-order")
     public ResponseEntity<OrderAPA> redoOrder(@RequestBody RedoOrderReq redoOrder) throws IOException {
         return ResponseEntity.ok().body(completedOrderService.redoOrder(redoOrder));

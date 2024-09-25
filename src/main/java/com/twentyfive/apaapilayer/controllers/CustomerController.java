@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class CustomerController {
         this.keycloakService= keycloakService;
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAllCustomers")
     public ResponseEntity<Page<CustomerDTO>> getAllCustomers(@RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "25") int size,
@@ -38,6 +40,7 @@ public class CustomerController {
         return ResponseEntity.ok(customerDTOs);
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAllEmployees")
     public ResponseEntity<Page<CustomerDTO>> getAllEmployees(@RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "25") int size,
@@ -47,7 +50,8 @@ public class CustomerController {
         return ResponseEntity.ok(customerDTOs);
     }
 
-    // Get a single customer by ID with added infos
+
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDetailsDTO> getById(@PathVariable String id) {
         CustomerDetailsDTO customerDetailsDTO = customerService.getById(id);
@@ -58,6 +62,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save")
     public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerAPA customerAPA) {
         try {
@@ -68,6 +73,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save/client")
     public ResponseEntity<String> editCustomerClient(@RequestBody Map<String,String> newCustomerInfos) {
         String id = newCustomerInfos.get("id");
@@ -92,6 +98,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/details/byKeycloakId/{keycloakId}")
     public ResponseEntity<CustomerDetailsDTO> getCustomerDetailsByIdKeycloak(@PathVariable String keycloakId) {
         try {
@@ -102,6 +109,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/changeStatus/{id}")
     public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
         boolean changed = customerService.changeStatusById(id);
@@ -112,6 +120,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @PostMapping("/reset-password/{userId}")
     public ResponseEntity<String> resetPassword(@PathVariable String userId) {
         try {
@@ -121,6 +130,8 @@ public class CustomerController {
             return ResponseEntity.status(500).body("Failed to send password reset email: " + e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @DeleteMapping("/delete-from-user/{id}")
     public ResponseEntity<String> deleteAccount(@PathVariable String id) {
         try {

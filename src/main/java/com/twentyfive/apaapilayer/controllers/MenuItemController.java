@@ -6,6 +6,7 @@ import com.twentyfive.apaapilayer.services.MenuItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,8 @@ public class MenuItemController {
     public ResponseEntity<List<MenuItemDTO>> getAll(){
         return ResponseEntity.ok().body(menuItemService.getAll());
     }
+
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getById/{id}")
     public ResponseEntity<MenuItemDTO> getById(@PathVariable("id")String id){
         return ResponseEntity.ok().body(menuItemService.getById(id));
@@ -29,6 +32,7 @@ public class MenuItemController {
     public ResponseEntity<List<MenuItemDTO>> getByIdCategory(@PathVariable("id")String id) {
         return ResponseEntity.ok().body(menuItemService.getAllByIdCategoryAndActiveTrue(id));
     }
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAllByIdCategoryPaginated")
     public ResponseEntity<Page<MenuItemDTO>> getAllByIdCategoryPaginated(@RequestParam("idCategory")String idCategory,
                                                                          @RequestParam(value = "page", defaultValue = "0") int page,
@@ -38,18 +42,25 @@ public class MenuItemController {
         return ResponseEntity.ok().body(menuItemService.getAllByIdCategoryPaginated(idCategory,page,size,sortColumn,sortDirection));
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save")
     public ResponseEntity<MenuItemAPA> save(@RequestBody MenuItemAPA menuItemAPA){
         return ResponseEntity.ok().body(menuItemService.save(menuItemAPA));
     }
+
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PatchMapping("/updateById/{id}")
     public ResponseEntity<MenuItemAPA> updateById(@PathVariable("id")String id,@RequestBody MenuItemAPA menuItemAPA){
         return ResponseEntity.ok().body(menuItemService.updateById(id,menuItemAPA));
     }
+
+    @PreAuthorize("hasRole('ROLE_admin')")
     @DeleteMapping("/deleteById/{id}")
     public ResponseEntity<Boolean> deleteById(@PathVariable("id")String id){
         return ResponseEntity.ok().body(menuItemService.deleteById(id));
     }
+
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/activateOrDisable/{id}")
     public ResponseEntity<Boolean> activeOrDisableById(@PathVariable String id) {
         return ResponseEntity.ok().body(menuItemService.activateOrDisableById(id));

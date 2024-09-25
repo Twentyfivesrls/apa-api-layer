@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.services.ProductWeightedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProductWeightedController {
 
     private final ProductWeightedService productWeightedService;
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAll")
     public ResponseEntity<Page<ProductWeightedAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
@@ -40,7 +42,7 @@ public class ProductWeightedController {
     public ResponseEntity<ProductWeightedAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(productWeightedService.getById(id));
     }
-
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save")
     public ResponseEntity<ProductWeightedAPA> save(@RequestBody ProductWeightedAPA p) {
         try {
@@ -50,17 +52,20 @@ public class ProductWeightedController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/disableById/{id}")
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(productWeightedService.disableById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id,
                                                 @RequestParam(value = "booleanModal", defaultValue = "false") boolean booleanModal) {
         return ResponseEntity.ok().body(productWeightedService.activateById(id, booleanModal));
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @DeleteMapping("/deleteById/{id}")
     public ResponseEntity<Boolean> deleteById(@PathVariable String id){
         return ResponseEntity.ok().body(productWeightedService.deleteById(id));

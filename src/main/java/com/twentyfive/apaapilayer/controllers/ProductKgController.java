@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.services.ProductKgService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class ProductKgController {
 
     private final ProductKgService productkgService;
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAll")
     public ResponseEntity<Page<ProductKgAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
@@ -27,6 +29,7 @@ public class ProductKgController {
             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(productkgService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
+
     @GetMapping("/getAllActive")
     public ResponseEntity<Page<ProductKgAPADTO>> getAllActive(
             @RequestParam("idCategory")String idCategory,
@@ -39,6 +42,7 @@ public class ProductKgController {
         return ResponseEntity.ok().body(productkgService.getById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PostMapping("/save")
     public ResponseEntity<ProductKgAPA> save(@RequestBody ProductKgAPA p) {
         try {
@@ -48,17 +52,19 @@ public class ProductKgController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/disableById/{id}")
     public ResponseEntity<Boolean> disableById(@PathVariable String id) {
         return ResponseEntity.ok().body(productkgService.disableById(id));
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/activateById/{id}")
     public ResponseEntity<Boolean> activateById(@PathVariable String id,
                                                 @RequestParam(value = "booleanModal", defaultValue = "false") boolean booleanModal) {
         return ResponseEntity.ok().body(productkgService.activateById(id, booleanModal));
     }
-
+    @PreAuthorize("hasRole('ROLE_admin')")
     @DeleteMapping("/deleteById/{id}")
     public ResponseEntity<Boolean> deleteById(@PathVariable String id){
         return ResponseEntity.ok().body(productkgService.deleteById(id));
