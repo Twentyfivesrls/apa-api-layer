@@ -62,7 +62,6 @@ public class PdfUtilities {
             for (ProductInPurchaseDTO product : orderDetails.getProducts()) {
                 document.add(new Paragraph(product.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
-                document.add(createParagraph("Quantità: ", String.valueOf(product.getQuantity()), boldFont, normalFont));
                 if(product.getIngredients() != null){
                     for(IngredientsWithCategory ingredients: product.getIngredients()){
                         document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
@@ -109,7 +108,6 @@ public class PdfUtilities {
             for (BundleInPurchaseDTO bundle : orderDetails.getBundles()) {
                 document.add(new Paragraph(bundle.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
-                document.add(createParagraph("Quantità: ", String.valueOf(bundle.getQuantity()), boldFont, normalFont));
                 document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
                 if (bundle.getWeightedProducts()!=null){
                     document.add(new Paragraph("Mignon: ", boldFont));

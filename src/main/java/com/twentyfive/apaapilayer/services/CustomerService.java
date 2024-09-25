@@ -419,30 +419,62 @@ public class CustomerService {
         order.setNote(buyInfos.getNote());
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
+
         for (ItemInPurchase item : items) {
-            if (item instanceof ProductInPurchase) {
-                products.add((ProductInPurchase) item);
-                Optional<ProductKgAPA> optProductKg =productKgRepository.findById(item.getId());
-                if (optProductKg.isPresent()){
-                    ProductKgAPA productKgAPA = optProductKg.get();
-                    if (productKgAPA.isCustomized()){
-                        toPrepare = true;
+            int quantity = item.getQuantity();
+            double unitPrice = item.getTotalPrice() / quantity;
+
+            for (int i = 0; i < quantity; i++) {
+                if (item instanceof ProductInPurchase) {
+                    ProductInPurchase originalPIP = (ProductInPurchase) item;
+                    ProductInPurchase singlePIP = new ProductInPurchase();
+
+                    singlePIP.setId(originalPIP.getId());
+                    singlePIP.setQuantity(1);
+                    singlePIP.setTotalPrice(unitPrice);
+                    singlePIP.setCustomization(originalPIP.getCustomization());
+                    singlePIP.setAttachment(originalPIP.getAttachment());
+                    singlePIP.setWeight(originalPIP.getWeight());
+                    singlePIP.setAllergens(originalPIP.getAllergens());
+
+                    products.add(singlePIP);
+
+
+                    Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
+                    if (optProductKg.isPresent()) {
+                        ProductKgAPA productKgAPA = optProductKg.get();
+                        if (productKgAPA.isCustomized()) {
+                            toPrepare = true;
+                        }
+                        List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA);
+                        singlePIP.setIngredients(ingredientsFromProduct);
+                        productStatService.addBuyingCountProduct(productKgAPA, 1);
+                        productKgRepository.save(productKgAPA);
                     }
-                    List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA);
-                    ((ProductInPurchase) item).setIngredients(ingredientsFromProduct);
-                    productStatService.addBuyingCountProduct(productKgAPA, 1);
-                    productKgRepository.save(productKgAPA);
-                }
-            } else if (item instanceof BundleInPurchase) {
-                bundles.add((BundleInPurchase) item);
-                Optional<Tray> tray=trayRepository.findById(item.getId());
-                if(tray.isPresent()) {
-                    productStatService.addBuyingCountTray(tray.get(),1);
-                    for (PieceInPurchase piece : ((BundleInPurchase) item).getWeightedProducts()) {
-                        Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
-                        if (productWeightedAPA.isPresent()) {
-                            productStatService.addBuyingCountProduct(productWeightedAPA.get(), 1);
-                            productWeightedRepository.save(productWeightedAPA.get());
+
+                } else if (item instanceof BundleInPurchase) {
+                    BundleInPurchase originalBIP = (BundleInPurchase) item;
+                    BundleInPurchase singleBIP = new BundleInPurchase();
+
+                    singleBIP.setId(item.getId());
+                    singleBIP.setQuantity(1);
+                    singleBIP.setTotalPrice(unitPrice);
+                    singleBIP.setAllergens(originalBIP.getAllergens());
+                    singleBIP.setWeightedProducts(originalBIP.getWeightedProducts());
+                    singleBIP.setMeasure(originalBIP.getMeasure());
+
+                    bundles.add(singleBIP);
+
+                    Optional<Tray> tray = trayRepository.findById(singleBIP.getId());
+
+                    if (tray.isPresent()) {
+                        productStatService.addBuyingCountTray(tray.get(), 1);
+                        for (PieceInPurchase piece : singleBIP.getWeightedProducts()) {
+                            Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
+                            if (productWeightedAPA.isPresent()) {
+                                productStatService.addBuyingCountProduct(productWeightedAPA.get(), 1);
+                                productWeightedRepository.save(productWeightedAPA.get());
+                            }
                         }
                     }
                 }
