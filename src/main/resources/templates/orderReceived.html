@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Ordine annullato</title>
+    <meta charset="UTF-8">
+    <title>Ordine ricevuto</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body style="background-color: #6C6029; font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;">
@@ -16,7 +17,32 @@
             <p style="color: #666;">Ciao <strong><span th:text="${customerName}"></span></strong>,</p>
             <p style="color: #666;">Abbiamo ricevuto il tuo ordine n. <strong><span th:text="${orderId}"></span></strong>!<br>
                 Il nostro team inizier&agrave; a prepararlo e ti aggiorneremo quando sar&agrave; pronto.</p>
-                <p style="color: #666;"><strong>Grazie per aver scelto Antica Pasticceria!</strong></p>
+
+            <div style="margin-top: 20px;">
+                <h2 style="color: #333;">Riepilogo Ordine</h2>
+
+                <div style="width: 100%; background-color: #f4f4f4; padding: 10px;">
+                    <span style="font-weight: bold; float: left; width: 33%;">Quantità</span>
+                    <span style="font-weight: bold; float: left; width: 33%;">Prodotto</span>
+                    <span style="font-weight: bold; float: left; width: 33%;">Prezzo</span>
+                    <div style="clear: both;"></div>
+                </div>
+
+                <div th:each="product : ${productList}" style="width: 100%; padding: 10px; border-bottom: 1px solid #ddd;">
+                    <span style="float: left; width: 33%;" th:text="${product.quantity}"></span>
+                    <span style="float: left; width: 33%;" th:text="${product.name}"></span>
+                    <span style="float: left; width: 33%;" th:text="${#numbers.formatDecimal(product.price, 2, 'POINT', 2, 'COMMA')}"></span>
+                    <div style="clear: both;"></div>
+                </div>
+
+                <div style="text-align: right; font-size: 16px; color: #333; padding: 10px; border-top: 1px solid #ddd;">
+                    <strong>Totale:</strong>
+                    <span th:text="${totalPrice}"></span>
+                </div>
+            </div>
+
+            <br>
+            <p style="color: #666;"><strong>Grazie per aver scelto Antica Pasticceria!</strong></p>
             <p style="color: #666;">Cordiali saluti,<br>
                 Il Team di Antica Pasticceria</p>
             <a href="http://80.211.123.141:5564/catalogo">Torna al sito</a>

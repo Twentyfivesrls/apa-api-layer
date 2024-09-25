@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.utils;
 
 import com.twentyfive.apaapilayer.dtos.SummaryEmailDTO;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +21,13 @@ public class TemplateUtilities {
         variables.put("orderId",summaryEmailDTO.getId());
         variables.put("productList",summaryEmailDTO.getProducts());
         variables.put("totalPrice",summaryEmailDTO.getTotalPrice());
+
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        String cleanedTotalPrice = summaryEmailDTO.getTotalPrice().replaceAll("[^\\d.,]", "");
+        String formattedTotalPrice = df.format(Double.parseDouble(cleanedTotalPrice));
+
+        variables.put("totalPrice", formattedTotalPrice);
+
         return variables;
     }
 }
