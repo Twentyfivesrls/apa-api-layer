@@ -20,6 +20,6 @@ public interface PaymentClientController {
     @PostMapping("/capture-outside/{orderId}")
     ResponseEntity<Map<String, Object>> capture(@RequestHeader("Authorization") String accessToken, @PathVariable("orderId") String orderId, @RequestBody PaypalCredentials paypalCredentials);
 
-    @PostMapping("/refund-outside/{captureId}")
-    ResponseEntity<Map<String, Object>> refundPaymentOutside(@RequestHeader("Authorization") String accessToken, @PathVariable String captureId, @RequestBody PaypalCredentials paypalCredentials);
+    @PostMapping("/refund-outside/{paymentId}")
+    ResponseEntity<Map<String, Object>> refundPaymentOutside(@RequestHeader("Authorization") String accessToken, @PathVariable String paymentId, @RequestBody PaypalCredentials paypalCredentials);
 }

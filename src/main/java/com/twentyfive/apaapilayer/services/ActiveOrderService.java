@@ -423,10 +423,10 @@ public class ActiveOrderService {
             if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
                 timeSlotAPARepository.save(timeSlotAPA);
             }
-            if (order.getCaptureId() != null){
+            if (order.getPaymentId() != null){
                 PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
                 String authorization=keycloakService.getAccessTokenTF();
-                paymentClientController.refundPaymentOutside(authorization, order.getCaptureId(), paypalCredentials);
+                paymentClientController.refundPaymentOutside(authorization, order.getPaymentId(), paypalCredentials);
             }
             activeOrderRepository.delete(order); // Rimuove l'ordine dalla repository degli ordini attivi
             completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati
@@ -552,10 +552,10 @@ public class ActiveOrderService {
                     if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap())) {
                         timeSlotAPARepository.save(timeSlotAPA);
                     }
-                    if (order.getCaptureId() != null){
+                    if (order.getPaymentId() != null){
                         PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
                         String authorization=keycloakService.getAccessTokenTF();
-                        paymentClientController.refundPaymentOutside(authorization, order.getCaptureId(), paypalCredentials);
+                        paymentClientController.refundPaymentOutside(authorization, order.getPaymentId(), paypalCredentials);
                     }
                     activeOrderRepository.delete(optOrder.get()); // Rimuove l'ordine dalla repository degli ordini attivi
                     completedOrderRepository.save(completedOrder); // Salva l'ordine nella repository degli ordini completati/annullati

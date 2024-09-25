@@ -411,9 +411,6 @@ public class CustomerService {
         if(buyInfos.getPaymentId()!=null){
             order.setPaymentId(buyInfos.getPaymentId());
         }
-        if(buyInfos.getCaptureId()!=null){
-            order.setCaptureId(buyInfos.getCaptureId());
-        }
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
         order.setNote(buyInfos.getNote());
