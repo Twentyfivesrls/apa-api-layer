@@ -20,6 +20,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private String id;
     private String name;
     private double weight; // Il peso del prodotto
+    private int quantity;
     private String shape; // La forma del prodotto, potrebbe essere meglio come Enum se le forme sono predefinite
     private List<Customization> customization = new ArrayList<>(); // Una mappa degli ingredienti personalizzati, dove la chiave è l'ID dell'ingrediente
     private List<IngredientsWithCategory> ingredients = new ArrayList<>(); // Una mappa degli ingredienti, dove la chiave è l'ID dell'ingrediente
@@ -35,6 +36,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.id = product.getId();
         this.name = name;
         this.weight = product.getWeight();
+        this.quantity = product.getQuantity();
         this.shape = product.getShape();
         this.customization = product.getCustomization();
         this.ingredients = product.getIngredients();

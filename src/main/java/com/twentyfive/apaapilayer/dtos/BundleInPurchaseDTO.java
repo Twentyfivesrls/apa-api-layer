@@ -21,7 +21,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
 
     private Measure measure;
 
-//    private int quantity;
+    private int quantity;
     private double totalPrice;
     private double totalWeight;
     private List<Allergen> allergens;
@@ -33,6 +33,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.id = bundle.getId();
         this.name = name;
         this.measure = bundle.getMeasure();
+        this.quantity = bundle.getQuantity();
         this.location = bundle.getLocation();
         this.totalWeight = bundle.getTotalWeight();
         this.totalPrice = bundle.getTotalPrice();
@@ -43,6 +44,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.id = bundle.getId();
         this.name = name;
         this.measure = bundle.getMeasure();
+        this.quantity = bundle.getQuantity();
         this.totalPrice = bundle.getTotalPrice();
         this.allergens = bundle.getAllergens();
         this.location = bundle.getLocation();
