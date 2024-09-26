@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/cart")
 
-@PreAuthorize("hasRole('ROLE_customer') or hasRoles('ROLE_admin')")
+@PreAuthorize("hasRole('ROLE_customer') or hasRole('ROLE_admin')")
 public class CartController {
 
     private final CustomerService customerService;
