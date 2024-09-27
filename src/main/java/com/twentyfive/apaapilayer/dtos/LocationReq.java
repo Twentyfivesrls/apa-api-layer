@@ -11,4 +11,5 @@ public class LocationReq {
     private String orderId;
     private int position;
     private String location;
+    private String counterNote;
 }

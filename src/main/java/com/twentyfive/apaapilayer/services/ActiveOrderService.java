@@ -615,6 +615,7 @@ public class ActiveOrderService {
         Optional<OrderAPA> optOrder = activeOrderRepository.findById(locationReq.getOrderId());
         int position = locationReq.getPosition();
         String location = locationReq.getLocation();
+        String counterNote = locationReq.getCounterNote();
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
         if(optOrder.isPresent()){
@@ -644,6 +645,7 @@ public class ActiveOrderService {
                 } else if (location.equals("In pasticceria")) {
                     bIP.setToPrepare(true);
                     bIP.setLocation(location);
+                    bIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
@@ -657,6 +659,7 @@ public class ActiveOrderService {
                 } else if (location.equals("In pasticceria")) {
                     pIP.setToPrepare(true);
                     pIP.setLocation(location);
+                    pIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {

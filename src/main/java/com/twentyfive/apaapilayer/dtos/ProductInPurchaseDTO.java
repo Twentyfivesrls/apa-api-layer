@@ -30,6 +30,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private LocalDate deliveryDate; // La data di consegna del prodotto
     private double totalPrice;
     private boolean toPrepare;
+    private String counterNote; //Nota da bancone, se disponibile
 
 
     public ProductInPurchaseDTO(ProductInPurchase product, String name) {
@@ -46,6 +47,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.deliveryDate = product.getDeliveryDate();
         this.totalPrice = product.getTotalPrice();
         this.allergens=product.getAllergens();
+        this.counterNote = product.getCounterNote();
     }
 
 

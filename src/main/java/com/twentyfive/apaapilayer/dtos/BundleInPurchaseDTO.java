@@ -28,6 +28,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
     private List<PieceInPurchaseDTO> weightedProducts;
     private String location; // Luogo in cui è depositato il prodotto
     private boolean toPrepare;
+    private String counterNote; //Nota da bancone, se disponibile
 
     public BundleInPurchaseDTO(BundleInPurchase bundle, String name,List<PieceInPurchaseDTO> weightedProducts) {
         this.id = bundle.getId();
@@ -39,6 +40,8 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.totalPrice = bundle.getTotalPrice();
         this.weightedProducts = weightedProducts;
         this.allergens= bundle.getAllergens();
+        this.counterNote = bundle.getCounterNote();
+
     }
     public BundleInPurchaseDTO(BundleInPurchase bundle, String name) {
         this.id = bundle.getId();
@@ -49,6 +52,7 @@ public class BundleInPurchaseDTO extends ItemInPurchaseDTO{
         this.allergens = bundle.getAllergens();
         this.location = bundle.getLocation();
         this.toPrepare = bundle.isToPrepare();
+        this.counterNote = bundle.getCounterNote();
     }
 
 }
