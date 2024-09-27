@@ -191,14 +191,10 @@ public class ActiveOrderService {
 
     private String maskModifiedFromBakerForCustomers(OrderStatus orderStatus) throws IOException{
         List<String> roles = JwtUtilities.getRoles();
-        if(roles.contains("customer")){ //Mascheriamo modificato da pasticceria con "in preparazione"
-            if(orderStatus.equals(MODIFICATO_DA_PASTICCERIA)){
-                return OrderStatus.IN_PREPARAZIONE.getStatus();
-            } else{
-                return orderStatus.getStatus();
-            }
+        if(roles.contains("customer") && orderStatus.equals(MODIFICATO_DA_PASTICCERIA)){ //Mascheriamo modificato da pasticceria con "in preparazione"
+            return OrderStatus.IN_PREPARAZIONE.getStatus();
         }
-        return null;
+        return orderStatus.getStatus();
     }
 
     public OrderDetailsAPADTO getDetailsById(String id) throws IOException {
