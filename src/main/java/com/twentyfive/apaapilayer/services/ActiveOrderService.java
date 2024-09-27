@@ -154,34 +154,51 @@ public class ActiveOrderService {
         return PageUtilities.convertListToPage(realOrder,pageable);
     }
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
-        OrderAPADTO dto = new OrderAPADTO();
-        dto.setId(order.getId());
-        dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
-        dto.setRealPrice(order.getTotalPrice());
-        if(order.getPaymentId()!=null){
-            dto.setMethodPayment("Online");
-        } else {
-            dto.setMethodPayment("Al ritiro");
-        }
-        dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
-        dto.setStatus(order.getStatus().getStatus());
-        dto.setUnread(order.isUnread());
-        dto.setBakerUnread(order.isBakerUnread());
-        dto.setCounterUnread(order.isCounterUnread());
-        if(order.getCustomerId()!= null){
-            Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
-            if(optCustomerId.isPresent()){
-                CustomerAPA customer = optCustomerId.get();
-                dto.setFirstName(customer.getFirstName());
-                dto.setLastName(customer.getLastName());
+        try {
+            OrderAPADTO dto = new OrderAPADTO();
+            dto.setId(order.getId());
+            dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
+            dto.setRealPrice(order.getTotalPrice());
+            if(order.getPaymentId()!=null){
+                dto.setMethodPayment("Online");
+            } else {
+                dto.setMethodPayment("Al ritiro");
             }
-        } else {
-            dto.setFirstName(order.getCustomInfo().getFirstName());
-            dto.setLastName(order.getCustomInfo().getLastName());
+            dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+            String status = maskModifiedFromBakerForCustomers(order.getStatus());
+            dto.setStatus(status);
+            dto.setUnread(order.isUnread());
+            dto.setBakerUnread(order.isBakerUnread());
+            dto.setCounterUnread(order.isCounterUnread());
+            if(order.getCustomerId()!= null){
+                Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
+                if(optCustomerId.isPresent()){
+                    CustomerAPA customer = optCustomerId.get();
+                    dto.setFirstName(customer.getFirstName());
+                    dto.setLastName(customer.getLastName());
+                }
+            } else {
+                dto.setFirstName(order.getCustomInfo().getFirstName());
+                dto.setLastName(order.getCustomInfo().getLastName());
+            }
+            someToPrepare(order);
+            dto.setToPrepare(someToPrepare(order));
+            return dto;
+        } catch(Exception e){
+            throw new RuntimeException("Error retrieving roles user!");
         }
-        someToPrepare(order);
-        dto.setToPrepare(someToPrepare(order));
-        return dto;
+    }
+
+    private String maskModifiedFromBakerForCustomers(OrderStatus orderStatus) throws IOException{
+        List<String> roles = JwtUtilities.getRoles();
+        if(roles.contains("customer")){ //Mascheriamo modificato da pasticceria con "in preparazione"
+            if(orderStatus.equals(MODIFICATO_DA_PASTICCERIA)){
+                return OrderStatus.IN_PREPARAZIONE.getStatus();
+            } else{
+                return orderStatus.getStatus();
+            }
+        }
+        return null;
     }
 
     public OrderDetailsAPADTO getDetailsById(String id) throws IOException {
@@ -209,7 +226,8 @@ public class ActiveOrderService {
         dto.setTotalPrice(order.getTotalPrice());
         dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
-        dto.setStatus(order.getStatus().getStatus());
+        String status = maskModifiedFromBakerForCustomers(order.getStatus());
+        dto.setStatus(status);
         dto.setOrderNote(order.getNote());
         dto.setUnread(order.isUnread());
         if(order.getCustomerId()!=null){
@@ -340,7 +358,7 @@ public class ActiveOrderService {
         }
     }
 
-    public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable) {
+    public Page<OrderAPADTO> getByCustomerId(String customerId, Pageable pageable){
         // Supponendo che il repository abbia il metodo findOrdersByCustomerId
         return activeOrderRepository.findOrdersByCustomerIdOrderByCreatedDateDesc(customerId, pageable)
                 .map(this::convertToOrderAPADTO); // Converti ogni ordine in OrderAPADTO
@@ -712,5 +730,6 @@ public class ActiveOrderService {
     private boolean someToPrepare(OrderAPA order){
         return order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
     }
+
 }
 

@@ -422,6 +422,7 @@ public class CustomerService {
             double unitPrice = item.getTotalPrice() / quantity;
 
             for (int i = 0; i < quantity; i++) {
+
                 if (item instanceof ProductInPurchase) {
                     ProductInPurchase originalPIP = (ProductInPurchase) item;
                     ProductInPurchase singlePIP = new ProductInPurchase();
@@ -433,7 +434,10 @@ public class CustomerService {
                     singlePIP.setAttachment(originalPIP.getAttachment());
                     singlePIP.setWeight(originalPIP.getWeight());
                     singlePIP.setAllergens(originalPIP.getAllergens());
-
+                    if (item.isToPrepare()){
+                        singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
+                    }
+                    singlePIP.setToPrepare(originalPIP.isToPrepare());
                     products.add(singlePIP);
 
 
@@ -454,6 +458,10 @@ public class CustomerService {
                     BundleInPurchase singleBIP = new BundleInPurchase();
 
                     singleBIP.setId(item.getId());
+                    if (item.isToPrepare()){
+                        singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
+                    }
+                    singleBIP.setToPrepare(item.isToPrepare());
                     singleBIP.setQuantity(1);
                     singleBIP.setTotalPrice(unitPrice);
                     singleBIP.setAllergens(originalBIP.getAllergens());
@@ -481,6 +489,7 @@ public class CustomerService {
         order.setBundlesInPurchase(bundles);
         order.setTotalPrice(calculateTotalPrice(items));
         if (toPrepare){
+            order.setBakerUnread(true);
             TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
             stompClientController.sendObjectMessage(twentyfiveMessage);
             order.setStatus(OrderStatus.IN_PREPARAZIONE);
