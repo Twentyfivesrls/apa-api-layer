@@ -639,7 +639,6 @@ public class ActiveOrderService {
                 products = order.getProductsInPurchase();
                 bundles = order.getBundlesInPurchase();
             } else if (roles.contains("baker")){
-                //TODO stomp per admin e counter
 
                 // Filtra i prodotti con toPrepare = true
                 products = order.getProductsInPurchase().stream()
@@ -686,7 +685,6 @@ public class ActiveOrderService {
                     order.setUnread(true);
                     order.setCreatedDate(LocalDateTime.now());
                 }
-                //TODO stomp per in base ai ruoli
                 if (!roles.contains("baker")){
                     if(alreadySomeToPrepare){
                         if(location.equals("In pasticceria")){
@@ -708,6 +706,8 @@ public class ActiveOrderService {
                             .allMatch(bundle -> bundle.getLocation() != null && !"In pasticceria".equals(bundle.getLocation()));
             if (noMoreToPrepare){
                 order.setStatus(OrderStatus.PRONTO);
+                CustomerAPA customer = getCustomerFromOrder(order);
+                emailService.sendEmail(customer.getEmail(),OrderStatus.PRONTO,TemplateUtilities.populateEmail(customer.getFirstName(),order.getId()));
             }
             activeOrderRepository.save(order);
             return true;
@@ -725,6 +725,18 @@ public class ActiveOrderService {
 
     private boolean someToPrepare(OrderAPA order){
         return order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
+    }
+
+    private CustomerAPA getCustomerFromOrder(OrderAPA order) {
+        CustomerAPA customer = new CustomerAPA();
+        // Se CustomInfo non è null, prendi il customer da lì
+        if (order.getCustomInfo() != null) {
+            customer.setFirstName(order.getCustomInfo().getFirstName());
+            customer.setEmail(order.getCustomInfo().getEmail());
+        }
+        // Se CustomInfo è null, prendi il customer usando l'idCustomer
+        return customerRepository.findById(order.getCustomerId())
+                .orElse(null);
     }
 
 }
