@@ -3,14 +3,13 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
-import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
-import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
+import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +37,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
-    private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
 
     private final ProductStatService productStatService;
     private final CustomerRepository customerRepository;
-
     private final CompletedOrderRepository completedOrderRepository;
     private final StompClientController stompClientController;
     private final ActiveOrderService orderService;
@@ -50,7 +47,6 @@ public class CustomerService {
     private final KeycloakService keycloakService;
     private final PaymentClientController paymentClientController;
     private final SettingRepository settingRepository;
-
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final IngredientRepository ingredientRepository;
@@ -60,7 +56,6 @@ public class CustomerService {
     private final CategoryRepository categoryRepository;
 
     private final TrayRepository trayRepository;
-    private final ProducerPool producerPool;
     private final ActiveOrderRepository activeOrdersRepository;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
@@ -96,22 +91,9 @@ public class CustomerService {
         );
     }
 
-    @Transactional
-    public void modifyCustomerInfo(String customerId, String firstName, String lastName, String phoneNumber){
-
-        CustomerAPA customer = customerRepository.findById(customerId).orElseThrow();
-        customer.setFirstName(firstName);
-        customer.setLastName(lastName);
-        customer.setPhoneNumber(phoneNumber);
-
-        customerRepository.save(customer);
-        keycloakService.update(customer);
-
-    }
-
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProducerPool producerPool) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository,ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -128,7 +110,6 @@ public class CustomerService {
         this.timeSlotAPARepository = timeSlotAPARepository;
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
-        this.producerPool = producerPool;
         this.activeOrdersRepository= activeOrderRepository;
     }
 
@@ -200,9 +181,16 @@ public class CustomerService {
     }
 
     public CustomerAPA saveCustomer(CustomerAPA customer) throws IOException {
-        if(customer.getIdKeycloak()!=null){
-            keycloakService.update(customer);
-            return customerRepository.save(customer);
+
+        if(customer.getIdKeycloak()!=null){ //Stiamo aggiornando un customer esistente
+            Optional<CustomerAPA> optCustomerToPatch=getByIdFromDb(customer.getId());
+            if(optCustomerToPatch.isPresent()) {
+                CustomerAPA customerAPA = optCustomerToPatch.get();
+                ReflectionUtilities.updateNonNullFields(customer,customerAPA);
+                keycloakService.update(customer);
+                return customerRepository.save(customerAPA);
+            }
+            throw new InvalidCustomerIdException();
         } else {
             keycloakService.add(customer);
             keycloakService.sendPasswordResetEmail(customer.getIdKeycloak());
@@ -210,7 +198,7 @@ public class CustomerService {
         }
     }
 
-    public boolean changeStatusById(String id) {
+    public boolean changeStatusById(String id) throws IOException {
         Optional<CustomerAPA> customerAPA = customerRepository.findById(id);
         // Verifica che il cliente esista prima di tentare di eliminarlo
         if (customerAPA.isPresent()) {
@@ -677,20 +665,6 @@ public class CustomerService {
     }
 
 
-    /*private LocalDateTime next(int hour){
-        LocalDateTime now= LocalDateTime.now();
-        // Definisce il mezzogiorno
-        LocalTime noon = LocalTime.of(hour, 0);
-
-        // Se ora è già passato il mezzogiorno, passa al giorno successivo
-        if (now.toLocalTime().isAfter(noon)) {
-            return now.toLocalDate().plusDays(1).atTime(noon);
-        } else {
-            // Altrimenti, restituisce il mezzogiorno di oggi
-            return now.toLocalDate().atTime(noon);
-        }
-    }*/
-
 
 
     public Map<LocalDate, List<LocalTime>> getAvailablePickupTimes(String customerId, List<Integer> positions) {
@@ -942,4 +916,7 @@ public class CustomerService {
         return summarySingleItemDTO;
     }
 
+    private Optional<CustomerAPA> getByIdFromDb(String idCustomer){
+        return customerRepository.findById(idCustomer);
+    }
 }

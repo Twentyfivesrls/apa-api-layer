@@ -50,6 +50,11 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.NO_CONTENT, ex.getMessage()+ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError,HttpStatus.NO_CONTENT);
     }
+    @ExceptionHandler(InvalidKeycloakIdRequestException.class)
+    public ResponseEntity<ApiError> handleInvalidKeycloakIdRequestException (InvalidKeycloakIdRequestException ex){
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,"Impossibile modificare un customer che non sia quello che ha fatto richiesta! " +ex.getClass().getSimpleName());
+        return  new ResponseEntity<>(apiError,HttpStatus.UNAUTHORIZED);
+    }
     @Data
     @AllArgsConstructor
     public static class ApiError {

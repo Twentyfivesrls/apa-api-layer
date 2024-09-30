@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twentyfive.apaapilayer.clients.KeycloakExtClient;
 import com.twentyfive.apaapilayer.clients.KeycloakIntClient;
 import com.twentyfive.apaapilayer.dtos.ApaRole;
+import com.twentyfive.apaapilayer.exceptions.InvalidKeycloakIdRequestException;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
+import com.twentyfive.apaapilayer.utils.JwtUtilities;
 import com.twentyfive.apaapilayer.utils.KeycloakUtilities;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakRole;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.KeycloakUser;
 import twentyfive.twentyfiveadapter.dto.keycloakDto.TokenRequest;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -102,16 +105,16 @@ public class KeycloakService {
         String id = stringArray[stringArray.length - 1];
         customerAPA.setIdKeycloak(id);
         addRoleToUser(authorizationHeader,id,customerAPA);
-        /*ResponseEntity<List<KeycloakRole>> ruoli = keycloakExtClient.getAvailableRoles(authorizationHeader, id, "0", "100", "");
-        List<KeycloakRole> listaRuoli = ruoli.getBody();
-        List<KeycloakRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getRole().equals(customerAPA.getRole())).toList();
-        String clientIdRole = ruoliSelezionati.get(0).getClientId();
-        keycloakExtClient.addRoleToUser(authorizationHeader, id, clientIdRole, ruoliSelezionati.stream().map(KeycloakRole::toRoleRepresentation).collect(Collectors.toList()));
-         */
     }
-    public void update(CustomerAPA customerAPA) {
+    public void update(CustomerAPA customerAPA) throws IOException {
         String accessToken = this.getAccessToken();
         String authorizationHeader = "Bearer " + accessToken;
+        List<String> roles = JwtUtilities.getRoles();
+        if(!roles.contains("admin")){ //Allora è un customer, controlliamo se sta provando a modificare se stesso
+            if(!(JwtUtilities.getIdKeycloak().equals(customerAPA.getIdKeycloak()))){
+                throw new InvalidKeycloakIdRequestException();
+            }
+        }
         addRoleToUser(authorizationHeader, customerAPA.getIdKeycloak(), customerAPA);
         keycloakExtClient.update(authorizationHeader, customerAPA.getIdKeycloak(), KeycloakUtilities.updateUserForKeycloak(customerAPA)).getBody();
     }

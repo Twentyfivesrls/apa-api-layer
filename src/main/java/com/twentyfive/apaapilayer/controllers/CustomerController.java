@@ -62,7 +62,7 @@ public class CustomerController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_admin')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @PostMapping("/save")
     public ResponseEntity<CustomerDTO> saveCustomer(@RequestBody CustomerAPA customerAPA) {
         try {
@@ -71,22 +71,6 @@ public class CustomerController {
         } catch (IllegalStateException | IOException e) {
             return ResponseEntity.badRequest().body(null); // Potresti voler restituire un messaggio d'errore più specifico
         }
-    }
-
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
-    //TODO we should cancel this endpoint and use "/save", maybe checking token idKeycloak on request
-    @PostMapping("/save/client")
-    public ResponseEntity<String> editCustomerClient(@RequestBody Map<String,String> newCustomerInfos) {
-        String id = newCustomerInfos.get("id");
-        String firstName = newCustomerInfos.get("firstName");
-        String lastName = newCustomerInfos.get("lastName");
-        String phoneNumber = newCustomerInfos.get("phoneNumber");
-
-        //AGGIORNA LE INFO DELL'UTENTE SIA IN KEYCLOAK CHE SU MONGO
-        customerService.modifyCustomerInfo(id,firstName,lastName,phoneNumber);
-
-        return ResponseEntity.ok().body("\"modifiche salvate con successo\"");
-
     }
 
     @PostMapping("/register")
@@ -112,7 +96,7 @@ public class CustomerController {
 
     @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/changeStatus/{id}")
-    public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) {
+    public ResponseEntity<Boolean> changeStatusById(@PathVariable String id) throws IOException {
         boolean changed = customerService.changeStatusById(id);
         if (changed) {
             return ResponseEntity.ok(true);  // Restituisce true se la cancellazione è avvenuta con successo
