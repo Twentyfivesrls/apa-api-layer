@@ -105,7 +105,6 @@ public class CustomerService {
         customer.setPhoneNumber(phoneNumber);
 
         customerRepository.save(customer);
-        System.out.println("ok");
         keycloakService.update(customer);
 
     }

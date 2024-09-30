@@ -16,6 +16,6 @@ public interface ActiveOrderRepository extends MongoRepository<OrderAPA,String> 
     List<OrderAPA> findByCustomerId(String customerId);
     Page<OrderAPA> findOrdersByCustomerIdOrderByCreatedDateDesc(String customerId, Pageable pageable);
 
-    List<OrderAPA> findByProductsInPurchaseToPrepareTrueOrBundlesInPurchaseToPrepareTrueOrderByCreatedDateAsc();
+    List<OrderAPA> findByProductsInPurchaseToPrepareTrueOrBundlesInPurchaseToPrepareTrueOrderByCreatedDateDesc();
 
 }

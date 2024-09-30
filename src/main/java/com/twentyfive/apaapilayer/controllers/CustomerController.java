@@ -73,7 +73,8 @@ public class CustomerController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_admin')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
+    //TODO we should cancel this endpoint and use "/save", maybe checking token idKeycloak on request
     @PostMapping("/save/client")
     public ResponseEntity<String> editCustomerClient(@RequestBody Map<String,String> newCustomerInfos) {
         String id = newCustomerInfos.get("id");
