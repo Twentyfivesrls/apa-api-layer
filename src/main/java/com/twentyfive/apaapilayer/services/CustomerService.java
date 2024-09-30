@@ -433,6 +433,7 @@ public class CustomerService {
                     singlePIP.setCustomization(originalPIP.getCustomization());
                     singlePIP.setAttachment(originalPIP.getAttachment());
                     singlePIP.setWeight(originalPIP.getWeight());
+                    singlePIP.setShape(originalPIP.getShape());
                     singlePIP.setAllergens(originalPIP.getAllergens());
                     if (item.isToPrepare()){
                         singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
