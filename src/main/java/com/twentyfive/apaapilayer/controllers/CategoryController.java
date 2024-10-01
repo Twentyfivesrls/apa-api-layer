@@ -36,7 +36,6 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.getById(id));
     }
 
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/getAllByIdSection/{id}")
     public ResponseEntity<List<CategoryAPA>> getAllByIdSectionEnabledTrueAndSoftDeletedFalse(@PathVariable String id) {
         return ResponseEntity.ok().body(categoryService.getAllActiveByIdSection(id));
