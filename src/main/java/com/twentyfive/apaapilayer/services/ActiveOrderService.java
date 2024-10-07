@@ -130,29 +130,6 @@ public class ActiveOrderService {
         return PageUtilities.convertListToPage(realOrder,pageable);
     }
 
-    public Page<OrderAPADTO> getAllWithStatus(int page, int size, String sortColumn, String sortDirection, OrderStatus status) {
-        // Fetching paginated orders from the database
-        List<OrderAPA> orderList= activeOrderRepository.findAllByStatusOrderByCreatedDateDesc(status);
-        List<OrderAPADTO> realOrder= new ArrayList<>();
-        for(OrderAPA order:orderList){
-            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
-            realOrder.add(orderAPA);
-        }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort;
-            if (sortColumn.equals("price")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } else if (sortColumn.equals("formattedPickupDate")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
-            } else {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
-            }
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
-        }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realOrder,pageable);
-    }
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
         try {
             OrderAPADTO dto = new OrderAPADTO();
@@ -208,6 +185,8 @@ public class ActiveOrderService {
             } else if (roles.contains("baker")) {
                 orderAPA.setBakerUnread(false);
                 activeOrderRepository.save(orderAPA);
+            } else { //dovremmo mappare gli oggetti uguali nello stesso dto. (bIP e pIP) (customer)
+
             }
             return convertToOrderDetailsAPADTO(orderAPA);
         } else {
@@ -258,7 +237,7 @@ public class ActiveOrderService {
             dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
             return;
         }
-        if (roles.contains("baker")){
+        else if (roles.contains("baker")){
             // Filtra i prodotti con toPrepare = true
             productDTOs = order.getProductsInPurchase().stream()
                     .filter(ProductInPurchase::isToPrepare).map(this::convertProductPurchaseToDTO)
@@ -271,7 +250,8 @@ public class ActiveOrderService {
             dto.setBundles(bundleDTOs);
             return;
         }
-        if (roles.contains("customer")){
+        else if (roles.contains("customer")){
+            //TODO mapActiveOrderToSummaryEmail unire i prodotti uguali aumentato quantità, consiglio di creare un nuovo metodo o controllare con i ruoli
             productDTOs = order.getProductsInPurchase().stream()
                     .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
                     .collect(Collectors.toList());

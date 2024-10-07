@@ -365,11 +365,8 @@ public class CustomerService {
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
                 ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                if (product.isCustomized()) {
                     numSlotRequired += pip.getQuantity();
                     //TODO IF Drip Cake or Torta a Forma controllare se ce ne sono massimo 2
-                }
-
 
             } else if (item instanceof BundleInPurchase) {
                 BundleInPurchase pip = (BundleInPurchase) item;
@@ -901,20 +898,6 @@ public class CustomerService {
         return summaryEmailDTO;
     }
 
-    private SummarySingleItemDTO mapItemInSummary(ItemInPurchase item) {
-        SummarySingleItemDTO summarySingleItemDTO = new SummarySingleItemDTO();
-        summarySingleItemDTO.setQuantity(item.getQuantity());
-        summarySingleItemDTO.setPrice(item.getTotalPrice());
-        if (item instanceof ProductInPurchase){
-            ProductKgAPA product = productKgRepository.findById(item.getId()).get();
-            summarySingleItemDTO.setName(product.getName());
-        }
-        if (item instanceof BundleInPurchase){
-            Tray tray = trayRepository.findById(item.getId()).get();
-            summarySingleItemDTO.setName(tray.getName());
-        }
-        return summarySingleItemDTO;
-    }
 
     private Optional<CustomerAPA> getByIdFromDb(String idCustomer){
         return customerRepository.findById(idCustomer);
