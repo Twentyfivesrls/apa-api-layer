@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         return  new ResponseEntity<>(apiError,HttpStatus.UNAUTHORIZED);
     }
     @ExceptionHandler(InvalidKeycloakIdRequestException.class)
-    public ResponseEntity<ApiError> handleInvalidOrderTimeException (InvalidKeycloakIdRequestException ex) {
+    public ResponseEntity<ApiError> handleInvalidOrderTimeException (InvalidOrderTimeException ex) {
         ApiError apiError = new ApiError(HttpStatus.I_AM_A_TEAPOT, "L'orario non è più disponibile! " + ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError, HttpStatus.I_AM_A_TEAPOT);
     }
