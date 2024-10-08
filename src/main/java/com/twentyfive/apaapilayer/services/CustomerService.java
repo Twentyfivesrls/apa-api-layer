@@ -7,6 +7,7 @@ import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.exceptions.InvalidOrderTimeException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
@@ -280,6 +281,8 @@ public class CustomerService {
                 if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
+                } else {
+                    throw new InvalidOrderTimeException();
                 }
                 timeSlotAPARepository.save(timeSlotAPA);
                 customerRepository.save(customer);

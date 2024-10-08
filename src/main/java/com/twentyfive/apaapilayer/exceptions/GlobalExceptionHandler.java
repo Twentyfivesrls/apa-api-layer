@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.apache.kafka.common.requests.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +55,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleInvalidKeycloakIdRequestException (InvalidKeycloakIdRequestException ex){
         ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,"Impossibile modificare un customer che non sia quello che ha fatto richiesta! " +ex.getClass().getSimpleName());
         return  new ResponseEntity<>(apiError,HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(InvalidKeycloakIdRequestException.class)
+    public ResponseEntity<ApiError> handleInvalidOrderTimeException (InvalidKeycloakIdRequestException ex) {
+        ApiError apiError = new ApiError(HttpStatus.I_AM_A_TEAPOT, "L'orario non è più disponibile! " + ex.getClass().getSimpleName());
+        return new ResponseEntity<>(apiError, HttpStatus.I_AM_A_TEAPOT);
     }
     @Data
     @AllArgsConstructor
