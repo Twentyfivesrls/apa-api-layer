@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,"Impossibile modificare un customer che non sia quello che ha fatto richiesta! " +ex.getClass().getSimpleName());
         return  new ResponseEntity<>(apiError,HttpStatus.UNAUTHORIZED);
     }
-    @ExceptionHandler(InvalidKeycloakIdRequestException.class)
+    @ExceptionHandler(InvalidOrderTimeException.class)
     public ResponseEntity<ApiError> handleInvalidOrderTimeException (InvalidOrderTimeException ex) {
         ApiError apiError = new ApiError(HttpStatus.I_AM_A_TEAPOT, "L'orario non è più disponibile! " + ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError, HttpStatus.I_AM_A_TEAPOT);
