@@ -14,6 +14,7 @@ import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleOrderRequest;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -142,16 +143,10 @@ public class CartController {
 
     }
     @PostMapping("/buy-from-cart/{id}")
-    public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
-        try {
-            // Converti la lista di stringhe in interi
-            boolean result = customerService.buyItems(id, buyInfos);
-            return ResponseEntity.ok(result);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(false); // In caso di formato non valido
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build(); // Gestisci altre eccezioni in modo generico
-        }
+    public ResponseEntity<Boolean> buyMultiple(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) throws IOException {
+        // Converti la lista di stringhe in interi
+        boolean result = customerService.buyItems(id, buyInfos);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/summary/{id}")
