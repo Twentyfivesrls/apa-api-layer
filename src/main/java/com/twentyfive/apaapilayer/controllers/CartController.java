@@ -153,6 +153,9 @@ public class CartController {
     public ResponseEntity<List<SummarySingleItemDTO>> summary(@PathVariable String id, @RequestBody BuyInfosDTO buyInfos) {
         return ResponseEntity.ok().body(customerService.summary(id, buyInfos));
     }
-
+    @GetMapping("/countCart/{id}")
+    public ResponseEntity<Integer> countCart(@PathVariable String id) {
+        return ResponseEntity.ok().body(customerService.countCart(id));
+    }
 
 }

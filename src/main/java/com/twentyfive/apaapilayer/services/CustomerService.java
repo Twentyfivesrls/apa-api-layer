@@ -897,4 +897,13 @@ public class CustomerService {
     private Optional<CustomerAPA> getByIdFromDb(String idCustomer){
         return customerRepository.findById(idCustomer);
     }
+
+    public Integer countCart(String id) {
+        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+        if(optCustomer.isPresent()){
+            CustomerAPA customerAPA = optCustomer.get();
+            return customerAPA.getCart().getPurchases().size();
+        }
+        return 0;
+    }
 }
