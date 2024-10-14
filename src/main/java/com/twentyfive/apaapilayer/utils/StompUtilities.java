@@ -13,6 +13,7 @@ public class StompUtilities {
     private static final String ADMIN_CHANNEL ="/admin_apa";
     private static final String BAKER_CHANNEL ="/baker_apa";
     private static final String COUNTER_CHANNEL ="/counter_apa";
+    private static final String CUSTOMER_CHANNEL ="/%s";
 
     private static final String DEL_ORDER_MESSAGE="L'ordine di %s con ID %s è stato cancellato!";
     private static final String NEW_ORDER_MESSAGE ="Un nuovo ordine è arrivato!";
@@ -80,6 +81,13 @@ public class StompUtilities {
         String bakerMessage = String.format(UPDATE_BAKER_MESSAGE,idOrder,location);
         StompMessage stompMessage = new StompMessage(bakerMessage,true);
         TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(BAKER_CHANNEL,stompMessage);
+        return twentyfiveMessage;
+    }
+
+    public static TwentyfiveMessage sendCustomerNotification(String id) {
+        String customerTopic = String.format(CUSTOMER_ORDER_CHANNEL,id);
+        String message = "updateCart";
+        TwentyfiveMessage twentyfiveMessage = new TwentyfiveMessage(customerTopic,message);
         return twentyfiveMessage;
     }
 }

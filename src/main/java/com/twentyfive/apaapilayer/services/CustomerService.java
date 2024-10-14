@@ -595,6 +595,8 @@ public class CustomerService {
         }
 
         customerRepository.save(customer);
+        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customer.getId());
+        stompClientController.sendObjectMessage(twentyfiveMessage);
         return convertCartToDTO(customer);
     }
 
