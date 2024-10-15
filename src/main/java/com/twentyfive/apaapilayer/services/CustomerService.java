@@ -295,6 +295,7 @@ public class CustomerService {
                     TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminNewNotification();
                     stompClientController.sendObjectMessage(twentyfiveMessage);
                 }
+                sendCustomerNotification(customer.getId());
                 SummaryEmailDTO summaryEmailDTO = mapActiveOrderToSummaryEmail(order);
                 emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmailForNewOrder(firstName,summaryEmailDTO));
                 return true;
@@ -540,6 +541,7 @@ public class CustomerService {
         else {
             Cart cart=customer.getCart();
             cart.removeItemsAtPositions(positions);
+            sendCustomerNotification(customer.getId());
             customerRepository.save(customer);
             return convertCartToDTO(customer);
         }
@@ -593,10 +595,8 @@ public class CustomerService {
             product.setTotalPrice(calculateTotalPrice(product, productKg.getPricePerKg()));
             cart.getPurchases().add(product);
         }
-
+        sendCustomerNotification(customer.getId());
         customerRepository.save(customer);
-        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customer.getId());
-        stompClientController.sendObjectMessage(twentyfiveMessage);
         return convertCartToDTO(customer);
     }
 
@@ -638,7 +638,7 @@ public class CustomerService {
             bundle.setTotalPrice(calculateTotalPrice(bundle, tray.getPricePerKg()));
             cart.getPurchases().add(bundle);
         }
-
+        sendCustomerNotification(customer.getId());
         customerRepository.save(customer);
         return convertCartToDTO(customer);
     }
@@ -907,5 +907,10 @@ public class CustomerService {
             return customerAPA.getCart().getPurchases().size();
         }
         return 0;
+    }
+
+    private void sendCustomerNotification(String customerId){
+        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customerId);
+        stompClientController.sendObjectMessage(twentyfiveMessage);
     }
 }
