@@ -74,7 +74,7 @@ public class TimeSlotRefreshScheduling {
             DateRange dateRange =settingAPA.getBusinessHours();
             LocalTime slots =dateRange.getStartTime();
             Map<LocalTime,Integer> timeSlots = new TreeMap<>();
-            while(slots.isBefore(dateRange.getEndTime())){
+            while(!slots.isAfter(dateRange.getEndTime())) {
                 if(slots.isBefore(LocalTime.of(14,0))){
                     timeSlots.put(slots, settingAPA.getMaxMorningOrder());
                 } else {
