@@ -25,6 +25,7 @@ import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleItem;
 import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
@@ -683,28 +684,30 @@ public class CustomerService {
         Integer minDelay = settingRepository.findAll().get(0).getMinOrderDelay();
         List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
         int numSlotRequired = 0;
-        boolean somethingCustomized = false;
         boolean bigSemifreddo = false;
-
+        boolean customizedSemifreddo = false;
+        boolean longWait = false;
         for (ItemInPurchase item : items) {
-            if (item instanceof ProductInPurchase) {
-                ProductInPurchase pip = (ProductInPurchase) item;
-                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                numSlotRequired += pip.getQuantity();
-                if (product.isCustomized()) {
-                    somethingCustomized = true;
+            numSlotRequired += item.getQuantity();
+            if(item instanceof ProductInPurchase){
+                ProductInPurchase pIP = (ProductInPurchase) item;
+                ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
+                Category category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                String categoryName = category.getName();
+                if(categoryName.equals("Semifreddi")){
+                    if (pIP.getWeight()>=1.5){
+                        bigSemifreddo = true;
+                    } else if (!(pIP.getCustomization().isEmpty())){
+                        customizedSemifreddo = true;
+                    }
+                } else {
+                    longWait = true;
                 }
-                if (categoryRepository.findById(product.getCategoryId()).orElseThrow(InvalidCategoryException::new).getName().equals("Semifreddo")) {
-                    double weight = pip.getWeight();
-                    if (weight >= 1.5) bigSemifreddo = true;
-                }
-
-            } else if (item instanceof BundleInPurchase) {
-                BundleInPurchase pip = (BundleInPurchase) item;
-                Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                if (tray.isCustomized()) {
-                    numSlotRequired += pip.getQuantity();
-                    somethingCustomized = true;
+            }
+            if(item instanceof BundleInPurchase){
+                Tray tray = trayRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
+                if (tray.isCustomized()){
+                    longWait = true;
                 }
             }
         }
@@ -715,21 +718,30 @@ public class CustomerService {
         LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
         LocalDateTime minStartingDate;
 
-        if (bigSemifreddo) minDelay = 48;
-
-        if (!now.isBefore(startTime) && now.isBefore(endTime)) {  // richiesta fatta in orario lavorativo
-            if (!somethingCustomized) {
-                minStartingDate = LocalDateTime.now().plusHours(minDelay);
+        if(!bigSemifreddo){
+            if (!now.isBefore(startTime) && now.isBefore(endTime)) {// richiesta fatta in orario lavorativo
+                if (customizedSemifreddo){
+                    if (now.isAfter(LocalTime.of(14,0))){
+                        minStartingDate = next(8);
+                    } else {
+                        minStartingDate = LocalDateTime.now().plusHours(minDelay);
+                    }
+                } else if (longWait){
+                    minStartingDate = next(9);
+                } else {
+                    minStartingDate = LocalDateTime.now().plusHours(minDelay);  // fallback se customizedSemifreddo e longWait sono falsi
+                }
             } else {
-                minStartingDate = next(8).plusHours(minDelay);  // Gestione orari personalizzati
+                if (!longWait) {
+                    minStartingDate = next(8);
+                } else {
+                    minStartingDate = next(12);  // Gestione orari personalizzati fuori dall'orario lavorativo
+                }
             }
         } else {
-            if (!somethingCustomized) {
-                minStartingDate = next(8).plusHours(minDelay);
-            } else {
-                minStartingDate = next(12).plusHours(minDelay);  // Gestione orari personalizzati fuori dall'orario lavorativo
-            }
+            minStartingDate = LocalDateTime.now().plusHours(48); //Semifreddi superiori agli 1.5kg
         }
+
 
         // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
         Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
