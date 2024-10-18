@@ -544,6 +544,8 @@ public class CustomerService {
             cart.removeItemsAtPositions(positions);
             sendCustomerNotification(customer.getId());
             customerRepository.save(customer);
+            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customer.getId());
+            stompClientController.sendObjectMessage(twentyfiveMessage);
             return convertCartToDTO(customer);
         }
         throw new IllegalStateException("No cart available for this customer or invalid positions");
