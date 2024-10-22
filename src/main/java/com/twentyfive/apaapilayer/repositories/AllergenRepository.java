@@ -5,9 +5,13 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface AllergenRepository extends MongoRepository<Allergen,String> {
     Optional<Allergen> findByName(String name);
+
+    List<Allergen> findByNameIn(List<String> allergenNames);
 }

@@ -32,13 +32,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidItemException.class)
     public ResponseEntity<ApiError> handleIllegalItem (InvalidItemException ex){
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "l'item selezionato non esiste"+ex);
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "l'item selezionato non esiste! "+ex.getClass().getSimpleName());
         return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidCategoryException.class)
     public ResponseEntity<ApiError> handleIllegalCategory (InvalidCategoryException ex){
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "la categoria non esiste"+ex);
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "la categoria non esiste! "+ex.getClass().getSimpleName());
         return  new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(ExistingFieldException.class)
