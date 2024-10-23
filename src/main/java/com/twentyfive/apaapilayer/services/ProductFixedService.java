@@ -2,7 +2,6 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
-import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.mappers.IngredientMapperService;
 import com.twentyfive.apaapilayer.mappers.ProductMapperService;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.ProductFixed;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.*;
@@ -52,7 +50,7 @@ public class ProductFixedService {
     }
 
     public Page<ProductFixedAPADTO> getAllActive(String idCategory, int page, int size) {
-        List<ProductFixedAPA> products = productFixedRepository.findAllByCategoryIdAndActiveTrueAndCustomizedFalseAndSoftDeletedFalse(idCategory);
+        List<ProductFixedAPA> products = productFixedRepository.findAllByCategoryIdAndActiveTrueAndSoftDeletedFalse(idCategory);
 
         // Ordinare prima per buyingCount e poi per name
         products = products.stream()

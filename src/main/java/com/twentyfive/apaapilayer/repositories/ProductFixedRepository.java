@@ -10,5 +10,5 @@ import java.util.List;
 public interface ProductFixedRepository extends MongoRepository<ProductFixedAPA, String> {
 
     List<ProductFixedAPA> findAllByCategoryIdAndSoftDeletedFalse(String categoryId);
-    List<ProductFixedAPA> findAllByCategoryIdAndActiveTrueAndCustomizedFalseAndSoftDeletedFalse(String categoryId);
+    List<ProductFixedAPA> findAllByCategoryIdAndActiveTrueAndSoftDeletedFalse(String categoryId);
 }
