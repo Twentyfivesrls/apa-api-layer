@@ -125,7 +125,7 @@ public class ProductFixedService {
         List<ProductFixedAPADTO> dtos = new ArrayList<>();
         for (ProductFixedAPA productFixedAPA : productsFixed) {
             List<IngredientAPA> ingredients = ingredientRepository.findByIdIn(productFixedAPA.getIngredientIds());
-            String ingredientNames = ingredientMapperService.ingredientsIdToIngredientsName(ingredients);
+            List<String> ingredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(ingredients);
             Set<Allergen> allergens = new HashSet<>();
             for (IngredientAPA ingredient : ingredients) {
                 List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());

@@ -16,7 +16,7 @@ public class ProductFixedAPADTO {
     private String name;
     private String description;
     private Set<Allergen> allergens;
-    private String ingredientsName;
+    private List<String> ingredients;
     private double realPrice;
     private String price;
     private String imageUrl;

@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.mappers;
 
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
+import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductFixedAPA;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -12,14 +13,14 @@ import java.util.Set;
 @Service
 public class ProductMapperService {
 
-    public ProductFixedAPADTO fixedAPAToDTO(ProductFixedAPA productFixed, String ingredientsName, Set<Allergen> allergens) {
+    public ProductFixedAPADTO fixedAPAToDTO(ProductFixedAPA productFixed, List<String> ingredients, Set<Allergen> allergens) {
         String realPrice = "€ " + productFixed.getPrice();
         return new ProductFixedAPADTO(
                 productFixed.getId(),
                 productFixed.getName(),
                 productFixed.getDescription(),
                 allergens,
-                ingredientsName,
+                ingredients,
                 productFixed.getPrice(),
                 realPrice,
                 productFixed.getImageUrl(),
