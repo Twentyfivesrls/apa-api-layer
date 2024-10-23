@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -13,9 +14,12 @@ import java.util.Set;
 public class ProductFixedAPADTO {
     private String id;
     private String name;
+    private String description;
     private Set<Allergen> allergens;
+    private List<String> ingredients;
     private String ingredientsName;
     private double realPrice;
     private String price;
+    private String imageUrl;
     private boolean active;
 }
