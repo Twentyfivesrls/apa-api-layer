@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.models.ProductFixedAPA;
 import com.twentyfive.apaapilayer.services.ProductFixedService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,13 @@ public class ProductFixedController {
     ){
         return ResponseEntity.ok().body(productFixedService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
-
+    @GetMapping("/getAllActive")
+    public ResponseEntity<Page<ProductFixedAPADTO>> getAllActive(
+            @RequestParam("idCategory")String idCategory,
+            @RequestParam(value = "page", defaultValue ="0") int page,
+            @RequestParam(value = "size", defaultValue ="9") int size){
+        return ResponseEntity.ok().body(productFixedService.getAllActive(idCategory,page,size));
+    }
     @GetMapping("/getById/{id}")
     public ResponseEntity<ProductFixedAPADetailsDTO> findById(@PathVariable("id") String id){
         return ResponseEntity.ok().body(productFixedService.getById(id));

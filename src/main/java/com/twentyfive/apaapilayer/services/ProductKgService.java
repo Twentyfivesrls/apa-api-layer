@@ -154,10 +154,8 @@ public class ProductKgService {
                 .collect(Collectors.toList());
         List<ProductKgAPADTO> realProductsKg = new ArrayList<>();
         for(ProductKgAPA p : productsKg){
-            if(p!=null) {
-                ProductKgAPADTO dto = productsKgToDTO(p);
-                realProductsKg.add(dto);
-            }
+            ProductKgAPADTO dto = productsKgToDTO(p);
+            realProductsKg.add(dto);
         }
         Pageable pageable=PageRequest.of(page,size);
         return PageUtilities.convertListToPage(realProductsKg,pageable);
