@@ -166,7 +166,6 @@ public class ProductKgService {
     public String getImageUrl(String id) {
         ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
         return productKgAPA.getImageUrl();
-
     }
 
     public boolean deleteById(String id) {

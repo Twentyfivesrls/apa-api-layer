@@ -7,9 +7,11 @@ import com.twentyfive.apaapilayer.mappers.IngredientMapperService;
 import com.twentyfive.apaapilayer.mappers.ProductMapperService;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductFixedAPA;
+import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductFixedRepository;
+import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,7 @@ import java.util.*;
 public class ProductFixedService {
 
     private final ProductFixedRepository productFixedRepository;
+    private final ProductStatRepository productStatRepository;
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
 
@@ -69,5 +72,44 @@ public class ProductFixedService {
             return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergenNames);
         }
         throw new InvalidItemException();
+    }
+
+    public ProductFixedAPA save(ProductFixedAPA p) {
+        if (p.getId() == null){
+            ProductStatAPA pStat=new ProductStatAPA("productFixed");
+            p.setStats(pStat);
+            productStatRepository.save(pStat);
+        }
+        return productFixedRepository.save(p);
+    }
+
+    public Boolean deleteById(String id) {
+        Optional<ProductFixedAPA> optProduct = productFixedRepository.findById(id);
+        if(optProduct.isPresent()){
+            ProductFixedAPA product = optProduct.get();
+            product.setSoftDeleted(true);
+            productFixedRepository.save(product);
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean toggleById(String id) {
+        Optional<ProductFixedAPA> optProduct = productFixedRepository.findById(id);
+        if(optProduct.isPresent()){
+            ProductFixedAPA product = optProduct.get();
+            product.setActive(!product.isActive());
+            productFixedRepository.save(product);
+            return true;
+        }
+        return false;
+    }
+
+    public String getImageUrl(String id) {
+        Optional<ProductFixedAPA> optProduct = productFixedRepository.findById(id);
+        if(optProduct.isPresent()){
+            return optProduct.get().getImageUrl();
+        }
+        return null;
     }
 }

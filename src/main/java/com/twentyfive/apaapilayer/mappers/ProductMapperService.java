@@ -27,11 +27,13 @@ public class ProductMapperService {
 
     public ProductFixedAPADetailsDTO fixedAPAToDetailsDTO(ProductFixedAPA productFixed,List<String> ingredientNames, Set<String> allergenNames) {
         String realPrice = "€ " + productFixed.getPrice();
+        String realWeight = productFixed.getWeight() + " Kg";
         return new ProductFixedAPADetailsDTO(
                 productFixed.getId(),
                 allergenNames,
                 ingredientNames,
                 realPrice,
+                realWeight,
                 productFixed.getImageUrl()
         );
     }
