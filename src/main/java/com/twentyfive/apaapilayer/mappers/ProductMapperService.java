@@ -17,10 +17,12 @@ public class ProductMapperService {
         return new ProductFixedAPADTO(
                 productFixed.getId(),
                 productFixed.getName(),
+                productFixed.getDescription(),
                 allergens,
                 ingredientsName,
                 productFixed.getPrice(),
                 realPrice,
+                productFixed.getImageUrl(),
                 productFixed.isActive()
         );
     }
