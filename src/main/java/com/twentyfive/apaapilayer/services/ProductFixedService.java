@@ -80,24 +80,25 @@ public class ProductFixedService {
                 allergens.addAll(allergensList);
             }
             List<CustomizableIngredientDTO> customizableIngredientsWithCategory = new ArrayList<>();
-            for (CustomizableIngredient possibleCustomization : product.getPossibleCustomizations()) {
-                Optional<CategoryAPA> optCategory = categoryRepository.findById(possibleCustomization.getId());
-                if(optCategory.isPresent()){
-                    CategoryAPA category = optCategory.get();
-                    CustomizableIngredientDTO dto = new CustomizableIngredientDTO();
-                    List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
-                    List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
-                    customizableIngredients.removeAll(excludedIngredients);
-                    List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
-                    dto.setId(possibleCustomization.getId());
-                    dto.setName(category.getName());
-                    dto.setIngredientNames(customizableIngredientNames);
-                    dto.setMaxCustomizable(possibleCustomization.getMaxCustomizable());
-                    customizableIngredientsWithCategory.add(dto);
+            if(product.getPossibleCustomizations() != null){
+                for (CustomizableIngredient possibleCustomization : product.getPossibleCustomizations()) {
+                    Optional<CategoryAPA> optCategory = categoryRepository.findById(possibleCustomization.getId());
+                    if(optCategory.isPresent()){
+                        CategoryAPA category = optCategory.get();
+                        CustomizableIngredientDTO dto = new CustomizableIngredientDTO();
+                        List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
+                        List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
+                        customizableIngredients.removeAll(excludedIngredients);
+                        List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
+                        dto.setId(possibleCustomization.getId());
+                        dto.setName(category.getName());
+                        dto.setIngredientNames(customizableIngredientNames);
+                        dto.setMaxCustomizable(possibleCustomization.getMaxCustomizable());
+                        customizableIngredientsWithCategory.add(dto);
+                    }
+
                 }
-
             }
-
             return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory);
         }
         throw new InvalidItemException();
