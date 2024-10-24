@@ -59,6 +59,7 @@ public class CustomerService {
 
     private final TrayRepository trayRepository;
     private final ActiveOrderRepository activeOrdersRepository;
+    private final ProductFixedRepository productFixedRepository;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -95,7 +96,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository,ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -113,6 +114,7 @@ public class CustomerService {
         this.categoryRepository = categoryRepository;
         this.trayRepository = trayRepository;
         this.activeOrdersRepository= activeOrderRepository;
+        this.productFixedRepository = productFixedRepository;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection) {
@@ -571,7 +573,14 @@ public class CustomerService {
     @Transactional
     public CartDTO addToCartProduct(String customerId, ProductInPurchase product) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-        ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        double price = 0;
+        if (product.isFixed()){
+            ProductFixedAPA productFixedAPA = productFixedRepository.findById(product.getId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+            price = productFixedAPA.getPrice();
+        } else {
+            ProductKgAPA productKg = productKgRepository.findById(product.getId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+            price = productKg.getPricePerKg();
+        }
         Cart cart = customer.getCart();
         Optional<ItemInPurchase> existingItem = cart.getPurchases().stream()
                 .filter(pip -> pip.equals(product))
@@ -580,9 +589,9 @@ public class CustomerService {
         if (existingItem.isPresent()) {
             ProductInPurchase existingProduct = (ProductInPurchase) existingItem.get();
             existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
-            existingProduct.setTotalPrice(calculateTotalPrice(existingProduct, productKg.getPricePerKg()));
+            existingProduct.setTotalPrice(calculateTotalPrice(existingProduct, price));
         } else {
-            if(productKg.isCustomized()){
+            if(product.getCustomization() != null){
                 List<Allergen> allergens = new ArrayList<>();
                 for(Customization customization : product.getCustomization()){
                     for(String value: customization.getValue()){
@@ -595,7 +604,7 @@ public class CustomerService {
                 }
                 product.setAllergens(allergens);
             }
-            product.setTotalPrice(calculateTotalPrice(product, productKg.getPricePerKg()));
+            product.setTotalPrice(calculateTotalPrice(product, price));
             cart.getPurchases().add(product);
         }
         sendCustomerNotification(customer.getId());
@@ -646,15 +655,17 @@ public class CustomerService {
         return convertCartToDTO(customer);
     }
 
-    public double calculateTotalPrice(ItemInPurchase item, double pricePerKg) {
+    public double calculateTotalPrice(ItemInPurchase item, double price) {
         if (item instanceof ProductInPurchase) {
             ProductInPurchase product = (ProductInPurchase) item;
             double totalPrice;
 
             if (product.getTotalPrice() != 0) {
-                totalPrice = product.getTotalPrice();
+                totalPrice = product.getTotalPrice(); //Semmai dovessimo passare da fe totalPrice
+            } else if (!(product.isFixed())) { // prezzo al kg
+                totalPrice = product.getQuantity() * (price * product.getWeight());
             } else {
-                totalPrice = product.getQuantity() * (pricePerKg * product.getWeight());
+                totalPrice = product.getQuantity() * price; //prezzo fisso
             }
 
             if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
@@ -664,7 +675,7 @@ public class CustomerService {
 
         } else if (item instanceof BundleInPurchase) {
             BundleInPurchase bundle = (BundleInPurchase) item;
-            return bundle.getQuantity() * (pricePerKg * bundle.getMeasure().getWeight());
+            return bundle.getQuantity() * (price * bundle.getMeasure().getWeight());
         }
         throw new IllegalArgumentException("Unknown item type");
     }
