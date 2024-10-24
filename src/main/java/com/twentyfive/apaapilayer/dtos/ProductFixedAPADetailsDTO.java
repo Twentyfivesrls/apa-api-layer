@@ -19,6 +19,7 @@ public class ProductFixedAPADetailsDTO {
     private ProductStatAPA stats;
     private Set<Allergen> allergens;
     private List<String> ingredients;
+    private List<CustomizableIngredientDTO> customizableIngredients;
     private String price;
     private String weight;
     private String imageUrl;

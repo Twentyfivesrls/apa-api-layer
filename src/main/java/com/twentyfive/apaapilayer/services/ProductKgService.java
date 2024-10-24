@@ -60,6 +60,7 @@ public class ProductKgService {
         dto.setDescription(product.getDescription());
         dto.setWeightRange(product.getWeightRange());
         dto.setCustomized(product.isCustomized());
+
         return dto;
     }
 

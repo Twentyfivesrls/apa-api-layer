@@ -1,17 +1,16 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.mappers.IngredientMapperService;
 import com.twentyfive.apaapilayer.mappers.ProductMapperService;
+import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductFixedAPA;
 import com.twentyfive.apaapilayer.models.ProductStatAPA;
-import com.twentyfive.apaapilayer.repositories.AllergenRepository;
-import com.twentyfive.apaapilayer.repositories.IngredientRepository;
-import com.twentyfive.apaapilayer.repositories.ProductFixedRepository;
-import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
+import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.*;
@@ -35,6 +35,7 @@ public class ProductFixedService {
 
     private final ProductMapperService productMapperService;
     private final IngredientMapperService ingredientMapperService;
+    private final CategoryRepository categoryRepository;
 
     public Page<ProductFixedAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection) {
         List<ProductFixedAPA> productsFixed = productFixedRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
@@ -78,7 +79,26 @@ public class ProductFixedService {
                 List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());
                 allergens.addAll(allergensList);
             }
-            return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergens);
+            List<CustomizableIngredientDTO> customizableIngredientsWithCategory = new ArrayList<>();
+            for (CustomizableIngredient possibleCustomization : product.getPossibleCustomizations()) {
+                Optional<CategoryAPA> optCategory = categoryRepository.findById(possibleCustomization.getId());
+                if(optCategory.isPresent()){
+                    CategoryAPA category = optCategory.get();
+                    CustomizableIngredientDTO dto = new CustomizableIngredientDTO();
+                    List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
+                    List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
+                    customizableIngredients.removeAll(excludedIngredients);
+                    List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
+                    dto.setId(possibleCustomization.getId());
+                    dto.setName(category.getName());
+                    dto.setIngredientNames(customizableIngredientNames);
+                    dto.setMaxCustomizable(possibleCustomization.getMaxCustomizable());
+                    customizableIngredientsWithCategory.add(dto);
+                }
+
+            }
+
+            return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory);
         }
         throw new InvalidItemException();
     }
@@ -132,6 +152,7 @@ public class ProductFixedService {
                 List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());
                 allergens.addAll(allergensList);
             }
+
             ProductFixedAPADTO productFixedAPADTO = productMapperService.fixedAPAToDTO(productFixedAPA,ingredientNames,allergens);
             dtos.add(productFixedAPADTO);
         }

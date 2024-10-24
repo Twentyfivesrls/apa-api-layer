@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.mappers;
 
+import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
@@ -28,7 +29,7 @@ public class ProductMapperService {
         );
     }
 
-    public ProductFixedAPADetailsDTO fixedAPAToDetailsDTO(ProductFixedAPA productFixed,List<String> ingredients, Set<Allergen> allergens) {
+    public ProductFixedAPADetailsDTO fixedAPAToDetailsDTO(ProductFixedAPA productFixed,List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredient) {
         String realPrice = "€ " + productFixed.getPrice();
         String realWeight ="Kg " + productFixed.getWeight();
         return new ProductFixedAPADetailsDTO(
@@ -38,6 +39,7 @@ public class ProductMapperService {
                 productFixed.getStats(),
                 allergens,
                 ingredients,
+                customizableIngredient,
                 realPrice,
                 realWeight,
                 productFixed.getImageUrl()
