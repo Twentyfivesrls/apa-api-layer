@@ -73,11 +73,12 @@ public class ProductFixedService {
             ProductFixedAPA product = optProductFixedAPA.get();
             List<IngredientAPA> ingredients = ingredientRepository.findByIdIn(product.getIngredientIds());
             List<String> ingredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(ingredients);
-            Set<String> allergenNames = new HashSet<>();
+            Set<Allergen> allergens = new HashSet<>();
             for (IngredientAPA ingredient : ingredients) {
-                allergenNames.addAll(ingredient.getAllergenNames()); // Aggiunge solo se non presente
+                List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());
+                allergens.addAll(allergensList);
             }
-            return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergenNames);
+            return productMapperService.fixedAPAToDetailsDTO(product,ingredientNames,allergens);
         }
         throw new InvalidItemException();
     }
