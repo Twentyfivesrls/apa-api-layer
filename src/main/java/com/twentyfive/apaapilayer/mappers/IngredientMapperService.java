@@ -1,7 +1,9 @@
 package com.twentyfive.apaapilayer.mappers;
 
+import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import org.springframework.stereotype.Service;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,4 +22,14 @@ public class IngredientMapperService {
                 .map(IngredientAPA::getName)  // Supponendo che il nome dell'ingrediente sia ottenuto con getName()
                 .collect(Collectors.toList());
     }
+
+    public CustomizableIngredientDTO mapCustomizableIngredientToCustomizableIngredientDTO(CustomizableIngredient possibleCustomization, String name, List<String> customizableIngredientNames) {
+        return new CustomizableIngredientDTO(
+                possibleCustomization.getId(),
+                name,
+                customizableIngredientNames,
+                possibleCustomization.getMaxCustomizable()
+        );
+    }
+
 }

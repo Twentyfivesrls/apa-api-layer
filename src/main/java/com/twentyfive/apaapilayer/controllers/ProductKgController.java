@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.services.ProductKgService;
@@ -38,7 +39,7 @@ public class ProductKgController {
         return ResponseEntity.ok().body(productkgService.getAllActive(idCategory,page,size));
     }
     @GetMapping("/getById/{id}")
-    public ResponseEntity<ProductKgAPADTO> getById(@PathVariable String id) {
+    public ResponseEntity<ProductKgAPADetailsDTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(productkgService.getById(id));
     }
 

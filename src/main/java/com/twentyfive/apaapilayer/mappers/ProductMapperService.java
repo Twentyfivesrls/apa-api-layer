@@ -3,8 +3,10 @@ package com.twentyfive.apaapilayer.mappers;
 import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADetailsDTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductFixedAPA;
+import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
@@ -29,7 +31,7 @@ public class ProductMapperService {
         );
     }
 
-    public ProductFixedAPADetailsDTO fixedAPAToDetailsDTO(ProductFixedAPA productFixed,List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredient) {
+    public ProductFixedAPADetailsDTO fixedAPAToDetailsDTO(ProductFixedAPA productFixed,List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredients) {
         String realPrice = "€ " + productFixed.getPrice();
         String realWeight ="Kg " + productFixed.getWeight();
         return new ProductFixedAPADetailsDTO(
@@ -39,10 +41,26 @@ public class ProductMapperService {
                 productFixed.getStats(),
                 allergens,
                 ingredients,
-                customizableIngredient,
+                customizableIngredients,
                 realPrice,
                 realWeight,
                 productFixed.getImageUrl()
+        );
+    }
+
+    public ProductKgAPADetailsDTO kgAPAToDetailsDTO(ProductKgAPA product, List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredients) {
+        String realPrice = "€ " + product.getPricePerKg();
+        return new ProductKgAPADetailsDTO(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getStats(),
+                allergens,
+                ingredients,
+                customizableIngredients,
+                realPrice,
+                product.getWeightRange(),
+                product.getImageUrl()
         );
     }
 }

@@ -1,13 +1,16 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADetailsDTO;
+import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.mappers.IngredientMapperService;
+import com.twentyfive.apaapilayer.mappers.ProductMapperService;
+import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductStatAPA;
-import com.twentyfive.apaapilayer.repositories.AllergenRepository;
-import com.twentyfive.apaapilayer.repositories.IngredientRepository;
-import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
-import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
+import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,11 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -29,8 +31,12 @@ public class ProductKgService {
 
     private final ProductKgRepository productKgRepository;
     private final IngredientRepository ingredientRepository;
+    private final CategoryRepository categoryRepository;
     private final AllergenRepository allergenRepository;
     private final ProductStatRepository productStatRepository;
+
+    private final IngredientMapperService ingredientMapperService;
+    private final ProductMapperService productMapperService;
 
     private ProductKgAPADTO productsKgToDTO(ProductKgAPA product){
         ProductKgAPADTO dto = new ProductKgAPADTO();
@@ -84,11 +90,36 @@ public class ProductKgService {
     }
 
 
-    public ProductKgAPADTO getById(String id) {
-        ProductKgAPA productKgAPA = productKgRepository.findById(id).orElse(null);
-        if(productKgAPA==null)
-            return null;
-        return productsKgToDTO(productKgAPA);
+    public ProductKgAPADetailsDTO getById(String id) {
+        Optional<ProductKgAPA> optProduct = productKgRepository.findById(id);
+        if(optProduct.isPresent()) {
+            ProductKgAPA product = optProduct.get();
+            List<IngredientAPA> ingredients = ingredientRepository.findByIdIn(product.getIngredientIds());
+            List<String> ingredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(ingredients);
+            Set<Allergen> allergens = new HashSet<>();
+            for (IngredientAPA ingredient : ingredients) {
+                List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());
+                allergens.addAll(allergensList);
+            }
+            List<CustomizableIngredientDTO> customizableIngredientsWithCategory = new ArrayList<>();
+            if(product.getPossibleCustomizations() != null){
+                for (CustomizableIngredient possibleCustomization : product.getPossibleCustomizations()) {
+                    Optional<CategoryAPA> optCategory = categoryRepository.findById(possibleCustomization.getId());
+                    if(optCategory.isPresent()){
+                        CategoryAPA category = optCategory.get();
+                        List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
+                        List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
+                        customizableIngredients.removeAll(excludedIngredients);
+                        List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
+                        CustomizableIngredientDTO dto = ingredientMapperService.mapCustomizableIngredientToCustomizableIngredientDTO(possibleCustomization,category.getName(),customizableIngredientNames);
+                        customizableIngredientsWithCategory.add(dto);
+                    }
+
+                }
+            }
+            return productMapperService.kgAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory);
+        }
+        throw new InvalidItemException();
     }
 
     @Transactional

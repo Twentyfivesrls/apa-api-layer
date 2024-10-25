@@ -85,15 +85,11 @@ public class ProductFixedService {
                     Optional<CategoryAPA> optCategory = categoryRepository.findById(possibleCustomization.getId());
                     if(optCategory.isPresent()){
                         CategoryAPA category = optCategory.get();
-                        CustomizableIngredientDTO dto = new CustomizableIngredientDTO();
                         List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
                         List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
                         customizableIngredients.removeAll(excludedIngredients);
                         List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
-                        dto.setId(possibleCustomization.getId());
-                        dto.setName(category.getName());
-                        dto.setIngredientNames(customizableIngredientNames);
-                        dto.setMaxCustomizable(possibleCustomization.getMaxCustomizable());
+                        CustomizableIngredientDTO dto = ingredientMapperService.mapCustomizableIngredientToCustomizableIngredientDTO(possibleCustomization,category.getName(),customizableIngredientNames);
                         customizableIngredientsWithCategory.add(dto);
                     }
 
