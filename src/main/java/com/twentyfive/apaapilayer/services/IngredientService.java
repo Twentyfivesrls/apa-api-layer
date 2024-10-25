@@ -1,7 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
-import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
+import com.twentyfive.apaapilayer.dtos.IngredientAPADTO;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
@@ -35,8 +35,8 @@ public class IngredientService {
     private final MongoTemplate mongoTemplate;
 
 
-    private IngredientsAPADTO ingredientsToDTO(IngredientAPA ingredient){
-        IngredientsAPADTO dto = new IngredientsAPADTO();
+    private IngredientAPADTO ingredientsToDTO(IngredientAPA ingredient){
+        IngredientAPADTO dto = new IngredientAPADTO();
         dto.setIdCategory(ingredient.getCategoryId());
         dto.setId(ingredient.getId());
         dto.setName(ingredient.getName());
@@ -56,12 +56,12 @@ public class IngredientService {
         return dto;
     }
 
-    public Page<IngredientsAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn,String sortDirection) {
+    public Page<IngredientAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection) {
         List<IngredientAPA> ingredients = ingredientRepository.findAllByCategoryId(idCategory);
-        List<IngredientsAPADTO> realIngredients = new ArrayList<>();
+        List<IngredientAPADTO> realIngredients = new ArrayList<>();
         for(IngredientAPA ingredient : ingredients){
             if(ingredient!=null) {
-                IngredientsAPADTO dto = ingredientsToDTO(ingredient);
+                IngredientAPADTO dto = ingredientsToDTO(ingredient);
                 realIngredients.add(dto);
             }
         }
@@ -76,7 +76,7 @@ public class IngredientService {
     }
 
 
-    public IngredientsAPADTO getById(String id) {
+    public IngredientAPADTO getById(String id) {
         IngredientAPA ingredientAPA = ingredientRepository.findById(id).orElse(null);
         if(ingredientAPA==null)
             return null;

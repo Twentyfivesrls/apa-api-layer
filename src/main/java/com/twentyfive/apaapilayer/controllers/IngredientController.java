@@ -1,10 +1,9 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
-import com.twentyfive.apaapilayer.dtos.IngredientsAPADTO;
+import com.twentyfive.apaapilayer.dtos.IngredientAPADTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
-import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,11 +24,11 @@ public class IngredientController {
 
     @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAll")
-    public ResponseEntity<Page<IngredientsAPADTO>> findByIdCategory(@RequestParam("idCategory")String idCategory,
-                                                                    @RequestParam(value = "page", defaultValue = "0") int page,
-                                                                    @RequestParam(value = "size", defaultValue = "25") int size,
-                                                                    @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                                    @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
+    public ResponseEntity<Page<IngredientAPADTO>> findByIdCategory(@RequestParam("idCategory")String idCategory,
+                                                                   @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                   @RequestParam(value = "size", defaultValue = "25") int size,
+                                                                   @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
+                                                                   @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
         return ResponseEntity.ok().body(ingredientService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
     }
 
@@ -51,7 +50,7 @@ public class IngredientController {
 
     @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getById/{id}")
-    public ResponseEntity<IngredientsAPADTO> getById(@PathVariable String id) {
+    public ResponseEntity<IngredientAPADTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(ingredientService.getById(id));
     }
 

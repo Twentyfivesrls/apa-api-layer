@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
+import com.twentyfive.apaapilayer.dtos.IngredientMinimalAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
@@ -88,8 +89,8 @@ public class ProductFixedService {
                         List<IngredientAPA> customizableIngredients = ingredientRepository.findAllByCategoryId(possibleCustomization.getId());
                         List<IngredientAPA> excludedIngredients = ingredientRepository.findByIdIn(possibleCustomization.getExcludedIngredientIds());
                         customizableIngredients.removeAll(excludedIngredients);
-                        List<String> customizableIngredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(customizableIngredients);
-                        CustomizableIngredientDTO dto = ingredientMapperService.mapCustomizableIngredientToCustomizableIngredientDTO(possibleCustomization,category.getName(),customizableIngredientNames);
+                        List<IngredientMinimalAPADTO> minimalCustomizableIngredients = ingredientMapperService.mapListIngredientToMinimalListIngredient(customizableIngredients);
+                        CustomizableIngredientDTO dto = ingredientMapperService.mapCustomizableIngredientToCustomizableIngredientDTO(possibleCustomization,category.getName(),minimalCustomizableIngredients);
                         customizableIngredientsWithCategory.add(dto);
                     }
 

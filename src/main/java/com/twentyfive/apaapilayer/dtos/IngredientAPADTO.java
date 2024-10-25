@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class IngredientsAPADTO {
+public class IngredientAPADTO {
     private String id;
     private String name;
     private String idCategory;
