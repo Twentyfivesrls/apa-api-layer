@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.services.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,12 @@ public class CategoryController {
     @GetMapping("/getAll")
     public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndEnable(@RequestParam List<String> types) {
         return ResponseEntity.ok().body(categoryService.getEnabledCategories(types));
+    }
+
+    @PreAuthorize("hasRole('ROLE_admin')")
+    @GetMapping("/getAllMinimal")
+    public ResponseEntity<List<CategoryMinimalDTO>> getAllMinimal(@RequestParam List<String> types) {
+        return ResponseEntity.ok().body(categoryService.getAllMinimal(types));
     }
 
     @PreAuthorize("hasRole('ROLE_admin')")

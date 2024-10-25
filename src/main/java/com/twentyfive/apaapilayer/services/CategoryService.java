@@ -1,5 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
+import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +22,7 @@ import java.util.Optional;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapperService categoryMapperService;
     private final ProductWeightedRepository productWeightedRepository;
     private final ProductKgRepository productKgRepository;
     private final IngredientRepository ingredientRepository;
@@ -26,6 +30,13 @@ public class CategoryService {
 
     public List<CategoryAPA> getEnabledCategories(List<String> types) {
         return categoryRepository.findAllByTypeInAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(types);
+    }
+
+    public List<CategoryMinimalDTO> getAllMinimal(List<String> types) {
+        List<CategoryAPA> allCategory = categoryRepository.findAllByTypeInAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(types);
+        List<CategoryMinimalDTO> dto = categoryMapperService.ListCategoryAPAToListMinimalDTO(allCategory);
+
+        return dto;
     }
 
     public List<CategoryAPA> getDisabledCategories(List<String> types) {
