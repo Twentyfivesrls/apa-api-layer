@@ -38,17 +38,18 @@ public class CompletedOrderService {
     private final EmailService emailService;
 
     private final ProductKgRepository productKgRepository;
-
+    private final ProductFixedRepository productFixedRepository;
     private final TrayRepository trayRepository;
 
     @Autowired
-    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, EmailService emailService, ProductKgRepository productKgRepository, TrayRepository trayRepository) {
+    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, EmailService emailService, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, TrayRepository trayRepository) {
         this.completedOrderRepository= completedOrderRepository;
         this.customerRepository=customerRepository;
         this.activeOrderRepository=activeOrderRepository;
         this.productWeightedRepository = productWeightedRepository;
         this.emailService = emailService;
         this.productKgRepository=productKgRepository;
+        this.productFixedRepository = productFixedRepository;
         this.trayRepository=trayRepository;
     }
 
@@ -149,9 +150,24 @@ public class CompletedOrderService {
     }
 
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
-        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getId());
-        String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
-        return new ProductInPurchaseDTO(productInPurchase, name);
+        String name ="";
+        double price = 0;
+        if(productInPurchase.isFixed()){
+            Optional<ProductFixedAPA> optPFixed = productFixedRepository.findById(productInPurchase.getId());
+            if(optPFixed.isPresent()){
+                ProductFixedAPA productFixed = optPFixed.get();
+                name = productFixed.getName();
+                price = productFixed.getPrice();
+            }
+        } else {
+            Optional<ProductKgAPA> optPkg = productKgRepository.findById(productInPurchase.getId());
+            if(optPkg.isPresent()){
+                ProductKgAPA productKg = optPkg.get();
+                name = productKg.getName();
+                price = productKg.getPricePerKg();
+            }
+        }
+        return new ProductInPurchaseDTO(productInPurchase, name, price);
     }
 
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {

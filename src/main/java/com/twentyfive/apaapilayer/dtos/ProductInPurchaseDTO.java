@@ -19,6 +19,7 @@ import java.util.Map;
 public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private String id;
     private String name;
+    private double price;
     private double weight; // Il peso del prodotto
     private int quantity;
     private String shape; // La forma del prodotto, potrebbe essere meglio come Enum se le forme sono predefinite
@@ -31,11 +32,12 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private double totalPrice;
     private boolean toPrepare;
     private String counterNote; //Nota da bancone, se disponibile
+    private boolean fixed;
 
-
-    public ProductInPurchaseDTO(ProductInPurchase product, String name) {
+    public ProductInPurchaseDTO(ProductInPurchase product, String name, double price) {
         this.id = product.getId();
         this.name = name;
+        this.price = price;
         this.weight = product.getWeight();
         this.quantity = product.getQuantity();
         this.shape = product.getShape();
@@ -48,6 +50,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
         this.totalPrice = product.getTotalPrice();
         this.allergens=product.getAllergens();
         this.counterNote = product.getCounterNote();
+        this.fixed = product.isFixed();
     }
 
 

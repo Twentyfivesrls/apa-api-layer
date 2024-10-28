@@ -530,9 +530,6 @@ public class CustomerService {
 
     public CartDTO getCartById(String customerId) {
         CustomerAPA customer = customerRepository.findById(customerId).orElseThrow(InvalidCustomerIdException::new);
-        if (customer.getCart()==null) {
-            customer.setCart(new Cart());
-        }
         return convertCartToDTO(customer);
     }
 
@@ -704,8 +701,15 @@ public class CustomerService {
             numSlotRequired += item.getQuantity();
             if(item instanceof ProductInPurchase){
                 ProductInPurchase pIP = (ProductInPurchase) item;
-                ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
-                Category category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                Category category;
+                if (pIP.isFixed()){
+                    ProductFixedAPA productFixed = productFixedRepository.findById(pIP.getId()).orElseThrow(() -> new InvalidItemException());
+                    category = categoryRepository.findById(productFixed.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                } else {
+                    ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
+                     category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                }
+
                 String categoryName = category.getName();
                 if(categoryName.equals("Semifreddi")){
                     if (pIP.getWeight()>=1.5){
@@ -802,9 +806,24 @@ public class CustomerService {
     }
 
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
-        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getId());
-        String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
-        return new ProductInPurchaseDTO(productInPurchase, name);
+        String name ="";
+        double price = 0;
+        if(productInPurchase.isFixed()){
+            Optional<ProductFixedAPA> optPFixed = productFixedRepository.findById(productInPurchase.getId());
+            if(optPFixed.isPresent()){
+                ProductFixedAPA productFixed = optPFixed.get();
+                name = productFixed.getName();
+                price = productFixed.getPrice();
+            }
+        } else {
+            Optional<ProductKgAPA> optPkg = productKgRepository.findById(productInPurchase.getId());
+            if(optPkg.isPresent()){
+                ProductKgAPA productKg = optPkg.get();
+                name = productKg.getName();
+                price = productKg.getPricePerKg();
+            }
+        }
+        return new ProductInPurchaseDTO(productInPurchase, name, price);
     }
 
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {

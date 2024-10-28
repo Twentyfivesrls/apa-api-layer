@@ -50,6 +50,7 @@ public class ActiveOrderService {
     private final ProducerPool producerPool;
     private final StompClientController stompClientController;
     private final ProductKgRepository productKgRepository;
+    private final ProductFixedRepository productFixedRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final PaymentClientController paymentClientController;
     private final KeycloakService keycloakService;
@@ -61,7 +62,7 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -69,6 +70,7 @@ public class ActiveOrderService {
         this.producerPool = producerPool;
         this.stompClientController = stompClientController;
         this.productKgRepository=productKgRepository;
+        this.productFixedRepository = productFixedRepository;
         this.productWeightedRepository = productWeightedRepository;
         this.paymentClientController = paymentClientController;
         this.keycloakService = keycloakService;
@@ -297,9 +299,24 @@ public class ActiveOrderService {
     }
 
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
-        Optional<ProductKgAPA> pKg = productKgRepository.findById(productInPurchase.getId());
-        String name = pKg.map(ProductKgAPA::getName).orElse("no registered product");
-        return new ProductInPurchaseDTO(productInPurchase, name);
+        String name ="";
+        double price = 0;
+        if(productInPurchase.isFixed()){
+            Optional<ProductFixedAPA> optPFixed = productFixedRepository.findById(productInPurchase.getId());
+            if(optPFixed.isPresent()){
+                ProductFixedAPA productFixed = optPFixed.get();
+                name = productFixed.getName();
+                price = productFixed.getPrice();
+            }
+        } else {
+            Optional<ProductKgAPA> optPkg = productKgRepository.findById(productInPurchase.getId());
+            if(optPkg.isPresent()){
+                ProductKgAPA productKg = optPkg.get();
+                name = productKg.getName();
+                price = productKg.getPricePerKg();
+            }
+        }
+        return new ProductInPurchaseDTO(productInPurchase, name, price);
     }
 
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {
