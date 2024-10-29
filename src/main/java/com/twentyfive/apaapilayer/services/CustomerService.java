@@ -718,7 +718,7 @@ public class CustomerService {
                     ProductFixedAPA productFixed = productFixedRepository.findById(pIP.getId()).orElseThrow(() -> new InvalidItemException());
                     category = categoryRepository.findById(productFixed.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
                     if(productFixed.getPossibleCustomizations() != null){
-
+                        customizableProduct = true;
                     }
                 } else {
                     ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
@@ -749,29 +749,32 @@ public class CustomerService {
         LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
         LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
         LocalDateTime minStartingDate;
-
-        if(!bigSemifreddo){
-            if (!now.isBefore(startTime) && now.isBefore(endTime)) {// richiesta fatta in orario lavorativo
-                if (customizedSemifreddo){
-                    if (now.isAfter(LocalTime.of(14,0))){
+        if(!customizableProduct) {
+            if (!bigSemifreddo) {
+                if (!now.isBefore(startTime) && now.isBefore(endTime)) {// richiesta fatta in orario lavorativo
+                    if (customizedSemifreddo) {
+                        if (now.isAfter(LocalTime.of(14, 0))) {
+                            minStartingDate = next(8);
+                        } else {
+                            minStartingDate = LocalDateTime.now().plusHours(minDelay);
+                        }
+                    } else if (longWait) {
+                        minStartingDate = next(9);
+                    } else {
+                        minStartingDate = LocalDateTime.now().plusHours(minDelay);  // fallback se customizedSemifreddo e longWait sono falsi
+                    }
+                } else {
+                    if (!longWait) {
                         minStartingDate = next(8);
                     } else {
-                        minStartingDate = LocalDateTime.now().plusHours(minDelay);
+                        minStartingDate = next(12);  // Gestione orari personalizzati fuori dall'orario lavorativo
                     }
-                } else if (longWait){
-                    minStartingDate = next(9);
-                } else {
-                    minStartingDate = LocalDateTime.now().plusHours(minDelay);  // fallback se customizedSemifreddo e longWait sono falsi
                 }
             } else {
-                if (!longWait) {
-                    minStartingDate = next(8);
-                } else {
-                    minStartingDate = next(12);  // Gestione orari personalizzati fuori dall'orario lavorativo
-                }
+                minStartingDate = LocalDateTime.now().plusHours(48); //Semifreddi superiori agli 1.5kg
             }
         } else {
-            minStartingDate = LocalDateTime.now().plusHours(48); //Semifreddi superiori agli 1.5kg
+            minStartingDate = LocalDateTime.now().plusHours(72); //Prodotti componibili
         }
 
 
