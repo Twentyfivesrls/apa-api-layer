@@ -22,9 +22,12 @@ public class ProductStatService {
         if (product instanceof ProductWeightedAPA){
             ProductWeightedAPA productWeightedAPA=(ProductWeightedAPA) product;
             productStat = productStatRepository.findById(productWeightedAPA.getStats().getId());
-        } else {
+        } else if (product instanceof  ProductKgAPA){
             ProductKgAPA productKgAPA=(ProductKgAPA) product;
             productStat = productStatRepository.findById(productKgAPA.getStats().getId());
+        } else {
+            ProductFixedAPA productFixedAPA=(ProductFixedAPA) product;
+            productStat = productStatRepository.findById(productFixedAPA.getStats().getId());
         }
         if (productStat.isPresent()){
             productStat.get().setBuyingCount(productStat.get().getBuyingCount()+n);

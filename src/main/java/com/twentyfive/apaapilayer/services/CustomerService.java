@@ -422,29 +422,40 @@ public class CustomerService {
                     singlePIP.setQuantity(1);
                     singlePIP.setTotalPrice(unitPrice);
                     singlePIP.setCustomization(originalPIP.getCustomization());
+                    singlePIP.setFixed(originalPIP.isFixed());
                     singlePIP.setAttachment(originalPIP.getAttachment());
                     singlePIP.setWeight(originalPIP.getWeight());
                     singlePIP.setShape(originalPIP.getShape());
                     singlePIP.setAllergens(originalPIP.getAllergens());
+
                     if (item.isToPrepare()){
                         singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
                     }
                     singlePIP.setToPrepare(originalPIP.isToPrepare());
                     products.add(singlePIP);
 
-
-                    Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
-                    if (optProductKg.isPresent()) {
-                        ProductKgAPA productKgAPA = optProductKg.get();
-                        if (productKgAPA.isCustomized()) {
-                            toPrepare = true;
+                    if(singlePIP.isFixed()){
+                        Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(originalPIP.getId());
+                        if(optProductFixed.isPresent()){
+                            ProductFixedAPA productFixed = optProductFixed.get();
+                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productFixed.getIngredientIds());
+                            singlePIP.setIngredients(ingredientsFromProduct);
+                            productStatService.addBuyingCountProduct(productFixed, 1);
+                            productFixedRepository.save(productFixed);
                         }
-                        List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA);
-                        singlePIP.setIngredients(ingredientsFromProduct);
-                        productStatService.addBuyingCountProduct(productKgAPA, 1);
-                        productKgRepository.save(productKgAPA);
+                    } else {
+                        Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
+                        if (optProductKg.isPresent()) {
+                            ProductKgAPA productKgAPA = optProductKg.get();
+                            if (productKgAPA.isCustomized()) {
+                                toPrepare = true;
+                            }
+                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
+                            singlePIP.setIngredients(ingredientsFromProduct);
+                            productStatService.addBuyingCountProduct(productKgAPA, 1);
+                            productKgRepository.save(productKgAPA);
+                        }
                     }
-
                 } else if (item instanceof BundleInPurchase) {
                     BundleInPurchase originalBIP = (BundleInPurchase) item;
                     BundleInPurchase singleBIP = new BundleInPurchase();
@@ -491,9 +502,9 @@ public class CustomerService {
         return order;
     }
 
-    private List<IngredientsWithCategory> findIngredientsFromProduct(ProductKgAPA productKgAPA) {
+    private List<IngredientsWithCategory> findIngredientsFromProduct(List<String> ingredientIds) {
         List<IngredientsWithCategory> ingredients = new ArrayList<>();
-        for (String ingredientId : productKgAPA.getIngredientIds()) {
+        for (String ingredientId : ingredientIds) {
             Optional<IngredientAPA> optIngredient = ingredientRepository.findById(ingredientId);
             if(optIngredient.isPresent()){
                 IngredientAPA ingredient = optIngredient.get();
@@ -697,6 +708,7 @@ public class CustomerService {
         boolean bigSemifreddo = false;
         boolean customizedSemifreddo = false;
         boolean longWait = false;
+        boolean customizableProduct = false;
         for (ItemInPurchase item : items) {
             numSlotRequired += item.getQuantity();
             if(item instanceof ProductInPurchase){
@@ -705,6 +717,9 @@ public class CustomerService {
                 if (pIP.isFixed()){
                     ProductFixedAPA productFixed = productFixedRepository.findById(pIP.getId()).orElseThrow(() -> new InvalidItemException());
                     category = categoryRepository.findById(productFixed.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                    if(productFixed.getPossibleCustomizations() != null){
+
+                    }
                 } else {
                     ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
                      category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
