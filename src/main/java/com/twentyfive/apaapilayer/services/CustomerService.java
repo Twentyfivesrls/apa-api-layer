@@ -917,6 +917,11 @@ public class CustomerService {
         summaryEmailDTO.setId(order.getId());
         summaryEmailDTO.setTotalPrice(order.getTotalPrice() + " €");
 
+        if(order.getPaymentId() == null) {
+            summaryEmailDTO.setPaymentID("Al Ritiro");
+        } else {
+            summaryEmailDTO.setPaymentID("Online: " + order.getPaymentId());
+        }
         // Processa i prodotti
         for (ProductInPurchase productInPurchase : order.getProductsInPurchase()) {
             String productName = productKgRepository.findById(productInPurchase.getId()).get().getName();

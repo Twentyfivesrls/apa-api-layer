@@ -21,6 +21,7 @@ public class TemplateUtilities {
         variables.put("orderId",summaryEmailDTO.getId());
         variables.put("productList",summaryEmailDTO.getProducts());
         variables.put("totalPrice",summaryEmailDTO.getTotalPrice());
+        variables.put("paymentID", summaryEmailDTO.getPaymentID());
 
         DecimalFormat df = new DecimalFormat("#,##0.00");
         String cleanedTotalPrice = summaryEmailDTO.getTotalPrice().replaceAll("[^\\d.,]", "");

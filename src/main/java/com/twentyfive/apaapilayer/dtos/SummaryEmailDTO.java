@@ -13,4 +13,5 @@ public class SummaryEmailDTO {
     private String id;
     private List<SummarySingleItemDTO> products;
     private String totalPrice;
+    private String paymentID;
 }
