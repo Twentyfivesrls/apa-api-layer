@@ -17,6 +17,7 @@ import java.util.List;
 public class TestController {
     private final TimeSlotRefreshScheduling timeSlotRefreshScheduling;
     private final ProductKgRepository productKgRepository;
+    private final ProductFixedRepository productFixedRepository;
     private final TrayRepository trayRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final CategoryRepository categoryRepository;
@@ -32,8 +33,10 @@ public class TestController {
         List<CategoryAPA> categoryProductKg = categoryRepository.findAllByType("productKg");
         List<CategoryAPA> categoryProductWeighted = categoryRepository.findAllByType("productWeighted");
         List<CategoryAPA> categoryTray = categoryRepository.findAllByType("tray");
+        List<CategoryAPA> categoryProductFixed = categoryRepository.findAllByType("productFixed");
         List<ProductKgAPA> productKg = new ArrayList<>();
         List<ProductWeightedAPA> productWeighted = new ArrayList<>();
+        List<ProductFixedAPA> productFixed = new ArrayList<>();
         List<Tray> tray = new ArrayList<>();
         for (CategoryAPA category: categoryProductKg){
             productKg.addAll(productKgRepository.findAllByCategoryId(category.getId()));
@@ -63,6 +66,16 @@ public class TestController {
             product.setStats(productStatAPA);
             productStatRepository.save(productStatAPA);
             trayRepository.save(product);
+        }
+
+        for (CategoryAPA category: categoryProductFixed){
+            productFixed.addAll(productFixedRepository.findAllByCategoryId(category.getId()));
+        }
+        for (ProductFixedAPA product : productFixed){
+            ProductStatAPA productStatAPA=new ProductStatAPA("productFixed");
+            product.setStats(productStatAPA);
+            productStatRepository.save(productStatAPA);
+            productFixedRepository.save(product);
         }
     }
 }
