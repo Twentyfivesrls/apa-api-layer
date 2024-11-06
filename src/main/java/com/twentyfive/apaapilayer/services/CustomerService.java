@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
 import com.twentyfive.apaapilayer.exceptions.InvalidOrderTimeException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.JwtUtilities;
 import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
@@ -190,6 +191,11 @@ public class CustomerService {
             Optional<CustomerAPA> optCustomerToPatch=getByIdFromDb(customer.getId());
             if(optCustomerToPatch.isPresent()) {
                 CustomerAPA customerAPA = optCustomerToPatch.get();
+                List<String> roles = JwtUtilities.getRoles();
+                if(roles.contains("admin")){ //Se admin fa la chiamata, rimuoviamo il vecchio ruolo
+                    String role = customerAPA.getRole();
+                    keycloakService.removeRole(customerAPA.getIdKeycloak(),role);
+                }
                 ReflectionUtilities.updateNonNullFields(customer,customerAPA);
                 keycloakService.update(customer);
                 return customerRepository.save(customerAPA);
