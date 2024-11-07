@@ -107,27 +107,28 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection, OrderFilter filters) throws IOException {
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection,OrderFilter filters) throws IOException{
         List<String> roles = JwtUtilities.getRoles();
         Query query = new Query();
         query = FilterUtilities.applyOrderFilters(query, filters, roles, customerRepository);
 
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdDate");
-        if (sortColumn != null && !sortColumn.isBlank() && sortDirection != null && !sortDirection.isBlank()) {
-            sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn.equals("price") ? "realPrice" : sortColumn);
+        // Controllo del sorting di default su createdDate in ordine decrescente
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),
+                    sortColumn.equals("price") ? "realPrice" : sortColumn);
         }
-        query.with(sort);
 
-        // Recupera e converte i risultati
+        Pageable pageable = PageRequest.of(page, size, sort);
         List<OrderAPA> orderList = mongoTemplate.find(query, OrderAPA.class);
         List<OrderAPADTO> realOrder = orderList.stream()
                 .map(this::convertToOrderAPADTO)
                 .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return PageUtilities.convertListToPage(realOrder, pageable);
+        return PageUtilities.convertListToPageWithSorting(realOrder, pageable);
     }
-
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
         try {
@@ -146,6 +147,7 @@ public class ActiveOrderService {
             dto.setUnread(order.isUnread());
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
+            dto.setCreatedDate(order.getCreatedDate());
             if(order.getCustomerId()!= null){
                 Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
                 if(optCustomerId.isPresent()){

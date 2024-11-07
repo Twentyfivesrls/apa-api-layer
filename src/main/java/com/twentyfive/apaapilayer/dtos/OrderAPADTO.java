@@ -18,6 +18,7 @@ public class OrderAPADTO {
     private String lastName;
     private String methodPayment;
     private LocalDateTime pickupDateTime;
+    private LocalDateTime createdDate;
     private double realPrice;
     private String price;
     private String status;
