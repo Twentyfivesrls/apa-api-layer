@@ -16,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
@@ -61,8 +64,10 @@ public class ActiveOrderService {
 
     private final TimeSlotAPARepository timeSlotAPARepository;
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -77,6 +82,7 @@ public class ActiveOrderService {
         this.trayRepository=trayRepository;
         this.settingRepository=settingRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -101,35 +107,29 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) throws IOException{
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection,OrderFilter filters) throws IOException{
         List<String> roles = JwtUtilities.getRoles();
-        List<OrderAPA> orderList = new ArrayList<>();
-        List<OrderAPADTO> realOrder = new ArrayList<>();
-        if(roles.contains("admin")){
-            // Fetching paginated orders from the database
-            orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
+        Query query = new Query();
+        query = FilterUtilities.applyOrderFilters(query, filters, roles, customerRepository);
+
+        // Controllo del sorting di default su createdDate in ordine decrescente
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),
+                    sortColumn.equals("price") ? "realPrice" : sortColumn);
         }
-        else if (roles.contains("baker")){
-            orderList = activeOrderRepository.findByProductsInPurchaseToPrepareTrueOrBundlesInPurchaseToPrepareTrueOrderByCreatedDateDesc();
-        }
-        for(OrderAPA order:orderList){
-            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
-            realOrder.add(orderAPA);
-        }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort;
-            if (sortColumn.equals("price")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } else if (sortColumn.equals("formattedPickupDate")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
-            } else {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
-            }
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
-        }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realOrder,pageable);
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        //query.with(pageable);
+
+        List<OrderAPA> orderList = mongoTemplate.find(query, OrderAPA.class);
+        List<OrderAPADTO> realOrder = orderList.stream()
+                .map(this::convertToOrderAPADTO)
+                .collect(Collectors.toList());
+
+        return PageUtilities.convertListToPageWithSorting(realOrder, pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
