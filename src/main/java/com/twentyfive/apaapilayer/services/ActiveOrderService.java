@@ -107,30 +107,27 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection,OrderFilter filters) throws IOException{
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection, OrderFilter filters) throws IOException {
         List<String> roles = JwtUtilities.getRoles();
         Query query = new Query();
         query = FilterUtilities.applyOrderFilters(query, filters, roles, customerRepository);
 
-        // Controllo del sorting di default su createdDate in ordine decrescente
-        Sort sort;
-        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
-            sort = Sort.by(Sort.Direction.DESC, "createdDate");
-        } else {
-            sort = Sort.by(Sort.Direction.fromString(sortDirection),
-                    sortColumn.equals("price") ? "realPrice" : sortColumn);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        if (sortColumn != null && !sortColumn.isBlank() && sortDirection != null && !sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn.equals("price") ? "realPrice" : sortColumn);
         }
+        query.with(sort);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        //query.with(pageable);
-
+        // Recupera e converte i risultati
         List<OrderAPA> orderList = mongoTemplate.find(query, OrderAPA.class);
         List<OrderAPADTO> realOrder = orderList.stream()
                 .map(this::convertToOrderAPADTO)
                 .collect(Collectors.toList());
 
-        return PageUtilities.convertListToPageWithSorting(realOrder, pageable);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return PageUtilities.convertListToPage(realOrder, pageable);
     }
+
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
         try {
