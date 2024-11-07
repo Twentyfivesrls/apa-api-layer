@@ -54,11 +54,24 @@ public class FilterUtilities {
     private static void addCustomerNameCriteria(Query query, OrderFilter filters, CustomerRepository customerRepository) {
         if (filters.getName() != null) {
             String searchTerm = filters.getName().replace(" ", ".*"); // Regex per coprire spazi tra parole
+
+            // Criterio per customInfo se l'ordine è per un utente non registrato
+            Criteria customInfoCriteria = new Criteria().orOperator(
+                    Criteria.where("customInfo.firstName").regex(searchTerm, "i"),
+                    Criteria.where("customInfo.lastName").regex(searchTerm, "i")
+            );
+
+            // Cerca nella repo solo se customInfo è null o non contiene il nome
             List<String> customerIds = customerRepository.findByFullNameOrFirstNameOrLastName(searchTerm)
                     .stream()
                     .map(CustomerAPA::getId)
                     .collect(Collectors.toList());
-            query.addCriteria(Criteria.where("customerId").in(customerIds));
+
+            Criteria customerIdCriteria = Criteria.where("customerId").in(customerIds);
+
+            // Aggiungi i criteri sia per customerId che per customInfo
+            query.addCriteria(new Criteria().orOperator(customInfoCriteria, customerIdCriteria));
         }
     }
+
 }
