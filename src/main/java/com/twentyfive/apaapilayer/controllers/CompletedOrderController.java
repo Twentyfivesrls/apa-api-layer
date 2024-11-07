@@ -25,7 +25,7 @@ public class CompletedOrderController {
         this.completedOrderService = completedOrderService;
     }
 
-    @PreAuthorize("hasRole('ROLE_admin')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
     @GetMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -36,7 +36,7 @@ public class CompletedOrderController {
     }
 
 
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer') or hasRole('ROLE_counter')")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
         OrderDetailsAPADTO odapa = completedOrderService.getDetailsById(id);
