@@ -5,6 +5,7 @@ import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.OrderRestoringNotAllowedException;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
@@ -41,8 +44,10 @@ public class CompletedOrderService {
     private final ProductFixedRepository productFixedRepository;
     private final TrayRepository trayRepository;
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, EmailService emailService, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, TrayRepository trayRepository) {
+    public CompletedOrderService(CompletedOrderRepository completedOrderRepository, CustomerRepository customerRepository, ActiveOrderRepository activeOrderRepository, ProductWeightedRepository productWeightedRepository, EmailService emailService, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, TrayRepository trayRepository, MongoTemplate mongoTemplate) {
         this.completedOrderRepository= completedOrderRepository;
         this.customerRepository=customerRepository;
         this.activeOrderRepository=activeOrderRepository;
@@ -51,30 +56,27 @@ public class CompletedOrderService {
         this.productKgRepository=productKgRepository;
         this.productFixedRepository = productFixedRepository;
         this.trayRepository=trayRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) {
-        // Fetching paginated orders from the database
-        List<CompletedOrderAPA> orderList= completedOrderRepository.findAllByOrderByCreatedDateDesc();
-        List<OrderAPADTO> realOrder= new ArrayList<>();
-        for(CompletedOrderAPA order:orderList){
-            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
-            realOrder.add(orderAPA);
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection, OrderFilter filters) {
+        Query query = new Query();
+        query = FilterUtilities.applyOrderFilters(query, filters, new ArrayList<>(), customerRepository);
+        // Controllo del sorting di default su createdDate in ordine decrescente
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),
+                    sortColumn.equals("price") ? "realPrice" : sortColumn);
         }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort;
-            if (sortColumn.equals("price")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } else if (sortColumn.equals("formattedPickupDate")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
-            } else {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
-            }
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
-        }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realOrder,pageable);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        List<CompletedOrderAPA> orderList = mongoTemplate.find(query, CompletedOrderAPA.class);
+        List<OrderAPADTO> realOrder = orderList.stream()
+                .map(this::convertToOrderAPADTO)
+                .collect(Collectors.toList());
+
+        return PageUtilities.convertListToPageWithSorting(realOrder, pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(CompletedOrderAPA order) {
