@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductFilter {
-    private List<String> allergenIds;
+    private List<String> allergenNames;
     private List<String> ingredientIds;
     private ValueRange values;
     private String name;

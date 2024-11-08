@@ -2,6 +2,8 @@ package com.twentyfive.apaapilayer.utils;
 
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.models.OrderFilter;
+import com.twentyfive.apaapilayer.models.ProductFilter;
+import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,6 +29,33 @@ public class FilterUtilities {
         }
 
         return query;
+    }
+
+
+    public static Query applyProductFilters(Query query, ProductFilter filters,String idCategory) {
+        addCategoryId(query,idCategory);
+        if (filters != null) {
+            addProductName(query,filters);
+            addAllergenName(query,filters);
+        }
+
+        return query;
+    }
+
+    private static void addCategoryId(Query query, String idCategory) {
+        query.addCriteria(Criteria.where("categoryId").is(idCategory));
+    }
+
+    private static void addAllergenName(Query query, ProductFilter filters) {
+        if (filters.getAllergenNames() != null) {
+            query.addCriteria(Criteria.where("allergenNames").all(filters.getAllergenNames()));
+        }
+    }
+
+    private static void addProductName(Query query, ProductFilter filters) {
+        if (filters.getName()!=null) {
+            query.addCriteria(Criteria.where("name").regex(filters.getName(), "i"));
+        }
     }
 
     private static void addDateCriteria(Query query, OrderFilter filters) {

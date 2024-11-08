@@ -2,11 +2,10 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientAPADTO;
-import com.twentyfive.apaapilayer.models.CategoryAPA;
-import com.twentyfive.apaapilayer.models.IngredientAPA;
-import com.twentyfive.apaapilayer.models.ProductKgAPA;
-import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
+import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
+import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -56,22 +56,21 @@ public class IngredientService {
         return dto;
     }
 
-    public Page<IngredientAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection) {
-        List<IngredientAPA> ingredients = ingredientRepository.findAllByCategoryId(idCategory);
-        List<IngredientAPADTO> realIngredients = new ArrayList<>();
-        for(IngredientAPA ingredient : ingredients){
-            if(ingredient!=null) {
-                IngredientAPADTO dto = ingredientsToDTO(ingredient);
-                realIngredients.add(dto);
-            }
+    public Page<IngredientAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
+        Query query = new Query();
+        query = FilterUtilities.applyProductFilters(query,filters,idCategory);
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.ASC, "name");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
         }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);
-        }
-        Sort sort = Sort.by(Sort.Direction.ASC,"name");
         Pageable pageable=PageRequest.of(page,size,sort);
+        List<IngredientAPA> ingredients = mongoTemplate.find(query, IngredientAPA.class);
+        List<IngredientAPADTO> realIngredients = ingredients.stream()
+                .map(this::ingredientsToDTO)
+                .collect(Collectors.toList());
+
         return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);
     }
 
