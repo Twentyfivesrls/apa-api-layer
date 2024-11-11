@@ -63,6 +63,8 @@ public class FilterUtilities {
             return "pricePerKg";
         } else if (productClass.equals(ProductWeightedAPA.class)) {
             return "weight";
+        } else if (productClass.equals(ProductFixedAPA.class)) {
+            return "price";
         }
         return null;
     }

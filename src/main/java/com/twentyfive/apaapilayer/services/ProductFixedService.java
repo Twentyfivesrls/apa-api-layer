@@ -5,19 +5,20 @@ import com.twentyfive.apaapilayer.dtos.IngredientMinimalAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductFixedAPADetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.filters.ProductFilter;
 import com.twentyfive.apaapilayer.mappers.IngredientMapperService;
 import com.twentyfive.apaapilayer.mappers.ProductMapperService;
-import com.twentyfive.apaapilayer.models.CategoryAPA;
-import com.twentyfive.apaapilayer.models.IngredientAPA;
-import com.twentyfive.apaapilayer.models.ProductFixedAPA;
-import com.twentyfive.apaapilayer.models.ProductStatAPA;
+import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -38,16 +39,20 @@ public class ProductFixedService {
     private final IngredientMapperService ingredientMapperService;
     private final CategoryRepository categoryRepository;
 
-    public Page<ProductFixedAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection) {
-        List<ProductFixedAPA> productsFixed = productFixedRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
-        List<ProductFixedAPADTO> dtos = fillListDto(productsFixed);
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(dtos,pageable);
+    private final MongoTemplate mongoTemplate;
+
+    public Page<ProductFixedAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
+        Query query = new Query();
+        query = FilterUtilities.applyProductFilters(query,filters,idCategory,ingredientRepository,true, ProductFixedAPA.class);
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.ASC, "name");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
         }
-        Sort sort = Sort.by(Sort.Direction.ASC,"name");
         Pageable pageable=PageRequest.of(page,size,sort);
+        List<ProductFixedAPA> productsFixed = mongoTemplate.find(query, ProductFixedAPA.class);
+        List<ProductFixedAPADTO> dtos = fillListDto(productsFixed);
         return PageUtilities.convertListToPageWithSorting(dtos,pageable);
     }
 
