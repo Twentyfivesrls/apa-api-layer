@@ -2,7 +2,7 @@ package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientAPADTO;
-import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
+import com.twentyfive.apaapilayer.filters.IngredientFilter;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.FilterUtilities;
@@ -56,9 +56,9 @@ public class IngredientService {
         return dto;
     }
 
-    public Page<IngredientAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
+    public Page<IngredientAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, IngredientFilter filters) {
         Query query = new Query();
-        query = FilterUtilities.applyProductFilters(query,filters,idCategory);
+        query = FilterUtilities.applyIngredientFilters(query,filters,idCategory);
         Sort sort;
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
             sort = Sort.by(Sort.Direction.ASC, "name");
@@ -70,7 +70,6 @@ public class IngredientService {
         List<IngredientAPADTO> realIngredients = ingredients.stream()
                 .map(this::ingredientsToDTO)
                 .collect(Collectors.toList());
-
         return PageUtilities.convertListToPageWithSorting(realIngredients,pageable);
     }
 
