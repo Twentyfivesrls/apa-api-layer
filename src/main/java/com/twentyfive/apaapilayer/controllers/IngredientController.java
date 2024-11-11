@@ -4,7 +4,7 @@ import com.twentyfive.apaapilayer.dtos.AutoCompleteRes;
 import com.twentyfive.apaapilayer.dtos.IngredientAPADTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
-import com.twentyfive.apaapilayer.models.ProductFilter;
+import com.twentyfive.apaapilayer.filters.IngredientFilter;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class IngredientController {
                                                                    @RequestParam(value = "size", defaultValue = "25") int size,
                                                                    @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
                                                                    @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
-                                                                   @RequestBody(required = false)ProductFilter filters) {
+                                                                   @RequestBody(required = false) IngredientFilter filters) {
         return ResponseEntity.ok().body(ingredientService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection,filters));
     }
 

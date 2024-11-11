@@ -6,7 +6,7 @@ import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
-import com.twentyfive.apaapilayer.models.OrderFilter;
+import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
 import com.twentyfive.authorizationflow.services.AuthenticationService;
 import org.springframework.data.domain.Page;

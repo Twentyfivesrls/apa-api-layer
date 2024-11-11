@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.*;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,7 +107,7 @@ public class ActiveOrderService {
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection,OrderFilter filters) throws IOException{
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection, OrderFilter filters) throws IOException{
         List<String> roles = JwtUtilities.getRoles();
         Query query = new Query();
         query = FilterUtilities.applyOrderFilters(query, filters, roles, customerRepository);
