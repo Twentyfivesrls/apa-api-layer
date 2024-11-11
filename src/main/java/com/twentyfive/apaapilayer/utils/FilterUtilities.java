@@ -9,6 +9,7 @@ import com.twentyfive.apaapilayer.repositories.CustomerRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,18 +45,28 @@ public class FilterUtilities {
         return query;
     }
 
-    public static Query applyProductFilters(Query query, ProductFilter filters, String idCategory, IngredientRepository ingredientRepository, boolean checkSoftDeleted) {
+    public static <T> Query applyProductFilters(Query query, ProductFilter filters, String idCategory, IngredientRepository ingredientRepository, boolean checkSoftDeleted, Class<T> productClass) {
         addCategoryId(query,idCategory);
         addSoftDeleted(query,checkSoftDeleted);
         if (filters != null) {
             addName(query,filters);
             addIngredientName(query,filters,ingredientRepository);
-            //TODO tipo field da cercare
-            addValueRange(query,filters,"pricePerKg");
+            String fieldName=checkFieldNameByProductType(productClass);
+            addValueRange(query,filters,fieldName);
         }
 
         return query;
     }
+
+    private static <T> String checkFieldNameByProductType(Class<T> productClass) {
+        if (productClass.equals(ProductKgAPA.class)) {
+            return "pricePerKg";
+        } else if (productClass.equals(ProductWeightedAPA.class)) {
+            return "weight";
+        }
+        return null;
+    }
+
 
 
     private static void addSoftDeleted(Query query,boolean checkSoftDeleted) {

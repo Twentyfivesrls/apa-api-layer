@@ -72,7 +72,7 @@ public class ProductKgService {
 
     public Page<ProductKgAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
         Query query = new Query();
-        query = FilterUtilities.applyProductFilters(query,filters,idCategory,ingredientRepository,false);
+        query = FilterUtilities.applyProductFilters(query,filters,idCategory,ingredientRepository,true,ProductKgAPA.class);
         Sort sort;
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
             sort = Sort.by(Sort.Direction.ASC, "name");

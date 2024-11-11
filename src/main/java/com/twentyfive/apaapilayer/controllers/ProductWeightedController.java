@@ -4,6 +4,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.dtos.AutoCompleteProductWeighted;
 import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
+import com.twentyfive.apaapilayer.filters.ProductFilter;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.services.ProductWeightedService;
@@ -22,15 +23,16 @@ public class ProductWeightedController {
 
     private final ProductWeightedService productWeightedService;
 
-    @PreAuthorize("hasRole('ROLE_admin')")
+    //@PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAll")
     public ResponseEntity<Page<ProductWeightedAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
             @RequestParam(value = "page", defaultValue ="0") int page,
             @RequestParam(value = "size", defaultValue ="5") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        return ResponseEntity.ok().body(productWeightedService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+            @RequestBody(required = false)ProductFilter filters) {
+        return ResponseEntity.ok().body(productWeightedService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection,filters));
     }
 
     @GetMapping("/getAllForCustomizedTray")
