@@ -118,30 +118,30 @@ public class CustomerService {
         this.productFixedRepository = productFixedRepository;
     }
 
-    public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection) {
+    public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
         String customer="customer";
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
+            return customerRepository.findByRoleAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(customer,name,pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
+        return customerRepository.findByRoleAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(customer,name,pageable);
     }
 
-    public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection) {
+    public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection,String name) {
         List<String> excludedRoles = Arrays.asList("customer", "admin");
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
+            return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(excludedRoles,name, pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
+        return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(excludedRoles,name, pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {

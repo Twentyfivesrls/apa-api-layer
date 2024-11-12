@@ -15,8 +15,31 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends MongoRepository<CustomerAPA,String> {
     Optional<CustomerAPA> findByIdKeycloak(String idKeycloak);
-    Page<CustomerAPA> findAllByRoleAndIdKeycloakIsNotNull(String role,Pageable pageable);
-    Page<CustomerAPA> findAllByRoleNotInAndIdKeycloakIsNotNull(List<String> roles, Pageable pageable);
+
+    @Query("{ '$and': [ " +
+            "{ 'role': ?0 }, " +
+            "{ 'idKeycloak': { '$ne': null } }, " +
+            "{ '$or': [ " +
+            "{ '$expr': { '$regexMatch': { 'input': { '$concat': ['$firstName', ' ', '$lastName'] }, 'regex': ?1, 'options': 'i' } } }, " +
+            "{ '$expr': { '$regexMatch': { 'input': { '$concat': ['$firstName', ' ', '$middleName', ' ', '$lastName'] }, 'regex': ?1, 'options': 'i' } } }, " +
+            "{ 'firstName': { '$regex': ?1, '$options': 'i' } }, " +
+            "{ 'lastName': { '$regex': ?1, '$options': 'i' } } " +
+            "] } " +
+            "] }")
+    Page<CustomerAPA> findByRoleAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(String role,String regex,Pageable pageable);
+
+    @Query("{ '$and': [ " +
+            "{ 'role': { '$nin': ?0 } }, " +
+            "{ 'idKeycloak': { '$ne': null } }, " +
+            "{ '$or': [ " +
+            "{ '$expr': { '$regexMatch': { 'input': { '$concat': ['$firstName', ' ', '$lastName'] }, 'regex': ?1, 'options': 'i' } } }, " +
+            "{ '$expr': { '$regexMatch': { 'input': { '$concat': ['$firstName', ' ', '$middleName', ' ', '$lastName'] }, 'regex': ?1, 'options': 'i' } } }, " +
+            "{ 'firstName': { '$regex': ?1, '$options': 'i' } }, " +
+            "{ 'lastName': { '$regex': ?1, '$options': 'i' } } " +
+            "] } " +
+            "] }")
+    Page<CustomerAPA> findAllByRoleNotInAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(List<String> roles,String regex, Pageable pageable);
+
 
 
     @Query("{ '$or': [ " +
