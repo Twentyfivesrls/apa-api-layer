@@ -111,19 +111,24 @@ public class FilterUtilities {
 
     private static void addDateCriteria(Query query, OrderFilter filters) {
         if (filters.getDates() != null) {
-            query.addCriteria(Criteria.where("pickupDate")
-                    .gte(filters.getDates().getStartDate()));
-            if(filters.getDates().getEndDate()!=null) {
-                query.addCriteria(Criteria.where("pickupDate")
-                        .lte(filters.getDates().getEndDate()));
+            Criteria dateCriteria = Criteria.where("pickupDate");
+            if(filters.getDates().getStartDate()!=null) {
+                dateCriteria.gte(filters.getDates().getStartDate());
             }
+            if(filters.getDates().getEndDate()!=null) {
+                dateCriteria.lte(filters.getDates().getEndDate());
+            }
+            query.addCriteria(dateCriteria);
         }
     }
 
     private static void addValueRange(Query query, Filter filters, String field) {
         ValueRange values=extractFromFilter(filters);
         if (values != null) {
-            Criteria priceCriteria = Criteria.where(field).gte(values.getMin());
+            Criteria priceCriteria = Criteria.where(field);
+            if (values.getMin() != null) {
+                priceCriteria.gte(values.getMin());
+            }
             if (values.getMax() != null) {
                 priceCriteria.lte(values.getMax());
             }
