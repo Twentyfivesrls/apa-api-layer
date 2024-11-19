@@ -33,7 +33,7 @@ public class ActiveOrderController {
         this.activeOrderService = activeOrderService;
     }
 
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
