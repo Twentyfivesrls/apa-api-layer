@@ -24,7 +24,7 @@ public class ProductWeightedController {
     private final ProductWeightedService productWeightedService;
 
     @PreAuthorize("hasRole('ROLE_admin')")
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<ProductWeightedAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
             @RequestParam(value = "page", defaultValue ="0") int page,

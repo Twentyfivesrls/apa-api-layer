@@ -20,7 +20,7 @@ public class ProductFixedController {
     private final ProductFixedService productFixedService;
 
     @PreAuthorize("hasRole('ROLE_admin')")
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<ProductFixedAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
             @RequestParam(value = "page", defaultValue ="0") int page,
