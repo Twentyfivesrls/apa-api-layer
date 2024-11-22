@@ -27,7 +27,7 @@ public class CompletedOrderController {
     }
 
     @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
