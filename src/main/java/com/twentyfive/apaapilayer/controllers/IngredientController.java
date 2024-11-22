@@ -24,7 +24,7 @@ public class IngredientController {
 
 
     @PreAuthorize("hasRole('ROLE_admin')")
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<IngredientAPADTO>> findByIdCategory(@RequestParam("idCategory")String idCategory,
                                                                    @RequestParam(value = "page", defaultValue = "0") int page,
                                                                    @RequestParam(value = "size", defaultValue = "25") int size,
