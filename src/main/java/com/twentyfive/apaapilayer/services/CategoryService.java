@@ -39,6 +39,11 @@ public class CategoryService {
         return dto;
     }
 
+    public List<CategoryMinimalDTO> getAllMinimalByListId(List<String> ids){
+        List<CategoryAPA> categories = categoryRepository.findAllById(ids);
+        List<CategoryMinimalDTO> dto = categoryMapperService.ListCategoryAPAToListMinimalDTO(categories);
+        return dto;
+    }
     public List<CategoryAPA> getDisabledCategories(List<String> types) {
         return categoryRepository.findAllByTypeInAndEnabledFalseAndSoftDeletedFalseOrderByNameAsc(types);
     }

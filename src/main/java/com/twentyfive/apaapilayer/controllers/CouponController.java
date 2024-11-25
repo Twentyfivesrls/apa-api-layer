@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.CouponDTO;
+import com.twentyfive.apaapilayer.dtos.CouponDetailsDTO;
 import com.twentyfive.apaapilayer.services.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,8 +23,23 @@ public class CouponController {
         return ResponseEntity.ok().body(couponService.getAll(page,size,sortColumn,sortDirection));
 
     }
+
+    @GetMapping("/getById/{id}")
+    public ResponseEntity<CouponDetailsDTO> getById(@RequestParam(value = "id") String id) {
+        return ResponseEntity.ok().body(couponService.getById(id));
+    }
     @PostMapping("/save")
     public ResponseEntity<Coupon> save(@RequestBody Coupon coupon) {
         return ResponseEntity.ok().body(couponService.save(coupon));
+    }
+
+    @DeleteMapping("/deleteById/{id}")
+    public ResponseEntity<Boolean> deleteById(@PathVariable String id) {
+        return ResponseEntity.ok().body(couponService.deleteById(id));
+    }
+
+    @GetMapping("/changeStatus/{id}")
+    public ResponseEntity<Boolean> changeStatus(@PathVariable String id) {
+        return ResponseEntity.ok().body(couponService.changeStatus(id));
     }
 }

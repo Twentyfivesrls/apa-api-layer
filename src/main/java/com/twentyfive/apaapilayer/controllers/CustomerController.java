@@ -41,7 +41,7 @@ public class CustomerController {
         return ResponseEntity.ok(customerDTOs);
     }
 
-    //@PreAuthorize("hasRole('ROLE_admin')")
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAllEmployees")
     public ResponseEntity<Page<CustomerDTO>> getAllEmployees(@RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "25") int size,

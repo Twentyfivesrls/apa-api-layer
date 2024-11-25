@@ -1,6 +1,9 @@
 package com.twentyfive.apaapilayer.mappers;
 
+import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.CouponDTO;
+import com.twentyfive.apaapilayer.dtos.CouponDetailsDTO;
+import com.twentyfive.apaapilayer.dtos.NumberRangeDTO;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.FixedAmountCoupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PercentageCoupon;
@@ -36,6 +39,23 @@ public class CouponMapperService {
         return couponDTO;
     }
 
+    public CouponDetailsDTO mapCouponToDetailsDTO(Coupon coupon, List<CategoryMinimalDTO> categories) {
+        CouponDetailsDTO couponDTO = new CouponDetailsDTO();
+        couponDTO.setId(coupon.getId());
+        couponDTO.setActive(coupon.isActive());
+        couponDTO.setName(coupon.getName());
+        couponDTO.setCode(coupon.getCode());
+        couponDTO.setDates(coupon.getDates());
+        couponDTO.setPriceRange(mapNumberRangeToDTO(coupon.getPriceRange()));
+        couponDTO.setUsageCount(coupon.getUsageCount());
+        couponDTO.setMaxTotalUsage(coupon.getMaxTotalUsage());
+        couponDTO.setMaxUsagePerCustomer(coupon.getMaxUsagePerCustomer());
+        couponDTO.setType(typeFromChild(coupon));
+        couponDTO.setValue(valueFromChild(coupon));
+        couponDTO.setSpecificCategories(categories);
+        return couponDTO;
+    }
+
     private String priceRange(NumberRange numberRange) {
         String priceRange = "";
         if (numberRange == null) {
@@ -51,6 +71,12 @@ public class CouponMapperService {
             }
         }
         return priceRange;
+    }
+    private NumberRangeDTO mapNumberRangeToDTO(NumberRange numberRange) {
+        NumberRangeDTO numberRangeDTO = new NumberRangeDTO();
+        numberRangeDTO.setMin(numberRange.getMin() != null ? numberRange.getMin()+"€" : "-");
+        numberRangeDTO.setMax(numberRange.getMax() != null ? numberRange.getMax()+"€" : "-");
+        return numberRangeDTO;
     }
     private String validationPeriod(LocalDateRange dateRange){
         String validationPeriod = "";
@@ -77,6 +103,16 @@ public class CouponMapperService {
         } else if (coupon instanceof FixedAmountCoupon){
             FixedAmountCoupon amountCoupon = (FixedAmountCoupon) coupon;
             value = "€ " + amountCoupon.getFixedAmount();
+        }
+        return value;
+    }
+
+    private String typeFromChild(Coupon coupon){
+        String value = "";
+        if(coupon instanceof FixedAmountCoupon){
+            value = "fixed";
+        } else if (coupon instanceof PercentageCoupon){
+            value = "percentage";
         }
         return value;
     }
