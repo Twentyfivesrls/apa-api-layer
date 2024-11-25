@@ -16,8 +16,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +29,7 @@ public class CouponService {
 
     private final CategoryService categoryService;
 
-    public Page<CouponDTO> getAll(int page, int size, String sortColumn, String sortDirection) {
+    public Page<CouponDTO> getAll(int page, int size, String sortColumn, String sortDirection,boolean expired) {
         Sort sort;
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
             sort = Sort.by(Sort.Direction.ASC, "name");
@@ -39,7 +37,7 @@ public class CouponService {
             sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
         }
         Pageable pageable= PageRequest.of(page,size,sort);
-        List<Coupon> coupons = couponRepository.findAll();
+        List<Coupon> coupons = couponRepository.findAllByExpiredAndSoftDeletedFalse(expired);
         List<CouponDTO> dtos = couponMapperService.mapCouponsToDTO(coupons);
         return PageUtilities.convertListToPageWithSorting(dtos, pageable);
     }

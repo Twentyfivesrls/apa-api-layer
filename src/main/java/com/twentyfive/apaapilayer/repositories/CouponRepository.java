@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface CouponRepository extends MongoRepository<Coupon, String> {
 
-    List<Coupon> findAllByExpired(boolean expired);
+    List<Coupon> findAllByExpiredAndSoftDeletedFalse(boolean expired);
 }

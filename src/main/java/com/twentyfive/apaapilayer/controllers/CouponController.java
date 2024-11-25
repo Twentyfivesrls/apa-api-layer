@@ -19,8 +19,9 @@ public class CouponController {
     public ResponseEntity<Page<CouponDTO>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
                                                   @RequestParam(value = "size", defaultValue = "25") int size,
                                                   @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                  @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        return ResponseEntity.ok().body(couponService.getAll(page,size,sortColumn,sortDirection));
+                                                  @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+                                                  @RequestParam(value = "expired", defaultValue = "false") boolean expired) {
+        return ResponseEntity.ok().body(couponService.getAll(page,size,sortColumn,sortDirection,expired));
 
     }
 

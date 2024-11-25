@@ -16,7 +16,7 @@ public class CouponRefreshScheduling {
 
     @Scheduled(cron = "0 30 0 * * *")
     public void checkExpiredCoupons(){
-        List<Coupon> coupons = couponRepository.findAllByExpired(false);
+        List<Coupon> coupons = couponRepository.findAllByExpiredAndSoftDeletedFalse(false);
         for (Coupon coupon : coupons) {
             if(coupon.checkExpiredCoupon()){
                 coupon.setExpired(true);
