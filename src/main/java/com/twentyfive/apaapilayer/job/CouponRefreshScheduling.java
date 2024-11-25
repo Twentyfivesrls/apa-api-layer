@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.job;
 
 import com.twentyfive.apaapilayer.repositories.CouponRepository;
-import com.twentyfive.apaapilayer.services.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
