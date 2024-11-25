@@ -16,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +53,7 @@ public class CouponService {
         return couponMapperService.mapCouponToDetailsDTO(coupon,categories);
     }
     public Coupon save(Coupon coupon) {
+        coupon.setExpired(coupon.checkExpiredCoupon());
         if (coupon.getId() != null) {
             Optional<Coupon> optCouponToUpdate = couponRepository.findById(coupon.getId());
 
@@ -78,5 +81,4 @@ public class CouponService {
         couponRepository.save(coupon);
         return true;
     }
-
 }

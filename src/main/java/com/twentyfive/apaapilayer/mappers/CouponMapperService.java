@@ -72,12 +72,14 @@ public class CouponMapperService {
         }
         return priceRange;
     }
+
     private NumberRangeDTO mapNumberRangeToDTO(NumberRange numberRange) {
         NumberRangeDTO numberRangeDTO = new NumberRangeDTO();
         numberRangeDTO.setMin(numberRange.getMin() != null ? numberRange.getMin()+"€" : "-");
         numberRangeDTO.setMax(numberRange.getMax() != null ? numberRange.getMax()+"€" : "-");
         return numberRangeDTO;
     }
+
     private String validationPeriod(LocalDateRange dateRange){
         String validationPeriod = "";
         if(dateRange == null){
@@ -116,4 +118,5 @@ public class CouponMapperService {
         }
         return value;
     }
+
 }
