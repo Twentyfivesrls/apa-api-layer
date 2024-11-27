@@ -1,17 +1,20 @@
 package com.twentyfive.apaapilayer.controllers;
 
-import com.twentyfive.apaapilayer.dtos.CouponDTO;
-import com.twentyfive.apaapilayer.dtos.CouponDetailsDTO;
+import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.services.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/coupons")
 @RequiredArgsConstructor
+//@PreAuthorize("hasRole('ROLE_admin')")
 public class CouponController {
     private final CouponService couponService;
 
@@ -42,5 +45,11 @@ public class CouponController {
     @GetMapping("/changeStatus/{id}")
     public ResponseEntity<Boolean> changeStatus(@PathVariable String id) {
         return ResponseEntity.ok().body(couponService.changeStatus(id));
+    }
+
+    @PreAuthorize("hasRole('ROLE_customer') or hasRole('ROLE_admin')")
+    @PostMapping("/checkCoupon")
+    public ResponseEntity<SummaryOrderDTO> checkCoupon(@RequestBody CouponValidationReq couponValidationReq) throws IOException {
+        return ResponseEntity.ok().body(couponService.checkCoupon(couponValidationReq));
     }
 }

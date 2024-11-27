@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(InvalidCouponException.class)
     public ResponseEntity<ApiError> handleInvalidCouponException (InvalidCouponException ex) {
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "Coupon non valido!" + ex.getClass().getSimpleName());
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "Coupon non valido! " + ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 

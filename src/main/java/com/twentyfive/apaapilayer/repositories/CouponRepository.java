@@ -5,9 +5,11 @@ import org.springframework.stereotype.Repository;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CouponRepository extends MongoRepository<Coupon, String> {
 
     List<Coupon> findAllByExpiredAndSoftDeletedFalse(boolean expired);
+    Optional<Coupon> findByCodeAndSoftDeletedFalse(String code);
 }
