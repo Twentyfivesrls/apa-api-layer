@@ -15,5 +15,5 @@ public class CouponDTO {
     private String validationPeriod; //String buildata tra il range delle date del coupon
     private String value; //Valore che può essere % o €
     private String priceRange; //String buildata sul range di prezzo
-    private int maxTotalUsage;
+    private String maxTotalUsage;
 }

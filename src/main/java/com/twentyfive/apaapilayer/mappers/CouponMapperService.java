@@ -35,7 +35,7 @@ public class CouponMapperService {
         couponDTO.setValidationPeriod(validationPeriod(coupon.getDates()));
         couponDTO.setValue(valueFromChild(coupon));
         couponDTO.setPriceRange(priceRange(coupon.getPriceRange()));
-        couponDTO.setMaxTotalUsage(coupon.getMaxTotalUsage());
+        couponDTO.setMaxTotalUsage(validationMaxTotalUsage(coupon.getMaxTotalUsage()));
         return couponDTO;
     }
 
@@ -95,6 +95,16 @@ public class CouponMapperService {
             }
         }
         return validationPeriod;
+    }
+
+    private String validationMaxTotalUsage(Integer maxTotalUsage) {
+        String validationMaxTotalUsage = "";
+        if(maxTotalUsage == null){
+            validationMaxTotalUsage = "-";
+        } else {
+            validationMaxTotalUsage = maxTotalUsage.toString();
+        }
+        return validationMaxTotalUsage;
     }
 
     private String valueFromChild(Coupon coupon){
