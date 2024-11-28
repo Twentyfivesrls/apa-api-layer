@@ -98,7 +98,7 @@ public class CouponService {
     public SummaryOrderDTO checkCoupon(CouponValidationReq couponValidationReq) throws IOException {
         // Recupera il coupon
         Coupon coupon = couponRepository.findByCodeAndSoftDeletedFalse(couponValidationReq.getCouponCode())
-                .orElseThrow(InvalidCouponException::new);
+                .orElse(null);
 
         // Recupera il customer
         String idKeycloak = JwtUtilities.getIdKeycloak();
@@ -132,6 +132,9 @@ public class CouponService {
 
 
     private CouponValidation validateCoupon(Coupon coupon, CustomerAPA customer, List<ItemInPurchase> purchases) {
+        if (coupon == null || !coupon.isActive()){
+            return CouponValidation.NOT_VALID;
+        }
         if (coupon.checkExpiredCoupon()) {
             return CouponValidation.EXPIRED;
         }

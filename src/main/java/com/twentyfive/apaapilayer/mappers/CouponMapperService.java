@@ -59,15 +59,15 @@ public class CouponMapperService {
     private String priceRange(NumberRange numberRange) {
         String priceRange = "";
         if (numberRange == null) {
-            priceRange = "Nessun range di prezzo";
+            priceRange = "-";
         } else {
             if (numberRange.getMin() == null){
-                priceRange = "<"+numberRange.getMax();
+                priceRange = "< "+numberRange.getMax();
             }
             else if (numberRange.getMax() == null){
-                priceRange = ">"+numberRange.getMin();
+                priceRange = "> "+numberRange.getMin();
             } else {
-                priceRange = numberRange.getMin()+"€-"+numberRange.getMax()+"€";
+                priceRange = numberRange.getMin()+"€- "+numberRange.getMax()+" €";
             }
         }
         return priceRange;
@@ -75,21 +75,21 @@ public class CouponMapperService {
 
     private NumberRangeDTO mapNumberRangeToDTO(NumberRange numberRange) {
         NumberRangeDTO numberRangeDTO = new NumberRangeDTO();
-        numberRangeDTO.setMin(numberRange.getMin() != null ? numberRange.getMin()+"€" : "-");
-        numberRangeDTO.setMax(numberRange.getMax() != null ? numberRange.getMax()+"€" : "-");
+        numberRangeDTO.setMin(numberRange.getMin() != null ? numberRange.getMin()+" €" : "-");
+        numberRangeDTO.setMax(numberRange.getMax() != null ? numberRange.getMax()+" €" : "-");
         return numberRangeDTO;
     }
 
     private String validationPeriod(LocalDateRange dateRange){
         String validationPeriod = "";
         if(dateRange == null){
-            validationPeriod = "Per sempre";
+            validationPeriod = "∞";
         } else {
             if( dateRange.getStartDate() == null) {
                 validationPeriod = "Fino al "+ dateRange.getEndDate();
             }
             else if (dateRange.getEndDate() == null) {
-                validationPeriod = "Dal " + dateRange.getStartDate() + ", senza scadenza";
+                validationPeriod = "Dal " + dateRange.getStartDate();
             } else {
                 validationPeriod = dateRange.getStartDate() + " - " + dateRange.getEndDate();
             }
@@ -98,7 +98,7 @@ public class CouponMapperService {
     }
 
     private String validationMaxTotalUsage(Integer maxTotalUsage) {
-        String validationMaxTotalUsage = "";
+        String validationMaxTotalUsage;
         if(maxTotalUsage == null){
             validationMaxTotalUsage = "-";
         } else {
