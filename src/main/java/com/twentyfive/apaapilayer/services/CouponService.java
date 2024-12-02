@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.*;
+import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCouponException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
 import com.twentyfive.apaapilayer.mappers.CouponMapperService;
@@ -43,6 +44,8 @@ public class CouponService {
     private final ProductFixedRepository productFixedRepository;
     private final ProductKgRepository productKgRepository;
     private final TrayRepository trayRepository;
+
+    private final EmailService emailService;
 
     public Page<CouponDTO> getAll(int page, int size, String sortColumn, String sortDirection,boolean expired) {
         Sort sort;
@@ -332,4 +335,8 @@ public class CouponService {
         return totalDiscount;
     }
 
+    public Boolean sendCoupon(SendCouponReq sendCouponReq) throws IOException {
+        emailService.sendCoupon(sendCouponReq);
+        return true;
+    }
 }

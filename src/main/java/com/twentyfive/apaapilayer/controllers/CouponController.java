@@ -52,4 +52,9 @@ public class CouponController {
     public ResponseEntity<SummaryOrderDTO> checkCoupon(@RequestBody CouponValidationReq couponValidationReq) throws IOException {
         return ResponseEntity.ok().body(couponService.checkCoupon(couponValidationReq));
     }
+
+    @PostMapping("/sendCoupon")
+    public ResponseEntity<Boolean> sendCoupon(@RequestBody SendCouponReq sendCouponReq) throws IOException {
+        return ResponseEntity.ok().body(couponService.sendCoupon(sendCouponReq));
+    }
 }

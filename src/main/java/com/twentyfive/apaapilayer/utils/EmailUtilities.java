@@ -1,7 +1,9 @@
 package com.twentyfive.apaapilayer.utils;
 
+import com.google.gson.Gson;
 import com.twentyfive.apaapilayer.models.CustomerAPA;
 import com.twentyfive.apaapilayer.services.KeycloakService;
+import com.twentyfive.subscription.model.DeleteUserRoleMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -22,5 +24,11 @@ public class EmailUtilities {
         emailSendRequest.setSubject(subject);
         emailSendRequest.setAttributes(keycloakService.getEmailSettings());
         return emailSendRequest;
+    }
+
+    public String toEmailSendKafka(String template, String subject, String email) throws IOException {
+        Gson gson = new Gson();
+        EmailSendRequest emailSendRequest = toEmailSendRequest(template, subject, email);
+        return gson.toJson(emailSendRequest);
     }
 }
