@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Message;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.NumberRange;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -338,5 +340,20 @@ public class CouponService {
     public Boolean sendCoupon(SendCouponReq sendCouponReq) throws IOException {
         emailService.sendCoupon(sendCouponReq);
         return true;
+    }
+
+    public HomeCouponDTO randomCouponWithHome() {
+        List<Coupon> homeCoupons = couponRepository.findAllByExpiredFalseAndSoftDeletedFalseAndHomeIsNotNull();
+        if (homeCoupons == null){
+            return null;
+        }
+        Random random = new Random();
+        int index = random.nextInt(homeCoupons.size());
+        Coupon coupon = homeCoupons.get(index);
+
+        HomeCouponDTO homeCoupon = new HomeCouponDTO();
+        homeCoupon.setCode(coupon.getCode());
+        homeCoupon.setHome(coupon.getHome());
+        return homeCoupon;
     }
 }

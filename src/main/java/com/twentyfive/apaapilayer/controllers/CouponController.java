@@ -8,13 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Message;
 
 import java.io.IOException;
 
 @RestController
 @RequestMapping("/coupons")
 @RequiredArgsConstructor
-//@PreAuthorize("hasRole('ROLE_admin')")
+@PreAuthorize("hasRole('ROLE_admin')")
 public class CouponController {
     private final CouponService couponService;
 
@@ -56,5 +57,11 @@ public class CouponController {
     @PostMapping("/sendCoupon")
     public ResponseEntity<Boolean> sendCoupon(@RequestBody SendCouponReq sendCouponReq) throws IOException {
         return ResponseEntity.ok().body(couponService.sendCoupon(sendCouponReq));
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/homeCoupon")
+    public ResponseEntity<HomeCouponDTO> homeCoupon() {
+        return ResponseEntity.ok().body(couponService.randomCouponWithHome());
     }
 }

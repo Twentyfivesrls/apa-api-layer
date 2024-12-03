@@ -12,4 +12,5 @@ public interface CouponRepository extends MongoRepository<Coupon, String> {
 
     List<Coupon> findAllByExpiredAndSoftDeletedFalse(boolean expired);
     Optional<Coupon> findByCodeAndSoftDeletedFalse(String code);
+    List<Coupon> findAllByExpiredFalseAndSoftDeletedFalseAndHomeIsNotNull();
 }
