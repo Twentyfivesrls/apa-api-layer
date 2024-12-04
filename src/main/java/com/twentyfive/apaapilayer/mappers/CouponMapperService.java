@@ -75,6 +75,9 @@ public class CouponMapperService {
     }
 
     private NumberRangeDTO mapNumberRangeToDTO(NumberRange numberRange) {
+        if (numberRange == null) {
+            return null;
+        }
         NumberRangeDTO numberRangeDTO = new NumberRangeDTO();
         numberRangeDTO.setMin(numberRange.getMin() != null ? numberRange.getMin()+" €" : "-");
         numberRangeDTO.setMax(numberRange.getMax() != null ? numberRange.getMax()+" €" : "-");

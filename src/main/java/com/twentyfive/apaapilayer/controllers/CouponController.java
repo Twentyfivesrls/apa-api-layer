@@ -30,7 +30,7 @@ public class CouponController {
     }
 
     @GetMapping("/getById/{id}")
-    public ResponseEntity<CouponDetailsDTO> getById(@RequestParam(value = "id") String id) {
+    public ResponseEntity<CouponDetailsDTO> getById(@PathVariable String id) {
         return ResponseEntity.ok().body(couponService.getById(id));
     }
     @PostMapping("/save")
