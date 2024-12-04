@@ -53,6 +53,7 @@ public class CouponMapperService {
         couponDTO.setType(typeFromChild(coupon));
         couponDTO.setValue(valueFromChild(coupon));
         couponDTO.setSpecificCategories(categories);
+        couponDTO.setHome(coupon.getHome()!=null ? coupon.getHome() : null);
         return couponDTO;
     }
 

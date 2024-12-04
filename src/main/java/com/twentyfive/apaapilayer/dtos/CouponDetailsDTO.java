@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.LocalDateRange;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Message;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.NumberRange;
 
 import java.util.List;
@@ -24,4 +25,5 @@ public class CouponDetailsDTO {
     private Integer maxTotalUsage; //Numero massimo coupon consentiti, se null infiniti
     private Integer maxUsagePerCustomer; //Numero massimo per Customer consentiti, se null infiniti
     private List<CategoryMinimalDTO> specificCategories; //nome e id delle categorie impattate (se ci sono)
+    private Message home;
 }
