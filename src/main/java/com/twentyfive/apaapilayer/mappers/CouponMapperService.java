@@ -5,6 +5,7 @@ import com.twentyfive.apaapilayer.dtos.CouponDTO;
 import com.twentyfive.apaapilayer.dtos.CouponDetailsDTO;
 import com.twentyfive.apaapilayer.dtos.NumberRangeDTO;
 import org.springframework.stereotype.Service;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.AppliedCoupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.FixedAmountCoupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PercentageCoupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
@@ -55,6 +56,13 @@ public class CouponMapperService {
         couponDTO.setSpecificCategories(categories);
         couponDTO.setHome(coupon.getHome()!=null ? coupon.getHome() : null);
         return couponDTO;
+    }
+
+    public AppliedCoupon mapAppliedCouponFromCoupon(String code,double discount){
+        AppliedCoupon appliedCoupon = new AppliedCoupon();
+        appliedCoupon.setCode(code);
+        appliedCoupon.setDiscountValue(discount);
+        return appliedCoupon;
     }
 
     private String priceRange(NumberRange numberRange) {

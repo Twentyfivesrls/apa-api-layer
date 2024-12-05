@@ -4,10 +4,8 @@ import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.emails.EmailService;
-import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
-import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
-import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
-import com.twentyfive.apaapilayer.exceptions.InvalidOrderTimeException;
+import com.twentyfive.apaapilayer.exceptions.*;
+import com.twentyfive.apaapilayer.mappers.CouponMapperService;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.JwtUtilities;
@@ -27,6 +25,8 @@ import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
@@ -48,6 +48,8 @@ public class CustomerService {
     private final ActiveOrderService orderService;
     private final EmailService emailService;
     private final KeycloakService keycloakService;
+    private final CouponService couponService;
+    private final CouponUsageService couponUsageService;
     private final PaymentClientController paymentClientController;
     private final SettingRepository settingRepository;
     private final ProductKgRepository productKgRepository;
@@ -61,6 +63,7 @@ public class CustomerService {
     private final TrayRepository trayRepository;
     private final ActiveOrderRepository activeOrdersRepository;
     private final ProductFixedRepository productFixedRepository;
+    private final CouponMapperService couponMapperService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -97,7 +100,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -105,6 +108,8 @@ public class CustomerService {
         this.stompClientController = stompClientController;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
+        this.couponService = couponService;
+        this.couponUsageService = couponUsageService;
         this.paymentClientController = paymentClientController;
         this.settingRepository=settingRepository;
         this.productKgRepository = productKgRepository;
@@ -116,6 +121,7 @@ public class CustomerService {
         this.trayRepository = trayRepository;
         this.activeOrdersRepository= activeOrderRepository;
         this.productFixedRepository = productFixedRepository;
+        this.couponMapperService = couponMapperService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -286,6 +292,17 @@ public class CustomerService {
                 }
             }
             if (!selectedItems.isEmpty()) {
+                if (buyInfos.getCouponCode() != null){
+                    Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
+                    CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
+                    if(couponValidation == CouponValidation.VALID){
+                        double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems);
+                        AppliedCoupon appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(buyInfos.getCouponCode(), discount);
+                        couponUsageService.save(customer.getId(),coupon.getId());
+                    } else {
+                        throw new InvalidCouponException();
+                    }
+                }
                 OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems);
                 if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
                     orderService.createOrder(order);
