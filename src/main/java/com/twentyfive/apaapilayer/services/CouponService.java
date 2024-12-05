@@ -73,9 +73,10 @@ public class CouponService {
                 .orElse(null);
     }
     public Coupon save(Coupon coupon) {
-        if(couponRepository.existsByCodeAndSoftDeletedFalse(coupon.getCode())) {
-            throw new InvalidCouponException();
-        }
+//        ToDo: ROTOOOOOOO
+//        if(couponRepository.existsByCodeAndSoftDeletedFalse(coupon.getCode())) {
+//            throw new InvalidCouponException();
+//        }
         coupon.setExpired(coupon.checkExpiredCoupon());
         return couponRepository.save(coupon);
     }
