@@ -19,8 +19,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
-import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Message;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.NumberRange;
 
 import java.io.IOException;
@@ -70,18 +68,15 @@ public class CouponService {
         }
         return couponMapperService.mapCouponToDetailsDTO(coupon,categories);
     }
+    public Coupon getByCode(String code) {
+        return couponRepository.findByCodeAndSoftDeletedFalse(code)
+                .orElse(null);
+    }
     public Coupon save(Coupon coupon) {
-        coupon.setExpired(coupon.checkExpiredCoupon());
-        if (coupon.getId() != null) {
-            Optional<Coupon> optCouponToUpdate = couponRepository.findById(coupon.getId());
-
-            if (optCouponToUpdate.isPresent()) {
-                Coupon couponToUpdate = optCouponToUpdate.get();
-                //TODO da vedere se passare da fixedAmount a percentage si spacca (e viceversa)
-                ReflectionUtilities.updateNonNullFields(coupon, couponToUpdate);
-                return couponRepository.save(couponToUpdate);
-            }
+        if(couponRepository.existsByCodeAndSoftDeletedFalse(coupon.getCode())) {
+            throw new InvalidCouponException();
         }
+        coupon.setExpired(coupon.checkExpiredCoupon());
         return couponRepository.save(coupon);
     }
 
@@ -136,7 +131,7 @@ public class CouponService {
     }
 
 
-    private CouponValidation validateCoupon(Coupon coupon, CustomerAPA customer, List<ItemInPurchase> purchases) {
+    public CouponValidation validateCoupon(Coupon coupon, CustomerAPA customer, List<ItemInPurchase> purchases) {
         if (coupon == null || !coupon.isActive()){
             return CouponValidation.NOT_VALID;
         }
@@ -298,7 +293,7 @@ public class CouponService {
         return 0;
     }
 
-    private double applyCouponToPurchasesAndCalculateDiscount(Coupon coupon, List<ItemInPurchase> purchases) {
+    public double applyCouponToPurchasesAndCalculateDiscount(Coupon coupon, List<ItemInPurchase> purchases) {
         if (coupon == null || purchases == null || purchases.isEmpty()) return 0;
 
         double totalDiscount = 0;
