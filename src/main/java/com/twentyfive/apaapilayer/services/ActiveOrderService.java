@@ -186,8 +186,9 @@ public class ActiveOrderService {
             } else if (roles.contains("baker")) {
                 orderAPA.setBakerUnread(false);
                 activeOrderRepository.save(orderAPA);
-            } else { //dovremmo mappare gli oggetti uguali nello stesso dto. (bIP e pIP) (customer)
-
+            } else if (roles.contains("counter")){ //dovremmo mappare gli oggetti uguali nello stesso dto. (bIP e pIP) (customer)
+                orderAPA.setCounterUnread(false);
+                activeOrderRepository.save(orderAPA);
             }
             return convertToOrderDetailsAPADTO(orderAPA);
         } else {
@@ -206,6 +207,7 @@ public class ActiveOrderService {
         dto.setStatus(status);
         dto.setOrderNote(order.getNote());
         dto.setUnread(order.isUnread());
+        dto.setAppliedCoupon(order.getAppliedCoupon());
         if(order.getCustomerId()!=null){
             Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
             if(optCustomer.isPresent()){

@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.CouponDTO;
 import com.twentyfive.apaapilayer.dtos.CouponDetailsDTO;
 import com.twentyfive.apaapilayer.dtos.NumberRangeDTO;
+import com.twentyfive.apaapilayer.models.CategoryAPA;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.AppliedCoupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.FixedAmountCoupon;
@@ -58,11 +59,29 @@ public class CouponMapperService {
         return couponDTO;
     }
 
-    public AppliedCoupon mapAppliedCouponFromCoupon(String code,double discount){
+    public AppliedCoupon mapAppliedCouponFromCoupon(Coupon coupon,double discount,List<CategoryAPA> categories){
         AppliedCoupon appliedCoupon = new AppliedCoupon();
-        appliedCoupon.setCode(code);
+        appliedCoupon.setCode(coupon.getCode());
+        appliedCoupon.setValue(valueFromChild(coupon));
         appliedCoupon.setDiscountValue(discount);
+        appliedCoupon.setDescription(descriptionFromCoupon(categories));
         return appliedCoupon;
+    }
+
+    private String descriptionFromCoupon(List<CategoryAPA> categories) {
+        if (categories.isEmpty()) {
+            return "Sconto applicato sul totale";
+        }
+
+        StringBuilder description = new StringBuilder("Sconto applicato sulle seguenti categorie: ");
+        for (CategoryAPA category : categories) {
+            description.append(category.getName()).append(", ");
+        }
+
+        // Rimuove la virgola finale
+        description.setLength(description.length() - 2);
+
+        return description.toString();
     }
 
     private String priceRange(NumberRange numberRange) {

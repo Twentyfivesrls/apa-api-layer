@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.dtos;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.AppliedCoupon;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +27,7 @@ public class OrderDetailsAPADTO {
     private double totalWeight;
     private String status;
     private boolean unread;
+    private AppliedCoupon appliedCoupon;
 
     public String getFormattedPickupDate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy HH:mm", Locale.ITALIAN);

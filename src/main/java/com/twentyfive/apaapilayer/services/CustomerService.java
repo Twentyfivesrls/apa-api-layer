@@ -280,6 +280,7 @@ public class CustomerService {
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
         String email="";
         String firstName="";
+        AppliedCoupon appliedCoupon = new AppliedCoupon();
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
@@ -297,13 +298,17 @@ public class CustomerService {
                     CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
                     if(couponValidation == CouponValidation.VALID){
                         double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems);
-                        AppliedCoupon appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(buyInfos.getCouponCode(), discount);
+                        List<CategoryAPA> categories = new ArrayList<>();
+                        if(coupon.getSpecificCategoriesId() != null){
+                            categories = categoryRepository.findAllById(coupon.getSpecificCategoriesId());
+                        }
+                        appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(coupon, discount,categories);
                         couponUsageService.save(customer.getId(),coupon.getId());
                     } else {
                         throw new InvalidCouponException();
                     }
                 }
-                OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems);
+                OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
                 if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
@@ -414,7 +419,7 @@ public class CustomerService {
 
 
 
-    private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items) {
+    private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items,AppliedCoupon appliedCoupon) {
         OrderAPA order = new OrderAPA();
         boolean toPrepare = false;
         if (buyInfos.getCustomInfo().getFirstName()!=null){
@@ -428,6 +433,7 @@ public class CustomerService {
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
         order.setNote(buyInfos.getNote());
+        order.setAppliedCoupon(appliedCoupon);
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
 
