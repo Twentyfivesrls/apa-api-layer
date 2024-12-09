@@ -266,38 +266,63 @@ public class ActiveOrderService {
         }
     }
 
-    private OrderDetailsPrintAPADTO convertToOrderDetailsPrintAPADTO(OrderAPA order) {
+    private OrderDetailsPrintAPADTO convertToOrderDetailsPrintAPADTO(OrderAPA order) throws IOException {
         OrderDetailsPrintAPADTO dto = new OrderDetailsPrintAPADTO();
         dto.setId(order.getId());
         dto.setPickupDate(order.getPickupDate().atTime(order.getPickupTime()));
         dto.setStatus(order.getStatus().getStatus());
         dto.setNote(order.getNote());
-        List<ProductInPurchaseDTO> productDTOs = order.getProductsInPurchase().stream()
-                .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
-                .collect(Collectors.toList());
-        dto.setProducts(productDTOs);
 
-        List<BundleInPurchaseDTO> bundleDTOs = order.getBundlesInPurchase().stream()
-                .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
-                .collect(Collectors.toList());
-        dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
+        // Recupera i ruoli
+        List<String> roles = JwtUtilities.getRoles();
 
-        if(order.getCustomerId()!=null){
+        List<ProductInPurchaseDTO> productDTOs;
+        List<BundleInPurchaseDTO> bundleDTOs;
+
+        if (roles.contains("baker")) {
+            // Filtra i prodotti con toPrepare = true
+            productDTOs = order.getProductsInPurchase().stream()
+                    .filter(ProductInPurchase::isToPrepare)
+                    .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setProducts(productDTOs);
+
+            // Filtra i bundle con toPrepare = true
+            bundleDTOs = order.getBundlesInPurchase().stream()
+                    .filter(BundleInPurchase::isToPrepare)
+                    .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setBundles(bundleDTOs);
+        } else {
+            // Per gli altri ruoli, non si applica il filtro
+            productDTOs = order.getProductsInPurchase().stream()
+                    .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setProducts(productDTOs);
+
+            bundleDTOs = order.getBundlesInPurchase().stream()
+                    .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
+                    .collect(Collectors.toList());
+            dto.setBundles(bundleDTOs);
+        }
+
+        // Gestione informazioni del cliente
+        if (order.getCustomerId() != null) {
             Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
-            if(optCustomer.isPresent()){
+            if (optCustomer.isPresent()) {
                 CustomerAPA customer = optCustomer.get();
-                dto.setEmail(customer.getEmail()); // Assumi una relazione uno-a-uno con Customer
-                dto.setPhoneNumber(customer.getPhoneNumber()); // Assumi che il telefono sia disponibile
+                dto.setEmail(customer.getEmail());
+                dto.setPhoneNumber(customer.getPhoneNumber());
                 dto.setFullName(customer.getFirstName() + " " + customer.getLastName());
             }
-        } else {
-            dto.setEmail(order.getCustomInfo().getEmail()); // Assumi una relazione uno-a-uno con Customer
-            dto.setPhoneNumber(order.getCustomInfo().getPhoneNumber()); // Assumi che il telefono sia disponibile
+        } else if (order.getCustomInfo() != null) {
+            dto.setEmail(order.getCustomInfo().getEmail());
+            dto.setPhoneNumber(order.getCustomInfo().getPhoneNumber());
             dto.setFullName(order.getCustomInfo().getFirstName() + " " + order.getCustomInfo().getLastName());
         }
+
         return dto;
     }
-
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
         String name ="";
         double price = 0;
