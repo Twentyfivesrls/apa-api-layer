@@ -59,12 +59,13 @@ public class CouponMapperService {
         return couponDTO;
     }
 
-    public AppliedCoupon mapAppliedCouponFromCoupon(Coupon coupon,double discount,List<CategoryAPA> categories){
+    public AppliedCoupon mapAppliedCouponFromCoupon(Coupon coupon,double discount,List<CategoryAPA> categories, boolean totalOrderDiscount){
         AppliedCoupon appliedCoupon = new AppliedCoupon();
         appliedCoupon.setCode(coupon.getCode());
         appliedCoupon.setValue(valueFromChild(coupon));
         appliedCoupon.setDiscountValue(discount);
         appliedCoupon.setDescription(descriptionFromCoupon(categories));
+        appliedCoupon.setTotalOrderDiscount(totalOrderDiscount);
         return appliedCoupon;
     }
 

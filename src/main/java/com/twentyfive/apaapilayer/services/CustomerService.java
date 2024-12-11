@@ -301,12 +301,13 @@ public class CustomerService {
                     Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
                     CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
                     if(couponValidation == CouponValidation.VALID){
+                        boolean totalOrderDiscount = coupon.getSpecificCategoriesId() != null || coupon.getSpecificCategoriesId().size() == 0 ? true : false;
                         double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems);
                         List<CategoryAPA> categories = new ArrayList<>();
                         if(coupon.getSpecificCategoriesId() != null){
                             categories = categoryRepository.findAllById(coupon.getSpecificCategoriesId());
                         }
-                        appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(coupon, discount,categories);
+                        appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(coupon, discount,categories, totalOrderDiscount);
                         coupon.setUsageCount(coupon.getUsageCount()+1);
                         couponRepository.save(coupon);
                         couponUsageService.save(customer.getId(),coupon.getId());
@@ -525,7 +526,11 @@ public class CustomerService {
         }
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
-        order.setTotalPrice(calculateTotalPrice(items));
+        if(appliedCoupon.isTotalOrderDiscount()){
+            order.setTotalPrice(calculateTotalPrice(items)-appliedCoupon.getDiscountValue());
+        } else {
+            order.setTotalPrice(calculateTotalPrice(items));
+        }
         if (toPrepare){
             order.setBakerUnread(true);
             TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
