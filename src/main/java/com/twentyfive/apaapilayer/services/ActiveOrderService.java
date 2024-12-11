@@ -228,7 +228,7 @@ public class ActiveOrderService {
         List<String> roles = JwtUtilities.getRoles();
         List<ProductInPurchaseDTO> productDTOs;
         List<BundleInPurchaseDTO> bundleDTOs;
-        if (roles.contains("admin")){
+        if (roles.contains("admin") || roles.contains("counter")){
             productDTOs = order.getProductsInPurchase().stream()
                     .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
                     .collect(Collectors.toList());
@@ -658,7 +658,7 @@ public class ActiveOrderService {
         if(optOrder.isPresent()){
             OrderAPA order = optOrder.get();
             boolean alreadySomeToPrepare = order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
-            if (roles.contains("admin")){
+            if (roles.contains("admin") || roles.contains("counter")){
                 products = order.getProductsInPurchase();
                 bundles = order.getBundlesInPurchase();
             } else if (roles.contains("baker")){
@@ -756,10 +756,12 @@ public class ActiveOrderService {
         if (order.getCustomInfo() != null) {
             customer.setFirstName(order.getCustomInfo().getFirstName());
             customer.setEmail(order.getCustomInfo().getEmail());
+        } else {
+            // Se CustomInfo è null, prendi il customer usando l'idCustomer
+            customer = customerRepository.findById(order.getCustomerId())
+                    .orElse(null);
         }
-        // Se CustomInfo è null, prendi il customer usando l'idCustomer
-        return customerRepository.findById(order.getCustomerId())
-                .orElse(null);
+        return customer;
     }
 
 }
