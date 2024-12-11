@@ -10,7 +10,6 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.JwtUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
-import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,10 +21,8 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.NumberRange;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -73,10 +70,9 @@ public class CouponService {
                 .orElse(null);
     }
     public Coupon save(Coupon coupon) {
-//        ToDo: ROTOOOOOOO
-//        if(couponRepository.existsByCodeAndSoftDeletedFalse(coupon.getCode())) {
-//            throw new InvalidCouponException();
-//        }
+        if(couponRepository.existsByCodeAndSoftDeletedFalseAndIdNot(coupon.getCode(), coupon.getId())) {
+            throw new InvalidCouponException();
+        }
         coupon.setExpired(coupon.checkExpiredCoupon());
         return couponRepository.save(coupon);
     }
@@ -147,15 +143,13 @@ public class CouponService {
         if (!isUsageWithinLimit(coupon, customer.getId())) {
             return CouponValidation.LIMIT_USAGE;
         }
-
-        if (coupon.getSpecificCategoriesId() != null && !isItemEligibleForCoupon(coupon, purchases)) {
-            return CouponValidation.NOT_ELIGIBLE;
+        if (coupon.getSpecificCategoriesId() !=null && coupon.getSpecificCategoriesId().size()>0 ){
+            if (!isItemEligibleForCoupon(coupon, purchases) || !isPriceInRange(purchases,coupon.getPriceRange())) {
+                return CouponValidation.NOT_ELIGIBLE;
+            }
         }
 
-        if (coupon.getSpecificCategoriesId() != null && !isPriceInRange(purchases,coupon.getPriceRange())){
-            return CouponValidation.NOT_ELIGIBLE;
-        }
-        if (coupon.getSpecificCategoriesId() == null) {
+        if (coupon.getSpecificCategoriesId() == null || coupon.getSpecificCategoriesId().size() == 0) {
             double totalPrice = purchases.stream()
                     .mapToDouble(ItemInPurchase::getTotalPrice) // Estrae il prezzo totale di ogni item
                     .sum(); // Somma tutti i prezzi
@@ -214,7 +208,7 @@ public class CouponService {
     private void applyCouponToPurchases(Coupon coupon, List<ItemInPurchase> purchases) {
         if (coupon == null || purchases == null || purchases.isEmpty()) return;
 
-        if (coupon.getSpecificCategoriesId() == null) {
+        if (coupon.getSpecificCategoriesId() == null || coupon.getSpecificCategoriesId().size() == 0) {
             // Applica il coupon sull'intero ordine
             applyCouponToEntireOrder(coupon, purchases);
         } else {
@@ -299,7 +293,7 @@ public class CouponService {
 
         double totalDiscount = 0;
 
-        if (coupon.getSpecificCategoriesId() == null) {
+        if (coupon.getSpecificCategoriesId() == null || coupon.getSpecificCategoriesId().size() == 0) {
             // Applica il coupon sull'intero ordine
             double totalPrice = purchases.stream()
                     .mapToDouble(ItemInPurchase::getTotalPrice)

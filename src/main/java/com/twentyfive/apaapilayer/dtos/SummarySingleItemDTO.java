@@ -11,4 +11,5 @@ public class SummarySingleItemDTO {
     private String name;
     private int quantity;
     private double price;
+    private int position;
 }

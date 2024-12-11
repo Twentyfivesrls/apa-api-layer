@@ -257,10 +257,12 @@ public class CustomerService {
                 }
             }
             if (!selectedItems.isEmpty()) {
-                for (ItemInPurchase item : selectedItems) {
+                for (int i = 0; i < selectedItems.size(); i++) {
+                    ItemInPurchase item = selectedItems.get(i);
                     SummarySingleItemDTO singleItem = new SummarySingleItemDTO();
                     singleItem.setPrice(item.getTotalPrice());
                     singleItem.setQuantity(item.getQuantity());
+                    singleItem.setPosition(positions.get(i)); // Setta la posizione dell'item
                     if (item instanceof ProductInPurchase){
                         ProductKgAPA product = productKgRepository.findById(item.getId()).get();
                         singleItem.setName(product.getName());
