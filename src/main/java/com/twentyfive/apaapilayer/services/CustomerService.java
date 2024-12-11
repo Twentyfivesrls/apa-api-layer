@@ -302,7 +302,7 @@ public class CustomerService {
                     CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
                     if(couponValidation == CouponValidation.VALID){
                         boolean totalOrderDiscount = coupon.getSpecificCategoriesId() != null || coupon.getSpecificCategoriesId().size() == 0 ? true : false;
-                        double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems);
+                        double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems,false);
                         List<CategoryAPA> categories = new ArrayList<>();
                         if(coupon.getSpecificCategoriesId() != null){
                             categories = categoryRepository.findAllById(coupon.getSpecificCategoriesId());
@@ -311,8 +311,6 @@ public class CustomerService {
                         coupon.setUsageCount(coupon.getUsageCount()+1);
                         couponRepository.save(coupon);
                         couponUsageService.save(customer.getId(),coupon.getId());
-                    } else {
-                        throw new InvalidCouponException();
                     }
                 }
                 OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
@@ -346,6 +344,7 @@ public class CustomerService {
     public Map<String,Object> prepareBuying(String paymentAppId, PaymentReq paymentReq) throws IOException {
         String idKeycloak = JwtUtilities.getIdKeycloak();
         Optional<CustomerAPA> optCustomer = customerRepository.findByIdKeycloak(idKeycloak);
+        BuyInfosDTO buyInfos = paymentReq.getBuyInfos();
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             Cart cart = customer.getCart();
@@ -357,19 +356,27 @@ public class CustomerService {
                 }
             }
             List<SimpleItem> items = new ArrayList<>();
+
             double totalValue = 0;
             if (!selectedItems.isEmpty()) {
+                if (buyInfos.getCouponCode() != null) {
+                    Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
+                    CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
+                    if (couponValidation == CouponValidation.VALID) {
+                        couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems, true);
+                    }
+                }
                 for (ItemInPurchase selectedItem : selectedItems) {
                     SimpleItem simpleItem = new SimpleItem();
                     SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
-                    String totalPrice = String.format(Locale.US,"%.2f", selectedItem.getTotalPrice()/selectedItem.getQuantity());
+                    String totalPrice = String.format(Locale.US, "%.2f", selectedItem.getTotalPrice() / selectedItem.getQuantity());
                     simpleUnitAmount.setValue(String.valueOf(totalPrice));
                     simpleUnitAmount.setCurrency_code("EUR");
-                    String name ="";
-                    String description ="";
-                    if(selectedItem instanceof ProductInPurchase){
+                    String name = "";
+                    String description = "";
+                    if (selectedItem instanceof ProductInPurchase) {
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
-                        if(optProductKg.isPresent()){
+                        if (optProductKg.isPresent()) {
                             name = optProductKg.get().getName();
                             description = optProductKg.get().getDescription();
                         }
@@ -384,7 +391,7 @@ public class CustomerService {
                     simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
                     simpleItem.setDescription(description);
                     simpleItem.setUnit_amount(simpleUnitAmount);
-                    totalValue +=selectedItem.getTotalPrice();
+                    totalValue += selectedItem.getTotalPrice();
                     items.add(simpleItem);
                 }
             }
@@ -441,7 +448,9 @@ public class CustomerService {
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
         order.setNote(buyInfos.getNote());
-        order.setAppliedCoupon(appliedCoupon);
+        if(appliedCoupon!=null){
+            order.setAppliedCoupon(appliedCoupon);
+        }
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
 

@@ -112,7 +112,7 @@ public class CouponService {
 
         // Applica il coupon al carrello
         if (validationStatus == CouponValidation.VALID) {
-            discountApplied = applyCouponToPurchasesAndCalculateDiscount(coupon, purchases);
+            discountApplied = applyCouponToPurchasesAndCalculateDiscount(coupon, purchases, false);
         }
         // Calcola il prezzo totale dopo gli sconti
         double finalTotalPrice = purchases.stream()
@@ -291,7 +291,7 @@ public class CouponService {
         return 0;
     }
 
-    public double applyCouponToPurchasesAndCalculateDiscount(Coupon coupon, List<ItemInPurchase> purchases) {
+    public double applyCouponToPurchasesAndCalculateDiscount(Coupon coupon, List<ItemInPurchase> purchases,boolean isPaypal) {
         if (coupon == null || purchases == null || purchases.isEmpty()) return 0;
 
         double totalDiscount = 0;
@@ -308,16 +308,17 @@ public class CouponService {
                 totalDiscount = Math.min(((FixedAmountCoupon) coupon).getFixedAmount(), totalPrice);
             }
 
-            /*/ Distribuisci lo sconto proporzionalmente agli articoli
-            if (totalDiscount > 0) {
-                double finalDiscount = totalDiscount; // Necessario per lambda
-                purchases.forEach(item -> {
-                    double itemDiscount = (item.getTotalPrice() / totalPrice) * finalDiscount;
-                    item.applyDiscount(itemDiscount);
-                });
+            // Distribuisci lo sconto proporzionalmente agli articoli
+            if(isPaypal){
+                if (totalDiscount > 0) {
+                    double finalDiscount = totalDiscount; // Necessario per lambda
+                    purchases.forEach(item -> {
+                        double itemDiscount = (item.getTotalPrice() / totalPrice) * finalDiscount;
+                        item.applyDiscount(itemDiscount);
+                    });
+                }
             }
 
-             */
         } else {
             // Applica il coupon solo agli item validi
             for (ItemInPurchase item : purchases) {
