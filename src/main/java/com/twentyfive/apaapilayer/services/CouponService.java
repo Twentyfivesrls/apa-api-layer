@@ -165,6 +165,9 @@ public class CouponService {
     }
 
     private boolean isUsageWithinLimit(Coupon coupon, String customerId) {
+        if (coupon.getMaxTotalUsage() == null && coupon.getMaxUsagePerCustomer() == null){
+            return true;
+        }
         // Recupera il numero di utilizzi specifico del cliente
         return couponUsageRepository.findByIdCouponAndIdCustomer(coupon.getId(), customerId)
                 .map(couponUsage -> couponUsage.getUsageCount() < coupon.getMaxUsagePerCustomer())
