@@ -343,8 +343,9 @@ public class CustomerService {
         return false;
     }
 
-    public Map<String,Object> prepareBuying(String id, String paymentAppId, PaymentReq paymentReq) {
-        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+    public Map<String,Object> prepareBuying(String paymentAppId, PaymentReq paymentReq) throws IOException {
+        String idKeycloak = JwtUtilities.getIdKeycloak();
+        Optional<CustomerAPA> optCustomer = customerRepository.findByIdKeycloak(idKeycloak);
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             Cart cart = customer.getCart();
