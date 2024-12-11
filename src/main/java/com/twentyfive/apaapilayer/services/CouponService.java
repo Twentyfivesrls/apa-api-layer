@@ -114,11 +114,14 @@ public class CouponService {
         if (validationStatus == CouponValidation.VALID) {
             discountApplied = applyCouponToPurchasesAndCalculateDiscount(coupon, purchases);
         }
-
         // Calcola il prezzo totale dopo gli sconti
         double finalTotalPrice = purchases.stream()
                 .mapToDouble(ItemInPurchase::getTotalPrice)
                 .sum();
+        if(coupon.getSpecificCategoriesId()!=null && coupon.getSpecificCategoriesId().size() == 0){
+            finalTotalPrice-=discountApplied;
+        }
+
 
         // Genera la lista dei dettagli degli articoli
         List<SummarySingleItemDTO> summaryItems = generateSummaryItems(purchases);
@@ -305,7 +308,7 @@ public class CouponService {
                 totalDiscount = Math.min(((FixedAmountCoupon) coupon).getFixedAmount(), totalPrice);
             }
 
-            // Distribuisci lo sconto proporzionalmente agli articoli
+            /*/ Distribuisci lo sconto proporzionalmente agli articoli
             if (totalDiscount > 0) {
                 double finalDiscount = totalDiscount; // Necessario per lambda
                 purchases.forEach(item -> {
@@ -313,6 +316,8 @@ public class CouponService {
                     item.applyDiscount(itemDiscount);
                 });
             }
+
+             */
         } else {
             // Applica il coupon solo agli item validi
             for (ItemInPurchase item : purchases) {

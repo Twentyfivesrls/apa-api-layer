@@ -64,6 +64,7 @@ public class CustomerService {
     private final ActiveOrderRepository activeOrdersRepository;
     private final ProductFixedRepository productFixedRepository;
     private final CouponMapperService couponMapperService;
+    private final CouponRepository couponRepository;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -100,7 +101,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -122,6 +123,7 @@ public class CustomerService {
         this.activeOrdersRepository= activeOrderRepository;
         this.productFixedRepository = productFixedRepository;
         this.couponMapperService = couponMapperService;
+        this.couponRepository = couponRepository;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -305,6 +307,8 @@ public class CustomerService {
                             categories = categoryRepository.findAllById(coupon.getSpecificCategoriesId());
                         }
                         appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(coupon, discount,categories);
+                        coupon.setUsageCount(coupon.getUsageCount()+1);
+                        couponRepository.save(coupon);
                         couponUsageService.save(customer.getId(),coupon.getId());
                     } else {
                         throw new InvalidCouponException();
