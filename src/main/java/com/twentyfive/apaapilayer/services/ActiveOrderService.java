@@ -86,24 +86,6 @@ public class ActiveOrderService {
     }
 
     public OrderAPA createOrder(OrderAPA order) {
-        double totalPrice=0;
-        if(order.getBundlesInPurchase()!=null){
-            if (order.getBundlesInPurchase().size()>0){
-                for(BundleInPurchase bIP : order.getBundlesInPurchase()){
-                    totalPrice+=bIP.getTotalPrice();
-                }
-            }
-        }
-        if(order.getProductsInPurchase()!=null){
-            if (order.getProductsInPurchase().size()>0){
-                for(ProductInPurchase pIP : order.getProductsInPurchase()){
-
-                    totalPrice+=pIP.getTotalPrice();
-                }
-            }
-        }
-        order.setTotalPrice(totalPrice);
-        order.setCreatedDate(LocalDateTime.now());
         return activeOrderRepository.save(order);
     }
 

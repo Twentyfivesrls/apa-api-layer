@@ -301,7 +301,7 @@ public class CustomerService {
                     Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
                     CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
                     if(couponValidation == CouponValidation.VALID){
-                        boolean totalOrderDiscount = coupon.getSpecificCategoriesId() != null || coupon.getSpecificCategoriesId().size() == 0 ? true : false;
+                        boolean totalOrderDiscount = coupon.getSpecificCategoriesId() == null || coupon.getSpecificCategoriesId().size() == 0 ? true : false;
                         double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems,false);
                         List<CategoryAPA> categories = new ArrayList<>();
                         if(coupon.getSpecificCategoriesId() != null){
@@ -549,6 +549,7 @@ public class CustomerService {
         } else {
             order.setStatus(OrderStatus.RICEVUTO);
         }
+        order.setCreatedDate(LocalDateTime.now());
         return order;
     }
 
