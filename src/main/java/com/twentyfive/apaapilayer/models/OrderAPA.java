@@ -12,7 +12,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Order;
 @AllArgsConstructor
 public class OrderAPA extends Order {
 
-    private boolean bakerUnread = true; //status unread per pasticceria
-    private boolean counterUnread; //status unread per bancone
+    private boolean bakerUnread; //status unread per pasticceria
+    private boolean counterUnread = true; //status unread per bancone
 
 }
