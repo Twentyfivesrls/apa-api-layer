@@ -71,10 +71,10 @@ public class CouponMapperService {
 
     private String descriptionFromCoupon(List<CategoryAPA> categories) {
         if (categories.isEmpty()) {
-            return "Sconto applicato sul totale";
+            return "totale";
         }
 
-        StringBuilder description = new StringBuilder("Sconto applicato sulle seguenti categorie: ");
+        StringBuilder description = new StringBuilder();
         for (CategoryAPA category : categories) {
             description.append(category.getName()).append(", ");
         }
