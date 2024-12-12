@@ -198,7 +198,7 @@ public class CouponService {
 
         return items != null && items.stream().anyMatch(item -> {
             if (item == null || item.getQuantity() <= 0) return false; // Evita divisioni per 0 o item nulli
-            double unitPrice = item.getTotalPrice() / item.getQuantity();
+            double unitPrice = item.getTotalPrice();
             return isWithinRange(unitPrice, range);
         });
     }
