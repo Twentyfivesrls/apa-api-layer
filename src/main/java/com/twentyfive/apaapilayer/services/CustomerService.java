@@ -537,7 +537,8 @@ public class CustomerService {
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
         if(appliedCoupon.isTotalOrderDiscount()){
-            order.setTotalPrice(calculateTotalPrice(items)-appliedCoupon.getDiscountValue());
+            double discount = couponMapperService.discountNumber(appliedCoupon.getDiscountValue());
+            order.setTotalPrice(calculateTotalPrice(items)-discount);
         } else {
             order.setTotalPrice(calculateTotalPrice(items));
         }

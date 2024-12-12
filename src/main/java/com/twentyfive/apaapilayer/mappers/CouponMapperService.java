@@ -63,7 +63,7 @@ public class CouponMapperService {
         AppliedCoupon appliedCoupon = new AppliedCoupon();
         appliedCoupon.setCode(coupon.getCode());
         appliedCoupon.setValue(valueFromChild(coupon));
-        appliedCoupon.setDiscountValue(discount);
+        appliedCoupon.setDiscountValue(discountFromCoupon(discount));
         appliedCoupon.setDescription(descriptionFromCoupon(categories));
         appliedCoupon.setTotalOrderDiscount(totalOrderDiscount);
         return appliedCoupon;
@@ -85,6 +85,9 @@ public class CouponMapperService {
         return description.toString();
     }
 
+    private String discountFromCoupon(double value){
+        return "€ " +value;
+    }
     private String priceRange(NumberRange numberRange) {
         String priceRange = "";
         if (numberRange == null) {
@@ -159,6 +162,11 @@ public class CouponMapperService {
             value = "percentage";
         }
         return value;
+    }
+    public double discountNumber(String discountApplied){
+        return Double.parseDouble(discountApplied
+                .replaceAll("[^\\d.,-]", "") // Rimuovi caratteri non numerici
+                .replace(",", "."));        // Converti le virgole in punti
     }
 
 }
