@@ -13,8 +13,11 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.LocalDateRange;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.NumberRange;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class CouponMapperService {
@@ -86,7 +89,10 @@ public class CouponMapperService {
     }
 
     private String discountFromCoupon(double value) {
-        return String.format("€ %.2f", value);
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
+        symbols.setDecimalSeparator(','); // Imposta la virgola come separatore decimale
+        DecimalFormat decimalFormat = new DecimalFormat("0.00", symbols);
+        return "€ " + decimalFormat.format(value);
     }
 
     private String priceRange(NumberRange numberRange) {

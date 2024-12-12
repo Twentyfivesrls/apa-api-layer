@@ -123,13 +123,14 @@ public class ActiveOrderService {
             } else {
                 dto.setMethodPayment("Al ritiro");
             }
-            dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+            dto.setPrice("€ " +String.format("%.2f", order.getTotalPrice()));
             String status = maskModifiedFromBakerForCustomers(order.getStatus());
             dto.setStatus(status);
             dto.setUnread(order.isUnread());
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
             dto.setCreatedDate(order.getCreatedDate());
+            dto.setDiscountApplied(order.getAppliedCoupon().getDiscountValue());
             if(order.getCustomerId()!= null){
                 Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
                 if(optCustomerId.isPresent()){
