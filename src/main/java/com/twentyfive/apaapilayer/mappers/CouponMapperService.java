@@ -71,7 +71,7 @@ public class CouponMapperService {
 
     private String descriptionFromCoupon(List<CategoryAPA> categories) {
         if (categories.isEmpty()) {
-            return "totale";
+            return "Totale";
         }
 
         StringBuilder description = new StringBuilder();
@@ -85,9 +85,10 @@ public class CouponMapperService {
         return description.toString();
     }
 
-    private String discountFromCoupon(double value){
-        return "€ " +value;
+    private String discountFromCoupon(double value) {
+        return String.format("€ %.2f", value);
     }
+
     private String priceRange(NumberRange numberRange) {
         String priceRange = "";
         if (numberRange == null) {
