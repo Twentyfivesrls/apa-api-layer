@@ -130,7 +130,10 @@ public class ActiveOrderService {
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
             dto.setCreatedDate(order.getCreatedDate());
-            dto.setDiscountApplied(order.getAppliedCoupon().getDiscountValue());
+            if(order.getAppliedCoupon() != null){
+
+                dto.setDiscountApplied(order.getAppliedCoupon().getDiscountValue());
+            }
             if(order.getCustomerId()!= null){
                 Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
                 if(optCustomerId.isPresent()){

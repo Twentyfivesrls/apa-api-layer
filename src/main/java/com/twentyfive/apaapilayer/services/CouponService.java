@@ -343,7 +343,7 @@ public class CouponService {
 
     public HomeCouponDTO randomCouponWithHome() {
         List<Coupon> homeCoupons = couponRepository.findAllByExpiredFalseAndSoftDeletedFalseAndHomeIsNotNull();
-        if (homeCoupons == null){
+        if (homeCoupons.size()==0){
             return null;
         }
         Random random = new Random();
