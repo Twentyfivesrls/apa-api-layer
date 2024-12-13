@@ -35,8 +35,9 @@ public class CustomerController {
     public ResponseEntity<Page<CustomerDTO>> getAllCustomers(@RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "25") int size,
                                                              @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        Page<CustomerDTO> customerDTOs = customerService.getAllCustomers(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
+                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+                                                             @RequestParam(value = "name", defaultValue = "") String name) {
+        Page<CustomerDTO> customerDTOs = customerService.getAllCustomers(page, size,sortColumn,sortDirection,name).map(customerAPA -> new CustomerDTO(customerAPA));
         return ResponseEntity.ok(customerDTOs);
     }
 
@@ -45,8 +46,9 @@ public class CustomerController {
     public ResponseEntity<Page<CustomerDTO>> getAllEmployees(@RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "25") int size,
                                                              @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        Page<CustomerDTO> customerDTOs = customerService.getAllEmployees(page, size,sortColumn,sortDirection).map(customerAPA -> new CustomerDTO(customerAPA));
+                                                             @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+                                                             @RequestParam(value = "name", defaultValue = "") String name) {
+        Page<CustomerDTO> customerDTOs = customerService.getAllEmployees(page, size,sortColumn,sortDirection,name).map(customerAPA -> new CustomerDTO(customerAPA));
         return ResponseEntity.ok(customerDTOs);
     }
 

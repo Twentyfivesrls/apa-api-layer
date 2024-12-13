@@ -139,9 +139,15 @@ public class KeycloakService {
         ResponseEntity<List<ApaRole>> ruoliApa = keycloakExtClient.getApaRoles(authorizationHeader);
         List<ApaRole> listaRuoli = ruoliApa.getBody();
         List<ApaRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getName().equals(customerAPA.getRole())).toList();
-        log.info(ruoliSelezionati.toString());
-        log.info("id Keycloak"+id);
         keycloakExtClient.addRoleToUser(authorizationHeader, id, ruoliSelezionati.stream().map(ApaRole::toRoleRepresentation).collect(Collectors.toList()));
-        log.info("ruolo messo! evvai!");
+    }
+
+    public void removeRole(String idKeycloak, String role) {
+        String accessToken = this.getAccessToken();
+        String authorizationHeader = "Bearer " + accessToken;
+        ResponseEntity<List<ApaRole>> ruoliApa = keycloakExtClient.getApaRoles(authorizationHeader);
+        List<ApaRole> listaRuoli = ruoliApa.getBody();
+        List<ApaRole> ruoliSelezionati = listaRuoli.stream().filter(element -> element.getName().equals(role)).toList();
+        keycloakExtClient.deleteRoleToUser(authorizationHeader, idKeycloak, ruoliSelezionati.stream().map(ApaRole::toRoleRepresentation).collect(Collectors.toList()));
     }
 }

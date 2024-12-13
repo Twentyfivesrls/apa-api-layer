@@ -1,20 +1,26 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.AutoCompleteProductWeighted;
+import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductWeightedAPADTO;
+import com.twentyfive.apaapilayer.filters.ProductFilter;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
+import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.models.ProductStatAPA;
 import com.twentyfive.apaapilayer.models.ProductWeightedAPA;
 import com.twentyfive.apaapilayer.repositories.AllergenRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
 import com.twentyfive.apaapilayer.repositories.ProductStatRepository;
 import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
+import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
@@ -32,6 +38,8 @@ public class ProductWeightedService {
     private final ProductStatRepository productStatRepository;
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
+
+    private final MongoTemplate mongoTemplate;
 
     private ProductWeightedAPADTO productsWeightedToDTO(ProductWeightedAPA product){
         ProductWeightedAPADTO dto = new ProductWeightedAPADTO();
@@ -93,23 +101,22 @@ public class ProductWeightedService {
         return dto;
     }
 
-    public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size,String sortColumn,String sortDirection) {
-        List<ProductWeightedAPA> productsWeighted = productWeightedRepository.findAllByCategoryIdAndSoftDeletedFalse(idCategory);
-        List<ProductWeightedAPADTO> realProductsWeighted = new ArrayList<>();
-        for(ProductWeightedAPA p : productsWeighted){
-            if(p!=null) {
-                ProductWeightedAPADTO dto = productsWeightedToDTO(p);
-                realProductsWeighted.add(dto);
-            }
+    public Page<ProductWeightedAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
+        Query query = new Query();
+        query = FilterUtilities.applyProductFilters(query,filters,idCategory,ingredientRepository,true,ProductWeightedAPA.class);
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.ASC, "name");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
         }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
-        }
-        Sort sort = Sort.by(Sort.Direction.ASC,"name");
         Pageable pageable=PageRequest.of(page,size,sort);
-        return PageUtilities.convertListToPageWithSorting(realProductsWeighted,pageable);
+
+        List<ProductWeightedAPA> productWeighted = mongoTemplate.find(query, ProductWeightedAPA.class);
+        List<ProductWeightedAPADTO> realProductWeighted = productWeighted.stream()
+                .map(this::productsWeightedToDTO)
+                .collect(Collectors.toList());
+        return PageUtilities.convertListToPageWithSorting(realProductWeighted,pageable);
     }
 
 

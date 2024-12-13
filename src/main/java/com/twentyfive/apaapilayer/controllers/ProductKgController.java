@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADTO;
 import com.twentyfive.apaapilayer.dtos.ProductKgAPADetailsDTO;
 import com.twentyfive.apaapilayer.exceptions.ExistingFieldException;
+import com.twentyfive.apaapilayer.filters.ProductFilter;
 import com.twentyfive.apaapilayer.models.ProductKgAPA;
 import com.twentyfive.apaapilayer.services.ProductKgService;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,14 +20,15 @@ public class ProductKgController {
     private final ProductKgService productkgService;
 
     @PreAuthorize("hasRole('ROLE_admin')")
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<ProductKgAPADTO>> findByIdCategory(
             @RequestParam("idCategory")String idCategory,
             @RequestParam(value = "page", defaultValue ="0") int page,
             @RequestParam(value = "size", defaultValue ="5") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        return ResponseEntity.ok().body(productkgService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection));
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+            @RequestBody(required = false) ProductFilter filters) {
+        return ResponseEntity.ok().body(productkgService.findByIdCategory(idCategory,page,size,sortColumn,sortDirection,filters));
     }
 
     @GetMapping("/getAllActive")

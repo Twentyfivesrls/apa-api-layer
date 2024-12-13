@@ -131,11 +131,10 @@ public class CartController {
         }
     }
 
-    @PostMapping("/prepare-buying/{id}")
-    public ResponseEntity<Map<String,Object>> prepareBuying(@PathVariable String id,
-                                                     @RequestHeader("Payment-App-Id") String paymentId,
-                                                     @RequestBody PaymentReq paymentReq){
-        return ResponseEntity.ok().body(customerService.prepareBuying(id,paymentId,paymentReq));
+    @PostMapping("/prepare-buying")
+    public ResponseEntity<Map<String,Object>> prepareBuying(@RequestHeader("Payment-App-Id") String paymentId,
+                                                            @RequestBody PaymentReq paymentReq) throws IOException {
+        return ResponseEntity.ok().body(customerService.prepareBuying(paymentId,paymentReq));
     }
     @GetMapping("/capture/{orderId}")
     public ResponseEntity<Map<String,Object>> capture(@PathVariable String orderId){

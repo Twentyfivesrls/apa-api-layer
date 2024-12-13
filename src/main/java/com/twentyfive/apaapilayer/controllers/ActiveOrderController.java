@@ -6,6 +6,7 @@ import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
+import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
 import com.twentyfive.authorizationflow.services.AuthenticationService;
 import org.springframework.data.domain.Page;
@@ -32,13 +33,14 @@ public class ActiveOrderController {
         this.activeOrderService = activeOrderService;
     }
 
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection)  throws IOException{
-        return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection));
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+            @RequestBody(required = false) OrderFilter filters)  throws IOException{
+        return ResponseEntity.ok().body(activeOrderService.getAll(page,size,sortColumn,sortDirection,filters));
     }
     @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter') or hasRole('ROLE_customer')")
     @GetMapping("/details/{id}")

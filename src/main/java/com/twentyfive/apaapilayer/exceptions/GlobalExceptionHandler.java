@@ -61,6 +61,12 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.I_AM_A_TEAPOT, "L'orario non è più disponibile! " + ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError, HttpStatus.I_AM_A_TEAPOT);
     }
+    @ExceptionHandler(InvalidCouponException.class)
+    public ResponseEntity<ApiError> handleInvalidCouponException (InvalidCouponException ex) {
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "Coupon non valido! " + ex.getClass().getSimpleName());
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
     @Data
     @AllArgsConstructor
     public static class ApiError {

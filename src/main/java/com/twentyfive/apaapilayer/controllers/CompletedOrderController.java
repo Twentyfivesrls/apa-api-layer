@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
 import com.twentyfive.apaapilayer.models.OrderAPA;
+import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.services.CompletedOrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,18 +26,19 @@ public class CompletedOrderController {
         this.completedOrderService = completedOrderService;
     }
 
-    @PreAuthorize("hasRole('ROLE_admin')")
-    @GetMapping("/getAll")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_counter')")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<OrderAPADTO>> getAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "25") int size,
             @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection) {
-        return ResponseEntity.ok().body(completedOrderService.getAll(page,size,sortColumn,sortDirection));
+            @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
+            @RequestBody(required = false) OrderFilter filters) {
+        return ResponseEntity.ok().body(completedOrderService.getAll(page,size,sortColumn,sortDirection,filters));
     }
 
 
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
+    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer') or hasRole('ROLE_counter')")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDetailsAPADTO> getDetailsById(@PathVariable String id) {
         OrderDetailsAPADTO odapa = completedOrderService.getDetailsById(id);

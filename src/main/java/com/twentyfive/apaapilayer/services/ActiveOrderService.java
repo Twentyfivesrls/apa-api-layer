@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.*;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
@@ -61,8 +64,10 @@ public class ActiveOrderService {
 
     private final TimeSlotAPARepository timeSlotAPARepository;
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -77,59 +82,34 @@ public class ActiveOrderService {
         this.trayRepository=trayRepository;
         this.settingRepository=settingRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
-        double totalPrice=0;
-        if(order.getBundlesInPurchase()!=null){
-            if (order.getBundlesInPurchase().size()>0){
-                for(BundleInPurchase bIP : order.getBundlesInPurchase()){
-                    totalPrice+=bIP.getTotalPrice();
-                }
-            }
-        }
-        if(order.getProductsInPurchase()!=null){
-            if (order.getProductsInPurchase().size()>0){
-                for(ProductInPurchase pIP : order.getProductsInPurchase()){
-
-                    totalPrice+=pIP.getTotalPrice();
-                }
-            }
-        }
-        order.setTotalPrice(totalPrice);
-        order.setCreatedDate(LocalDateTime.now());
         return activeOrderRepository.save(order);
     }
 
-    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection) throws IOException{
+    public Page<OrderAPADTO> getAll(int page, int size, String sortColumn, String sortDirection, OrderFilter filters) throws IOException{
         List<String> roles = JwtUtilities.getRoles();
-        List<OrderAPA> orderList = new ArrayList<>();
-        List<OrderAPADTO> realOrder = new ArrayList<>();
-        if(roles.contains("admin")){
-            // Fetching paginated orders from the database
-            orderList= activeOrderRepository.findAllByOrderByCreatedDateDesc();
+        Query query = new Query();
+        query = FilterUtilities.applyOrderFilters(query, filters, roles, customerRepository);
+
+        // Controllo del sorting di default su createdDate in ordine decrescente
+        Sort sort;
+        if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        } else {
+            sort = Sort.by(Sort.Direction.fromString(sortDirection),
+                    sortColumn.equals("price") ? "realPrice" : sortColumn);
         }
-        else if (roles.contains("baker")){
-            orderList = activeOrderRepository.findByProductsInPurchaseToPrepareTrueOrBundlesInPurchaseToPrepareTrueOrderByCreatedDateDesc();
-        }
-        for(OrderAPA order:orderList){
-            OrderAPADTO orderAPA= convertToOrderAPADTO(order);
-            realOrder.add(orderAPA);
-        }
-        if(!(sortDirection.isBlank() || sortColumn.isBlank())){
-            Sort sort;
-            if (sortColumn.equals("price")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "realPrice");
-            } else if (sortColumn.equals("formattedPickupDate")) {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection), "pickupDateTime");
-            } else {
-                sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
-            }
-            Pageable pageable= PageRequest.of(page,size,sort);
-            return PageUtilities.convertListToPageWithSorting(realOrder,pageable);
-        }
-        Pageable pageable=PageRequest.of(page,size);
-        return PageUtilities.convertListToPage(realOrder,pageable);
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        List<OrderAPA> orderList = mongoTemplate.find(query, OrderAPA.class);
+        List<OrderAPADTO> realOrder = orderList.stream()
+                .map(this::convertToOrderAPADTO)
+                .collect(Collectors.toList());
+
+        return PageUtilities.convertListToPageWithSorting(realOrder, pageable);
     }
 
     private OrderAPADTO convertToOrderAPADTO(OrderAPA order) {
@@ -143,12 +123,14 @@ public class ActiveOrderService {
             } else {
                 dto.setMethodPayment("Al ritiro");
             }
-            dto.setPrice(String.format("%.2f", order.getTotalPrice()) + " €");
+            dto.setPrice("€ " +String.format("%.2f", order.getTotalPrice()));
             String status = maskModifiedFromBakerForCustomers(order.getStatus());
             dto.setStatus(status);
             dto.setUnread(order.isUnread());
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
+            dto.setCreatedDate(order.getCreatedDate());
+            dto.setDiscountApplied(order.getAppliedCoupon().getDiscountValue());
             if(order.getCustomerId()!= null){
                 Optional<CustomerAPA> optCustomerId = customerRepository.findById(order.getCustomerId());
                 if(optCustomerId.isPresent()){
@@ -187,8 +169,9 @@ public class ActiveOrderService {
             } else if (roles.contains("baker")) {
                 orderAPA.setBakerUnread(false);
                 activeOrderRepository.save(orderAPA);
-            } else { //dovremmo mappare gli oggetti uguali nello stesso dto. (bIP e pIP) (customer)
-
+            } else if (roles.contains("counter")){ //dovremmo mappare gli oggetti uguali nello stesso dto. (bIP e pIP) (customer)
+                orderAPA.setCounterUnread(false);
+                activeOrderRepository.save(orderAPA);
             }
             return convertToOrderDetailsAPADTO(orderAPA);
         } else {
@@ -207,6 +190,7 @@ public class ActiveOrderService {
         dto.setStatus(status);
         dto.setOrderNote(order.getNote());
         dto.setUnread(order.isUnread());
+        dto.setAppliedCoupon(order.getAppliedCoupon());
         if(order.getCustomerId()!=null){
             Optional<CustomerAPA> optCustomer = customerRepository.findById(order.getCustomerId());
             if(optCustomer.isPresent()){
@@ -227,7 +211,7 @@ public class ActiveOrderService {
         List<String> roles = JwtUtilities.getRoles();
         List<ProductInPurchaseDTO> productDTOs;
         List<BundleInPurchaseDTO> bundleDTOs;
-        if (roles.contains("admin")){
+        if (roles.contains("admin") || roles.contains("counter")){
             productDTOs = order.getProductsInPurchase().stream()
                     .map(this::convertProductPurchaseToDTO) // Utilizza il metodo di conversione definito
                     .collect(Collectors.toList());
@@ -657,7 +641,7 @@ public class ActiveOrderService {
         if(optOrder.isPresent()){
             OrderAPA order = optOrder.get();
             boolean alreadySomeToPrepare = order.getProductsInPurchase().stream().anyMatch(ProductInPurchase::isToPrepare) || order.getBundlesInPurchase().stream().anyMatch(BundleInPurchase::isToPrepare);
-            if (roles.contains("admin")){
+            if (roles.contains("admin") || roles.contains("counter")){
                 products = order.getProductsInPurchase();
                 bundles = order.getBundlesInPurchase();
             } else if (roles.contains("baker")){
@@ -755,10 +739,12 @@ public class ActiveOrderService {
         if (order.getCustomInfo() != null) {
             customer.setFirstName(order.getCustomInfo().getFirstName());
             customer.setEmail(order.getCustomInfo().getEmail());
+        } else {
+            // Se CustomInfo è null, prendi il customer usando l'idCustomer
+            customer = customerRepository.findById(order.getCustomerId())
+                    .orElse(null);
         }
-        // Se CustomInfo è null, prendi il customer usando l'idCustomer
-        return customerRepository.findById(order.getCustomerId())
-                .orElse(null);
+        return customer;
     }
 
 }

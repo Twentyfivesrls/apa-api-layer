@@ -4,12 +4,11 @@ import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.emails.EmailService;
-import com.twentyfive.apaapilayer.exceptions.InvalidCategoryException;
-import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
-import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
-import com.twentyfive.apaapilayer.exceptions.InvalidOrderTimeException;
+import com.twentyfive.apaapilayer.exceptions.*;
+import com.twentyfive.apaapilayer.mappers.CouponMapperService;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.JwtUtilities;
 import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
 import com.twentyfive.apaapilayer.utils.StompUtilities;
 import com.twentyfive.apaapilayer.utils.TemplateUtilities;
@@ -26,6 +25,8 @@ import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
@@ -47,6 +48,8 @@ public class CustomerService {
     private final ActiveOrderService orderService;
     private final EmailService emailService;
     private final KeycloakService keycloakService;
+    private final CouponService couponService;
+    private final CouponUsageService couponUsageService;
     private final PaymentClientController paymentClientController;
     private final SettingRepository settingRepository;
     private final ProductKgRepository productKgRepository;
@@ -60,6 +63,8 @@ public class CustomerService {
     private final TrayRepository trayRepository;
     private final ActiveOrderRepository activeOrdersRepository;
     private final ProductFixedRepository productFixedRepository;
+    private final CouponMapperService couponMapperService;
+    private final CouponRepository couponRepository;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -96,7 +101,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -104,6 +109,8 @@ public class CustomerService {
         this.stompClientController = stompClientController;
         this.emailService = emailService;
         this.keycloakService = keycloakService;
+        this.couponService = couponService;
+        this.couponUsageService = couponUsageService;
         this.paymentClientController = paymentClientController;
         this.settingRepository=settingRepository;
         this.productKgRepository = productKgRepository;
@@ -115,32 +122,34 @@ public class CustomerService {
         this.trayRepository = trayRepository;
         this.activeOrdersRepository= activeOrderRepository;
         this.productFixedRepository = productFixedRepository;
+        this.couponMapperService = couponMapperService;
+        this.couponRepository = couponRepository;
     }
 
-    public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection) {
+    public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
         String customer="customer";
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
+            return customerRepository.findByRoleAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(customer,name,pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByRoleAndIdKeycloakIsNotNull(customer,pageable);
+        return customerRepository.findByRoleAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(customer,name,pageable);
     }
 
-    public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection) {
+    public Page<CustomerAPA> getAllEmployees(int page, int size, String sortColumn, String sortDirection,String name) {
         List<String> excludedRoles = Arrays.asList("customer", "admin");
         Pageable pageable;
         if(!(sortDirection.isBlank() || sortColumn.isBlank())) {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortColumn);
             pageable=PageRequest.of(page,size,sort);
-            return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
+            return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(excludedRoles,name, pageable);
         }
         Sort sort = Sort.by(Sort.Direction.ASC,"lastName");
         pageable=PageRequest.of(page,size,sort);
-        return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNull(excludedRoles, pageable);
+        return customerRepository.findAllByRoleNotInAndIdKeycloakIsNotNullAndFullNameOrFirstNameOrLastName(excludedRoles,name, pageable);
     }
 
     public CustomerDetailsDTO getById(String customerId) {
@@ -190,6 +199,11 @@ public class CustomerService {
             Optional<CustomerAPA> optCustomerToPatch=getByIdFromDb(customer.getId());
             if(optCustomerToPatch.isPresent()) {
                 CustomerAPA customerAPA = optCustomerToPatch.get();
+                List<String> roles = JwtUtilities.getRoles();
+                if(roles.contains("admin")){ //Se admin fa la chiamata, rimuoviamo il vecchio ruolo
+                    String role = customerAPA.getRole();
+                    keycloakService.removeRole(customerAPA.getIdKeycloak(),role);
+                }
                 ReflectionUtilities.updateNonNullFields(customer,customerAPA);
                 keycloakService.update(customer);
                 return customerRepository.save(customerAPA);
@@ -245,10 +259,12 @@ public class CustomerService {
                 }
             }
             if (!selectedItems.isEmpty()) {
-                for (ItemInPurchase item : selectedItems) {
+                for (int i = 0; i < selectedItems.size(); i++) {
+                    ItemInPurchase item = selectedItems.get(i);
                     SummarySingleItemDTO singleItem = new SummarySingleItemDTO();
                     singleItem.setPrice(item.getTotalPrice());
                     singleItem.setQuantity(item.getQuantity());
+                    singleItem.setPosition(positions.get(i)); // Setta la posizione dell'item
                     if (item instanceof ProductInPurchase){
                         ProductKgAPA product = productKgRepository.findById(item.getId()).get();
                         singleItem.setName(product.getName());
@@ -268,6 +284,7 @@ public class CustomerService {
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
         String email="";
         String firstName="";
+        AppliedCoupon appliedCoupon = new AppliedCoupon();
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
@@ -280,7 +297,23 @@ public class CustomerService {
                 }
             }
             if (!selectedItems.isEmpty()) {
-                OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems);
+                if (buyInfos.getCouponCode() != null){
+                    Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
+                    CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
+                    if(couponValidation == CouponValidation.VALID){
+                        boolean totalOrderDiscount = coupon.getSpecificCategoriesId() == null || coupon.getSpecificCategoriesId().size() == 0 ? true : false;
+                        double discount = couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems,false);
+                        List<CategoryAPA> categories = new ArrayList<>();
+                        if(coupon.getSpecificCategoriesId() != null){
+                            categories = categoryRepository.findAllById(coupon.getSpecificCategoriesId());
+                        }
+                        appliedCoupon = couponMapperService.mapAppliedCouponFromCoupon(coupon, discount,categories, totalOrderDiscount);
+                        coupon.setUsageCount(coupon.getUsageCount()+1);
+                        couponRepository.save(coupon);
+                        couponUsageService.save(customer.getId(),coupon.getId());
+                    }
+                }
+                OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
                 if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
@@ -308,8 +341,10 @@ public class CustomerService {
         return false;
     }
 
-    public Map<String,Object> prepareBuying(String id, String paymentAppId, PaymentReq paymentReq) {
-        Optional<CustomerAPA> optCustomer = customerRepository.findById(id);
+    public Map<String,Object> prepareBuying(String paymentAppId, PaymentReq paymentReq) throws IOException {
+        String idKeycloak = JwtUtilities.getIdKeycloak();
+        Optional<CustomerAPA> optCustomer = customerRepository.findByIdKeycloak(idKeycloak);
+        BuyInfosDTO buyInfos = paymentReq.getBuyInfos();
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             Cart cart = customer.getCart();
@@ -321,19 +356,27 @@ public class CustomerService {
                 }
             }
             List<SimpleItem> items = new ArrayList<>();
+
             double totalValue = 0;
             if (!selectedItems.isEmpty()) {
+                if (buyInfos.getCouponCode() != null) {
+                    Coupon coupon = couponService.getByCode(buyInfos.getCouponCode());
+                    CouponValidation couponValidation = couponService.validateCoupon(coupon, customer, selectedItems);
+                    if (couponValidation == CouponValidation.VALID) {
+                        couponService.applyCouponToPurchasesAndCalculateDiscount(coupon, selectedItems, true);
+                    }
+                }
                 for (ItemInPurchase selectedItem : selectedItems) {
                     SimpleItem simpleItem = new SimpleItem();
                     SimpleUnitAmount simpleUnitAmount = new SimpleUnitAmount();
-                    String totalPrice = String.format(Locale.US,"%.2f", selectedItem.getTotalPrice()/selectedItem.getQuantity());
+                    String totalPrice = String.format(Locale.US, "%.2f", selectedItem.getTotalPrice() / selectedItem.getQuantity());
                     simpleUnitAmount.setValue(String.valueOf(totalPrice));
                     simpleUnitAmount.setCurrency_code("EUR");
-                    String name ="";
-                    String description ="";
-                    if(selectedItem instanceof ProductInPurchase){
+                    String name = "";
+                    String description = "";
+                    if (selectedItem instanceof ProductInPurchase) {
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(selectedItem.getId());
-                        if(optProductKg.isPresent()){
+                        if (optProductKg.isPresent()) {
                             name = optProductKg.get().getName();
                             description = optProductKg.get().getDescription();
                         }
@@ -348,7 +391,7 @@ public class CustomerService {
                     simpleItem.setQuantity(String.valueOf(selectedItem.getQuantity()));
                     simpleItem.setDescription(description);
                     simpleItem.setUnit_amount(simpleUnitAmount);
-                    totalValue +=selectedItem.getTotalPrice();
+                    totalValue += selectedItem.getTotalPrice();
                     items.add(simpleItem);
                 }
             }
@@ -391,7 +434,7 @@ public class CustomerService {
 
 
 
-    private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items) {
+    private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items,AppliedCoupon appliedCoupon) {
         OrderAPA order = new OrderAPA();
         boolean toPrepare = false;
         if (buyInfos.getCustomInfo().getFirstName()!=null){
@@ -405,6 +448,9 @@ public class CustomerService {
         order.setPickupDate(buyInfos.getSelectedPickupDateTime().toLocalDate());
         order.setPickupTime(buyInfos.getSelectedPickupDateTime().toLocalTime());
         order.setNote(buyInfos.getNote());
+        if(appliedCoupon!=null){
+            order.setAppliedCoupon(appliedCoupon);
+        }
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
 
@@ -490,7 +536,12 @@ public class CustomerService {
         }
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
-        order.setTotalPrice(calculateTotalPrice(items));
+        if(appliedCoupon.isTotalOrderDiscount()){
+            double discount = couponMapperService.discountNumber(appliedCoupon.getDiscountValue());
+            order.setTotalPrice(calculateTotalPrice(items)-discount);
+        } else {
+            order.setTotalPrice(calculateTotalPrice(items));
+        }
         if (toPrepare){
             order.setBakerUnread(true);
             TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
@@ -499,6 +550,7 @@ public class CustomerService {
         } else {
             order.setStatus(OrderStatus.RICEVUTO);
         }
+        order.setCreatedDate(LocalDateTime.now());
         return order;
     }
 
