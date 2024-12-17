@@ -284,7 +284,7 @@ public class CustomerService {
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
         String email="";
         String firstName="";
-        AppliedCoupon appliedCoupon = new AppliedCoupon();
+        AppliedCoupon appliedCoupon = null;
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
             TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
@@ -536,7 +536,7 @@ public class CustomerService {
         }
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
-        if(appliedCoupon.isTotalOrderDiscount()){
+        if(appliedCoupon != null && appliedCoupon.isTotalOrderDiscount()){
             double discount = couponMapperService.discountNumber(appliedCoupon.getDiscountValue());
             order.setTotalPrice(calculateTotalPrice(items)-discount);
         } else {
