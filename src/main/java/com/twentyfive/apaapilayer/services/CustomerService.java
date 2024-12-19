@@ -493,9 +493,6 @@ public class CustomerService {
                         Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
                         if (optProductKg.isPresent()) {
                             ProductKgAPA productKgAPA = optProductKg.get();
-                            if (productKgAPA.isCustomized()) {
-                                toPrepare = true;
-                            }
                             List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
                             singlePIP.setIngredients(ingredientsFromProduct);
                             productStatService.addBuyingCountProduct(productKgAPA, 1);
@@ -532,6 +529,9 @@ public class CustomerService {
                         }
                     }
                 }
+            }
+            if(!toPrepare){
+                toPrepare = item.isToPrepare();
             }
         }
         order.setProductsInPurchase(products);
