@@ -688,26 +688,6 @@ public class ActiveOrderService {
                     pIP.setToPrepare(false);
                     pIP.setLocation(location);
                 }
-                if(!roles.contains("admin")){
-                    TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminMoveNotification(order.getId(),location);
-                    stompClientController.sendObjectMessage(twentyfiveMessage);
-                    order.setUnread(true);
-                    order.setCreatedDate(LocalDateTime.now());
-                }
-                if (!roles.contains("baker")){
-                    if(alreadySomeToPrepare){
-                        if(location.equals("In pasticceria")){
-                            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
-                            stompClientController.sendObjectMessage(twentyfiveMessage);
-                        } else {
-                            TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerMoveNotification(order.getId(), location);
-                            stompClientController.sendObjectMessage(twentyfiveMessage);
-                        }
-                    } else {
-                        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
-                        stompClientController.sendObjectMessage(twentyfiveMessage);
-                    }
-                }
             }
             boolean noMoreToPrepare = order.getProductsInPurchase().stream()
                     .allMatch(product -> product.getLocation() != null && !"In pasticceria".equals(product.getLocation())) &&
@@ -717,6 +697,26 @@ public class ActiveOrderService {
                 order.setStatus(OrderStatus.PRONTO);
                 CustomerAPA customer = getCustomerFromOrder(order);
                 emailService.sendEmail(customer.getEmail(),OrderStatus.PRONTO,TemplateUtilities.populateEmail(customer.getFirstName(),order.getId()));
+            }
+            if(!roles.contains("admin")){
+                TwentyfiveMessage twentyfiveMessage = StompUtilities.sendAdminMoveNotification(order.getId(),location);
+                stompClientController.sendObjectMessage(twentyfiveMessage);
+                order.setUnread(true);
+                order.setCreatedDate(LocalDateTime.now());
+            }
+            if (!roles.contains("baker")){
+                if(alreadySomeToPrepare){
+                    if(location.equals("In pasticceria")){
+                        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
+                        stompClientController.sendObjectMessage(twentyfiveMessage);
+                    } else {
+                        TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerMoveNotification(order.getId(), location);
+                        stompClientController.sendObjectMessage(twentyfiveMessage);
+                    }
+                } else {
+                    TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerNewNotification();
+                    stompClientController.sendObjectMessage(twentyfiveMessage);
+                }
             }
             activeOrderRepository.save(order);
             return true;
