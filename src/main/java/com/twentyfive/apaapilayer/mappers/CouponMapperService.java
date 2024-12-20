@@ -97,7 +97,7 @@ public class CouponMapperService {
 
     private String priceRange(NumberRange numberRange) {
         String priceRange = "";
-        if (numberRange == null) {
+        if (numberRange == null || numberRange.getMin() == null && numberRange.getMax() == null) {
             priceRange = "-";
         } else {
             if (numberRange.getMin() == null){
