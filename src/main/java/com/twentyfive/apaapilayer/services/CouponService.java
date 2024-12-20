@@ -131,7 +131,7 @@ public class CouponService {
     }
 
 
-    public CouponValidation validateCoupon(Coupon coupon, CustomerAPA customer, List<ItemInPurchase> purchases) {
+    public CouponValidation validateCoupon(Coupon coupon, CustomerAPA customer, List<ItemInPurchase> purchases) throws IOException {
         if (coupon == null || !coupon.isActive()){
             return CouponValidation.NOT_VALID;
         }
@@ -164,8 +164,9 @@ public class CouponService {
         return CouponValidation.VALID;
     }
 
-    private boolean isUsageWithinLimit(Coupon coupon, String customerId) {
-        if (coupon.getMaxTotalUsage() == null && coupon.getMaxUsagePerCustomer() == null){
+    private boolean isUsageWithinLimit(Coupon coupon, String customerId) throws IOException {
+        List<String> roles = JwtUtilities.getRoles();
+        if (coupon.getMaxTotalUsage() == null && coupon.getMaxUsagePerCustomer() == null && roles.contains("admin")){
             return true;
         }
         // Recupera il numero di utilizzi specifico del cliente
