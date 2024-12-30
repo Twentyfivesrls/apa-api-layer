@@ -44,7 +44,8 @@ public class MediaManagerService {
 
     public String getPath(HttpServletRequest request) {
         String fullPath = request.getRequestURI();
-        String basePath = "/media/download/";
+        String contextPath = request.getContextPath();
+        String basePath = contextPath + "/download/";
         return fullPath.substring(basePath.length()); // Estrai il path relativo
     }
 }
