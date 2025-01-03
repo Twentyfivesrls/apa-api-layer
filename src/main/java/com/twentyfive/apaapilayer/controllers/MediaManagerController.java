@@ -17,7 +17,7 @@ public class MediaManagerController {
 
     public final MediaManagerService mediaManagerService;
 
-    @GetMapping("/download/**")
+    @GetMapping("/download/{*path}")
     public ResponseEntity<byte[]> getMedia(@PathVariable("path") String path) {
 
         DownloadMedia downloadMedia = mediaManagerService.downloadMedia(path);
