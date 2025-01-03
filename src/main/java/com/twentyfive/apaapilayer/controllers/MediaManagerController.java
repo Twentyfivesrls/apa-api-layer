@@ -16,7 +16,7 @@ public class MediaManagerController {
 
     public final MediaManagerService mediaManagerService;
 
-    @GetMapping("/download/**")
+    @GetMapping("/downloadkkk/**")
     public ResponseEntity<byte[]> getMedia(HttpServletRequest request) {
 
         DownloadMedia downloadMedia = mediaManagerService.downloadMedia(request);
