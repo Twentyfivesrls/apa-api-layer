@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -39,5 +40,9 @@ public class MediaManagerService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Errore inatteso durante il download: " + e.getMessage());
         }
+    }
+
+    public String uploadMedia(String path, MultipartFile multipartFile) {
+        return mediaManagerClientController.uploadMedia(multipartFile,path.substring(1));
     }
 }

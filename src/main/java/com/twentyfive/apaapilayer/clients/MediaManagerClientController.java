@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface MediaManagerClientController {
 
     @PostMapping(value = "/uploadkkk/{path}", consumes = "multipart/form-data")
-    ResponseEntity<String> uploadMedia(@RequestPart("file") MultipartFile file,
+    String uploadMedia(@RequestPart("file") MultipartFile file,
                                              @PathVariable("path") String path);
 
     @DeleteMapping(value = "/deletekkk/path}")

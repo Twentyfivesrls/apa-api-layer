@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,5 +27,10 @@ public class MediaManagerController {
                 .header("Content-Disposition", "inline; filename=\"" + path + "\"")
                 .contentType(downloadMedia.getMediaType())
                 .body(downloadMedia.getBytes());
+    }
+
+    @PostMapping("/upload/{*path}")
+    public ResponseEntity<String> uploadMedia(@PathVariable("path") String path, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok().body(mediaManagerService.uploadMedia(path,file));
     }
 }
