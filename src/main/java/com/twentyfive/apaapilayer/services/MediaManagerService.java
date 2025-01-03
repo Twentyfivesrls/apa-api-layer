@@ -21,18 +21,14 @@ public class MediaManagerService {
 
     private final MediaManagerClientController mediaManagerClientController;
 
-    public DownloadMedia downloadMedia(HttpServletRequest request) {
+    public byte[] downloadMedia(String path) {
         try {
-            String path = getPath(request);
-            DownloadMedia downloadMedia = new DownloadMedia();
             ResponseEntity<byte[]> response = mediaManagerClientController.downloadMedia(path);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                downloadMedia.setBytes(response.getBody());
+                return response.getBody();
             } else {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Immagine non trovata: " + path);
             }
-            downloadMedia.setMediaType(response.getHeaders().getContentType());
-            return downloadMedia;
         } catch (FeignException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Errore nel servizio remoto: " + e.contentUTF8());
@@ -45,7 +41,7 @@ public class MediaManagerService {
     public String getPath(HttpServletRequest request) {
         String fullPath = request.getRequestURI();
         String contextPath = request.getContextPath();
-        String basePath = contextPath + "/media/downloadkkk/";
+        String basePath = contextPath + "/twentyfiveserver/downloadkkk/";
         return fullPath.substring(basePath.length()); // Estrai il path relativo
     }
 }

@@ -15,7 +15,7 @@ public interface MediaManagerClientController {
     @DeleteMapping(value = "/deletekkk/path}")
     ResponseEntity<String> deleteMedia(@PathVariable("path") String path);
 
-    @GetMapping(value = "/downloadkkk/{path}")
+    @GetMapping(value = "/downloadkkk/apa/{path}")
     ResponseEntity<byte[]> downloadMedia(@PathVariable("path") String path);
 }
 
