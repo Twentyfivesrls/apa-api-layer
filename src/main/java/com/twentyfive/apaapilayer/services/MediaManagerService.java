@@ -45,4 +45,8 @@ public class MediaManagerService {
     public String uploadMedia(String path, MultipartFile multipartFile) {
         return mediaManagerClientController.uploadMedia(multipartFile,path.substring(1));
     }
+
+    public String deleteMedia(String path) {
+        return mediaManagerClientController.deleteMedia(path.substring(1));
+    }
 }

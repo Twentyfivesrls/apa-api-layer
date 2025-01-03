@@ -12,8 +12,8 @@ public interface MediaManagerClientController {
     String uploadMedia(@RequestPart("file") MultipartFile file,
                                              @PathVariable("path") String path);
 
-    @DeleteMapping(value = "/deletekkk/path}")
-    ResponseEntity<String> deleteMedia(@PathVariable("path") String path);
+    @DeleteMapping(value = "/deletekkk/{path}")
+    String deleteMedia(@PathVariable("path") String path);
 
     @GetMapping(value = "/downloadkkk/{path}")
     ResponseEntity<byte[]> downloadMedia(@PathVariable("path") String path);

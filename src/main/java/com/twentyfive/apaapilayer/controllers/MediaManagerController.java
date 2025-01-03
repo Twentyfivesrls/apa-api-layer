@@ -33,4 +33,9 @@ public class MediaManagerController {
     public ResponseEntity<String> uploadMedia(@PathVariable("path") String path, @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok().body(mediaManagerService.uploadMedia(path,file));
     }
+
+    @DeleteMapping("/delete/{*path}")
+    public ResponseEntity<String> deleteMedia(@PathVariable("path") String path) {
+        return ResponseEntity.ok().body(mediaManagerService.deleteMedia(path));
+    }
 }
