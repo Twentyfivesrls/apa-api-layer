@@ -23,7 +23,7 @@ public class MediaManagerService {
 
     public byte[] downloadMedia(String path) {
         try {
-            ResponseEntity<byte[]> response = mediaManagerClientController.downloadMedia(path);
+            ResponseEntity<byte[]> response = mediaManagerClientController.downloadMedia(path.substring(1));
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
             } else {
