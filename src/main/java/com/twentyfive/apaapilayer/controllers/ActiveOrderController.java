@@ -29,7 +29,7 @@ public class ActiveOrderController {
 
     private final ActiveOrderService activeOrderService; // Assumi che OrderService sia iniettato correttamente
 
-    public ActiveOrderController(ActiveOrderService activeOrderService, AuthenticationService authenticationService) {
+    public ActiveOrderController(ActiveOrderService activeOrderService) {
         this.activeOrderService = activeOrderService;
     }
 

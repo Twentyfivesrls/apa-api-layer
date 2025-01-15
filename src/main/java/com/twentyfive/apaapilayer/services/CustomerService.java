@@ -414,17 +414,15 @@ public class CustomerService {
 
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
-                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                    numSlotRequired += pip.getQuantity();
-                    //TODO IF Drip Cake or Torta a Forma controllare se ce ne sono massimo 2
-
-            } else if (item instanceof BundleInPurchase) {
-                BundleInPurchase pip = (BundleInPurchase) item;
-                Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                if (tray.isCustomized()) {
-                    numSlotRequired += pip.getQuantity();
+                Optional<CategoryAPA> optCategory = categoryRepository.findById(pip.getId());
+                if(optCategory.isPresent()){
+                    CategoryAPA category = optCategory.get();
+                    if (!category.getName().equals("Torte Secche") && !category.getName().equals("Dolci Festività") && !category.getName().equals("Semifreddi")) {
+                        numSlotRequired += pip.getQuantity();
+                    } else if (category.getName().equals("Torta a Piani")) {
+                        numSlotRequired += pip.getQuantity()*3;
+                    }
                 }
-
             }
         }
         return numSlotRequired;
@@ -762,7 +760,7 @@ public class CustomerService {
         boolean longWait = false;
         boolean customizableProduct = false;
         for (ItemInPurchase item : items) {
-            numSlotRequired += item.getQuantity();
+            boolean noSlotRequired = false;
             if(item instanceof ProductInPurchase){
                 ProductInPurchase pIP = (ProductInPurchase) item;
                 Category category;
@@ -774,7 +772,13 @@ public class CustomerService {
                     }
                 } else {
                     ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
-                     category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                    category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
+                    if (category.getName().equals("Torte Secche") || category.getName().equals("Dolci Festività") || category.getName().equals("Semifreddi")) {
+                        noSlotRequired = true;
+                    }
+                }
+                if(!noSlotRequired){
+                    numSlotRequired += item.getQuantity();
                 }
 
                 String categoryName = category.getName();
