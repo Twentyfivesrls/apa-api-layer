@@ -99,8 +99,12 @@ public class ActiveOrderService {
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
             sort = Sort.by(Sort.Direction.DESC, "createdDate");
         } else {
-            sort = Sort.by(Sort.Direction.fromString(sortDirection),
-                    sortColumn.equals("price") ? "realPrice" : sortColumn);
+            String mappedColumn = switch (sortColumn) {
+                case "formattedPickupDate" -> "pickupDateTime"; // Gestione sorting per pickupDateTime
+                case "price" -> "realPrice"; // Gestione sorting per realPrice
+                default -> sortColumn; // Utilizzo diretto per altre colonne
+            };
+            sort = Sort.by(Sort.Direction.fromString(sortDirection), mappedColumn);
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
