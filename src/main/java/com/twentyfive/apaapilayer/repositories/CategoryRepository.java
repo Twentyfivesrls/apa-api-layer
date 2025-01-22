@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.repositories;
 
 import com.twentyfive.apaapilayer.models.CategoryAPA;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,4 +25,11 @@ public interface CategoryRepository extends MongoRepository<CategoryAPA,String> 
     List<CategoryAPA> findAllByIdSectionAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(String id);
 
     List<CategoryAPA> findAllByIdSectionAndEnabledFalseAndSoftDeletedFalse(String id);
+
+    @Aggregation(pipeline = {
+            "{ $project: { _id: 1 } }"  // Proietta solo il campo _id per ogni documento
+    })
+    List<String> findAllIds();
+
+
 }

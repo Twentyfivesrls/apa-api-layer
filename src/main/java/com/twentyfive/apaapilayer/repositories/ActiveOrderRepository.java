@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,5 @@ public interface ActiveOrderRepository extends MongoRepository<OrderAPA,String> 
 
     List<OrderAPA> findByProductsInPurchaseToPrepareTrueOrBundlesInPurchaseToPrepareTrueOrderByCreatedDateDesc();
 
+    List<OrderAPA> findAllByPickupDate(LocalDate date);
 }

@@ -66,6 +66,12 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "Coupon non valido! " + ex.getClass().getSimpleName());
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(GlobalStatNotFoundException.class)
+    public ResponseEntity<ApiError> handleGlobalStatNotFoundException (GlobalStatNotFoundException ex) {
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
 
     @Data
     @AllArgsConstructor
