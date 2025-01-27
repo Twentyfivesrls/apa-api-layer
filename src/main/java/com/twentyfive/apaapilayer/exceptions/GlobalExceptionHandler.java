@@ -2,7 +2,6 @@ package com.twentyfive.apaapilayer.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.apache.kafka.common.requests.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

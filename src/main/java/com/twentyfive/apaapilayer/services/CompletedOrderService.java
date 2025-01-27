@@ -65,7 +65,7 @@ public class CompletedOrderService {
         // Controllo del sorting di default su createdDate in ordine decrescente
         Sort sort;
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
-            sort = Sort.by(Sort.Direction.DESC, "createdDate");
+            sort = Sort.by(Sort.Direction.DESC, "pickupDateTime");
         } else {
             String mappedColumn = switch (sortColumn) {
                 case "formattedPickupDate" -> "pickupDateTime"; // Gestione sorting per pickupDateTime
