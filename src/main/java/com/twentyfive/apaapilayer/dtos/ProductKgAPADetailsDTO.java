@@ -16,6 +16,7 @@ import java.util.Set;
 public class ProductKgAPADetailsDTO {
     private String id;
     private String name;
+    private String categoryName;
     private String description;
     private ProductStatAPA stats;
     private Set<Allergen> allergens;

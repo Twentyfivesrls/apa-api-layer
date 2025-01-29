@@ -93,6 +93,13 @@ public class ProductKgService {
         Optional<ProductKgAPA> optProduct = productKgRepository.findById(id);
         if(optProduct.isPresent()) {
             ProductKgAPA product = optProduct.get();
+
+            String categoryName = "";
+            Optional<CategoryAPA> optProdCategory = categoryRepository.findById(product.getCategoryId());
+            if (optProdCategory.isPresent()) {
+                categoryName = optProdCategory.get().getName();
+            }
+
             List<IngredientAPA> ingredients = ingredientRepository.findByIdIn(product.getIngredientIds());
             List<String> ingredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(ingredients);
             Set<Allergen> allergens = new HashSet<>();
@@ -116,7 +123,7 @@ public class ProductKgService {
 
                 }
             }
-            return productMapperService.kgAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory);
+            return productMapperService.kgAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory, categoryName);
         }
         throw new InvalidItemException();
     }

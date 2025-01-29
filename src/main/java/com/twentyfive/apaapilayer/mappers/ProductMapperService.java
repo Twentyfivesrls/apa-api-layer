@@ -48,11 +48,12 @@ public class ProductMapperService {
         );
     }
 
-    public ProductKgAPADetailsDTO kgAPAToDetailsDTO(ProductKgAPA product, List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredients) {
+    public ProductKgAPADetailsDTO kgAPAToDetailsDTO(ProductKgAPA product, List<String> ingredients, Set<Allergen> allergens, List<CustomizableIngredientDTO> customizableIngredients, String categoryName) {
         String realPrice = "€ " + product.getPricePerKg();
         return new ProductKgAPADetailsDTO(
                 product.getId(),
                 product.getName(),
+                categoryName,
                 product.getDescription(),
                 product.getStats(),
                 allergens,
