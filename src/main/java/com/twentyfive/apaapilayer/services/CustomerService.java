@@ -783,7 +783,7 @@ public class CustomerService {
 
                 String categoryName = category.getName();
                 if(categoryName.equals("Semifreddi")){
-                    if (pIP.getWeight()>=1.5){
+                    if (pIP.getWeight()>1.5){
                         bigSemifreddo = true;
                     } else if (!(pIP.getCustomization().isEmpty())){
                         customizedSemifreddo = true;
