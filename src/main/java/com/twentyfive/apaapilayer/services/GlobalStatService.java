@@ -43,7 +43,7 @@ public class GlobalStatService {
         if(LocalDate.now().isAfter(date.getStartDate()) || LocalDate.now().isBefore(date.getEndDate())) {
             createByDate(LocalDate.now());
         }
-        List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetween(date.getStartDate(), date.getEndDate());
+        List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
         return globalStatMapperService.createGlobalStatDTOFromGlobalStat(globalStats);
     }
 }

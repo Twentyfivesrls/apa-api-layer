@@ -417,10 +417,6 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     })
     Optional<Long> calculateTotalIngredients(LocalDate date, OrderStatus status);
 
-
-
-
-
     @Aggregation(pipeline = {
             "{ $match: { pickupDate: ?0, status: ?1 } }",
             "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
@@ -429,7 +425,7 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
             "{ $unwind: { path: '$productDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
 
             "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
-            "{ $unwind: { path: '$bundlesInPurchase.weightedProduct', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
             "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
             "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
             "{ $unwind: { path: '$bundleProductDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
@@ -440,47 +436,156 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     })
     List<String> findDistinctIngredientIds(LocalDate date, OrderStatus status);
 
-
     @Aggregation(pipeline = {
-            // Filtra per pickupDate e status
+            // 1. Filtra per pickupDate e status
             "{ $match: { pickupDate: ?0, status: ?1 } }",
 
-            // Espande la lista productsInPurchase
-            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
+            // 2. Proietta gli ID dei prodotti da productsInPurchase e dai bundlesInPurchase.weightedProducts
+            "{ $project: { " +
+                    "productsIds: { $map: { input: { $ifNull: [ \"$productsInPurchase\", [] ] }, as: \"p\", in: \"$$p._id\" } }, " +
+                    "bundlesProductIds: { " +
+                    "  $reduce: { " +
+                    "    input: { $ifNull: [ \"$bundlesInPurchase\", [] ] }, " +
+                    "    initialValue: [], " +
+                    "    in: { $setUnion: [ \"$$value\", " +
+                    "          { $map: { input: { $ifNull: [ \"$$this.weightedProducts\", [] ] }, as: \"bp\", in: \"$$bp._id\" } } " +
+                    "        ] } " +
+                    "  } " +
+                    "} " +
+                    "} }",
 
-            // Lookup per ottenere i dettagli dei prodotti
-            "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
-            "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
+            // 3. Unisce in un unico array tutti gli ID
+            "{ $project: { allProductIds: { $setUnion: [ \"$productsIds\", \"$bundlesProductIds\" ] } } }",
 
-            // Espande gli ingredienti dei prodotti
-            "{ $unwind: { path: '$productDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+            // 4. Lookup nella collezione products per ottenere i documenti relativi
+            "{ $lookup: { from: \"products\", localField: \"allProductIds\", foreignField: \"_id\", as: \"products\" } }",
 
-            // Espande la lista bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            // 5. Unwind per iterare su ogni prodotto trovato
+            "{ $unwind: \"$products\" }",
 
-            // Espande i weightedProducts all'interno di bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+            // 6. Unwind per iterare su ogni ingredientId presente in ogni prodotto
+            "{ $unwind: \"$products.ingredientIds\" }",
 
-            // Lookup per ottenere i dettagli dei weightedProducts
-            "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'weightedProductDetails' } }",
-            "{ $unwind: { path: '$weightedProductDetails', preserveNullAndEmptyArrays: true } }",
+            // 7. Lookup nella collezione ingredients: convertiamo il campo ingredientIds (stringa) in ObjectId per farlo combaciare con _id
+            "{ $lookup: { " +
+                    "from: \"ingredients\", " +
+                    "let: { ingId: { $toObjectId: \"$products.ingredientIds\" } }, " +
+                    "pipeline: [ " +
+                    "{ $match: { $expr: { $eq: [ \"$_id\", \"$$ingId\" ] } } } " +
+                    "], " +
+                    "as: \"ingredientDetails\" " +
+                    "} }",
 
-            // Espande gli ingredienti dei weightedProducts
-            "{ $unwind: { path: '$weightedProductDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+            // 8. Unwind l’array ingredientDetails (in genere contiene un solo elemento se la conversione è andata a buon fine)
+            "{ $unwind: \"$ingredientDetails\" }",
 
-            // Unione degli ingredienti da productsInPurchase e weightedProducts
-            "{ $project: { ingredientId: { $ifNull: ['$productDetails.ingredientIds', '$weightedProductDetails.ingredientIds'] } } }",
+            // 9. Raggruppa per ottenere i categoryId distinti
+            "{ $group: { _id: \"$ingredientDetails.categoryId\" } }",
 
-            // Raggruppa per ingredientId distinti
-            "{ $group: { _id: '$ingredientId' } }",
+            // 10. Proietta il campo categoryId
+            "{ $project: { _id: 0, categoryId: \"$_id\" } }"
+    })
+    List<String> findDistinctIngredientCategoryIds(LocalDate pickupDate, OrderStatus status);
 
-            // Conta gli ingredienti distinti
-            "{ $group: { _id: null, distinctIngredientsCount: { $sum: 1 } } }",
+    @Aggregation(pipeline = {
+            // 1. Filtra per pickupDate e status
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+
+            // 2. Proietta gli ID dei prodotti da productsInPurchase e dai bundlesInPurchase.weightedProducts
+            "{ $project: { " +
+                    "productsIds: { $map: { input: { $ifNull: [ \"$productsInPurchase\", [] ] }, as: \"p\", in: \"$$p._id\" } }, " +
+                    "bundlesProductIds: { " +
+                    "$reduce: { " +
+                    "input: { $ifNull: [ \"$bundlesInPurchase\", [] ] }, " +
+                    "initialValue: [], " +
+                    "in: { $setUnion: [ \"$$value\", " +
+                    "{ $map: { input: { $ifNull: [ \"$$this.weightedProducts\", [] ] }, as: \"bp\", in: \"$$bp._id\" } } " +
+                    "] } " +
+                    "} " +
+                    "} " +
+                    "} }",
+
+            // 3. Unisce in un unico array tutti gli ID
+            "{ $project: { allProductIds: { $setUnion: [ \"$productsIds\", \"$bundlesProductIds\" ] } } }",
+
+            // 4. Lookup in products per ottenere i documenti relativi agli ID
+            "{ $lookup: { from: \"products\", localField: \"allProductIds\", foreignField: \"_id\", as: \"products\" } }",
+            "{ $unwind: \"$products\" }",
+
+            // 5. Per ogni prodotto, esplodi l'array degli ingredientIds
+            "{ $unwind: \"$products.ingredientIds\" }",
+
+            // 6. Lookup in ingredients per ottenere i dettagli dell'ingrediente
+            //    Si usa $toObjectId perché in products.ingredientIds il valore potrebbe essere una stringa mentre in ingredients gli _id sono ObjectId.
+            "{ $lookup: { " +
+                    "from: \"ingredients\", " +
+                    "let: { ingId: { $toObjectId: \"$products.ingredientIds\" } }, " +
+                    "pipeline: [ { $match: { $expr: { $eq: [ \"$_id\", \"$$ingId\" ] } } } ], " +
+                    "as: \"ingredientDetails\" " +
+                    "} }",
+            "{ $unwind: \"$ingredientDetails\" }",
+
+            // 7. Filtra gli ingredienti in base alla categoria specificata
+            "{ $match: { \"ingredientDetails.categoryId\": ?2 } }",
+
+            // 8. Conta ogni occorrenza (ogni documento rappresenta un ingrediente usato)
+            "{ $group: { _id: null, ingredientCount: { $sum: 1 } } }",
+
+            // 9. Proietta il risultato finale
+            "{ $project: { _id: 0, ingredientCount: 1 } }"
+    })
+    Optional<Long> countIngredientsByCategory(LocalDate pickupDate, OrderStatus status, String categoryId);
+
+
+    @Aggregation(pipeline = {
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+
+            // Proietta gli ID dei prodotti da productsInPurchase e dai bundlesInPurchase.weightedProducts
+            "{ $project: { " +
+                    "productsIds: { $map: { input: { $ifNull: [ \"$productsInPurchase\", [] ] }, as: \"p\", in: \"$$p._id\" } }, " +
+                    "bundlesProductIds: { " +
+                    "$reduce: { " +
+                    "input: { $ifNull: [ \"$bundlesInPurchase\", [] ] }, " +
+                    "initialValue: [], " +
+                    "in: { $setUnion: [ \"$$value\", " +
+                    "{ $map: { input: { $ifNull: [ \"$$this.weightedProducts\", [] ] }, as: \"bp\", in: \"$$bp._id\" } } " +
+                    "] } " +
+                    "} " +
+                    "} " +
+                    "} }",
+
+            // Unisce in un unico array tutti gli ID
+            "{ $project: { allProductIds: { $setUnion: [ \"$productsIds\", \"$bundlesProductIds\" ] } } }",
+
+            // Lookup in products per ottenere i dettagli dei prodotti
+            "{ $lookup: { from: \"products\", localField: \"allProductIds\", foreignField: \"_id\", as: \"products\" } }",
+            "{ $unwind: \"$products\" }",
+
+            // Esplodi l'array degli ingredientIds per ogni prodotto
+            "{ $unwind: \"$products.ingredientIds\" }",
+
+            // Lookup in ingredients per ottenere i dettagli dell'ingrediente (conversione con $toObjectId se necessario)
+            "{ $lookup: { " +
+                    "from: \"ingredients\", " +
+                    "let: { ingId: { $toObjectId: \"$products.ingredientIds\" } }, " +
+                    "pipeline: [ { $match: { $expr: { $eq: [ \"$_id\", \"$$ingId\" ] } } } ], " +
+                    "as: \"ingredientDetails\" " +
+                    "} }",
+            "{ $unwind: \"$ingredientDetails\" }",
+
+            // Filtra per ingredienti della categoria richiesta
+            "{ $match: { \"ingredientDetails.categoryId\": ?2 } }",
+
+            // Raggruppa per ottenere gli ingredienti distinti (utilizziamo l'ID presente in products.ingredientIds)
+            "{ $group: { _id: \"$products.ingredientIds\" } }",
+
+            // Conta il numero di ingredienti distinti
+            "{ $group: { _id: null, distinctIngredientCount: { $sum: 1 } } }",
 
             // Proietta il risultato finale
-            "{ $project: { _id: 0, distinctIngredientsCount: 1 } }"
+            "{ $project: { _id: 0, distinctIngredientCount: 1 } }"
     })
-    Optional<Long> countDistinctIngredients(LocalDate date, OrderStatus status);
+    Optional<Long> countDistinctIngredientsByCategory(LocalDate pickupDate, OrderStatus status, String categoryId);
 
 
     @Aggregation(pipeline = {
