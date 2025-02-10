@@ -1,6 +1,8 @@
 package com.twentyfive.apaapilayer.mappers;
 
-import com.twentyfive.apaapilayer.dtos.stats.*;
+import com.twentyfive.apaapilayer.dtos.stats.DashboardProductStatDTO;
+import com.twentyfive.apaapilayer.dtos.stats.GlobalProductStatDTO;
+import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
 import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
@@ -36,7 +38,7 @@ public class GlobalStatMapperService {
         return globalIngredientStat;
     }
 
-    private List<CategoryIngredientStat> createIngredientCategoryStat(LocalDate date) { //todo non punziona
+    private List<CategoryIngredientStat> createIngredientCategoryStat(LocalDate date) { //FIXME
         List<String> ingredientIds = completedOrderRepository.findDistinctIngredientIds(date,OrderStatus.COMPLETO);
         List<CategoryIngredientStat> categoryIngredientStats = new ArrayList<>();
         for (String ingredientId : ingredientIds) {
@@ -49,7 +51,7 @@ public class GlobalStatMapperService {
     }
 
     private List<GlobalCategoryStat> createGlobalCategoryStats(LocalDate date) {
-        List<String> categoryIds = completedOrderRepository.findDistinctCategoryIdsForIngredientsByDateAndStatus(date,OrderStatus.COMPLETO);
+        List<String> categoryIds = completedOrderRepository.findDistinctCategoryIdsByDateAndStatus(date,OrderStatus.COMPLETO);
         List<GlobalCategoryStat> globalCategoryStats = new ArrayList<>();
         for (String categoryId : categoryIds) {
             GlobalCategoryStat globalCategoryStat = createGlobalCategoryStat(date,categoryId);
@@ -70,12 +72,12 @@ public class GlobalStatMapperService {
         GeneralIngredientStat generalIngredientStat = new GeneralIngredientStat();
         generalIngredientStat.setTotalIngredients(ingredientRepository.count());
         generalIngredientStat.setUsedIngredients(completedOrderRepository.countUniqueIngredients(date,OrderStatus.COMPLETO).orElse(0L));
-        generalIngredientStat.setTotalUsedIngredients(completedOrderRepository.countTotalIngredients(date,OrderStatus.COMPLETO).orElse(0L)); //TODO it doesn't work
+        generalIngredientStat.setTotalUsedIngredients(completedOrderRepository.calculateTotalIngredients(date,OrderStatus.COMPLETO).orElse(0L));
         return generalIngredientStat;
     }
 
     private GlobalProductStat createGlobalProductStatByDate(LocalDate date) {
-        List<String> categoryIds = completedOrderRepository.findDistinctCategoryIdsByDateAndStatus(date,OrderStatus.COMPLETO);
+        List<String> categoryIds = completedOrderRepository.findDistinctCategoryIdsByDateAndStatus(date,OrderStatus.COMPLETO); //TODO we should take only categoryIDs that has atleast 1 product
         GlobalProductStat globalProductStat = new GlobalProductStat();
         globalProductStat.setGeneralStat(createGeneralProductStatByDate(date));
         globalProductStat.setCustomCakeStat(createCustomStatByDate(date));
@@ -184,41 +186,23 @@ public class GlobalStatMapperService {
     public GlobalStatDTO createGlobalStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
         GlobalStatDTO globalStat = new GlobalStatDTO();
         globalStat.setGlobalProductStat(createGlobalProductStatDTOFromGlobalStat(globalStats));
-        globalStat.setGlobalIngredientStat(createGlobalIngredientStatDTOFromGlobalStat(globalStats));
         return globalStat;
     }
 
-    private GlobalIngredientStatDTO createGlobalIngredientStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
-        GlobalIngredientStatDTO globalIngredientStatDTO = new GlobalIngredientStatDTO();
-        globalIngredientStatDTO.setGeneralStat(sumIngredientGeneralStatsFromGlobalStatList(globalStats));
-        globalIngredientStatDTO.setGlobalCategoryStats(createListGlobalCategoryStatDTOFromListGlobalCategoryStat(globalStats));
-        return globalIngredientStatDTO;
+    private GlobalProductStatDTO createGlobalProductStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
+        GlobalProductStatDTO globalProductStatDTO = new GlobalProductStatDTO();
+        globalProductStatDTO.setGeneralStat(sumGeneralStatsFromGlobalStatList(globalStats));
+        globalProductStatDTO.setCustomCakeStat(sumCustomCakeStatFromCustomCakeStatList(globalStats));
+        globalProductStatDTO.setDashboardProductStats(createListDashboardProductStatDTOFromListDashboardProductDTO(globalStats));
+        return globalProductStatDTO;
     }
 
-    private List<GlobalCategoryStatDTO> createListGlobalCategoryStatDTOFromListGlobalCategoryStat(List<GlobalStatAPA> globalStats) {
-        Map<String,GlobalCategoryStatDTO> globalCategoryStats = new HashMap<>(globalStats.size());
-        for (GlobalStatAPA globalStat : globalStats) {
-            createOrUploadKeyForGlobalCategoryStats(globalStat,globalCategoryStats);
+    private List<DashboardProductStatDTO> createListDashboardProductStatDTOFromListDashboardProductDTO(List<GlobalStatAPA> globalStats) {
+        Map<String,DashboardProductStatDTO> dashboardStats = new HashMap<>(globalStats.size());
+        for (GlobalStatAPA globalStatAPA : globalStats) {
+            createOrUploadKeyForDashboardStats(globalStatAPA,dashboardStats);
         }
-        return new ArrayList<>(globalCategoryStats.values());
-    }
-
-    private void createOrUploadKeyForGlobalCategoryStats(GlobalStatAPA globalStat, Map<String, GlobalCategoryStatDTO> globalCategoryStats) {
-        for (GlobalCategoryStat globalCategoryStat : globalStat.getIngredients().getCategoryStat()) {
-            if (globalCategoryStats.containsKey(globalCategoryStat.getIdCategory())){
-                GlobalCategoryStatDTO globalCategoryStatDTO = globalCategoryStats.get(globalCategoryStat.getIdCategory());
-                globalCategoryStatDTO.setUsedIngredients(globalCategoryStatDTO.getUsedIngredients()+globalCategoryStat.getUsedIngredients());
-                globalCategoryStatDTO.setTotalUsedIngredients(globalCategoryStatDTO.getTotalUsedIngredients()+globalCategoryStat.getTotalUsedIngredients());
-            } else {
-                String name = categoryRepository.findById(globalCategoryStat.getIdCategory()).get().getName();
-                GlobalCategoryStatDTO globalCategoryStatDTO = new GlobalCategoryStatDTO();
-                globalCategoryStatDTO.setIdCategory(globalCategoryStat.getIdCategory());
-                globalCategoryStatDTO.setName(name);
-                globalCategoryStatDTO.setUsedIngredients(globalCategoryStat.getUsedIngredients());
-                globalCategoryStatDTO.setTotalUsedIngredients(globalCategoryStat.getTotalUsedIngredients());
-            }
-
-        }
+        return new ArrayList<>(dashboardStats.values());
     }
 
     private void createOrUploadKeyForDashboardStats(GlobalStatAPA globalStatAPA, Map<String, DashboardProductStatDTO> dashboardStats) {
@@ -240,23 +224,6 @@ public class GlobalStatMapperService {
         }
 
     }
-
-    private List<DashboardProductStatDTO> createListDashboardProductStatDTOFromListDashboardProductDTO(List<GlobalStatAPA> globalStats) {
-        Map<String,DashboardProductStatDTO> dashboardStats = new HashMap<>(globalStats.size());
-        for (GlobalStatAPA globalStatAPA : globalStats) {
-            createOrUploadKeyForDashboardStats(globalStatAPA,dashboardStats);
-        }
-        return new ArrayList<>(dashboardStats.values());
-    }
-
-    private GlobalProductStatDTO createGlobalProductStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
-        GlobalProductStatDTO globalProductStatDTO = new GlobalProductStatDTO();
-        globalProductStatDTO.setGeneralStat(sumProductGeneralStatsFromGlobalStatList(globalStats));
-        globalProductStatDTO.setCustomCakeStat(sumCustomCakeStatFromCustomCakeStatList(globalStats));
-        globalProductStatDTO.setDashboardProductStats(createListDashboardProductStatDTOFromListDashboardProductDTO(globalStats));
-        return globalProductStatDTO;
-    }
-
 
     private CustomCakeStat sumCustomCakeStatFromCustomCakeStatList(List<GlobalStatAPA> globalStats) {
         CustomCakeStat customCakeStat = new CustomCakeStat();
@@ -289,7 +256,7 @@ public class GlobalStatMapperService {
     }
 
 
-    private GeneralProductStat sumProductGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
+    private GeneralProductStat sumGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
         GeneralProductStat generalProductStat = new GeneralProductStat();
         for (GlobalStatAPA globalStat : globalStats) {
             generalProductStat.setTotalRevenue(generalProductStat.getTotalRevenue()+globalStat.getProducts().getGeneralStat().getTotalRevenue());
@@ -298,16 +265,6 @@ public class GlobalStatMapperService {
             generalProductStat.setTotalRevenue(generalProductStat.getTotalCustomersServed()+globalStat.getProducts().getGeneralStat().getTotalCustomersServed());
         }
         return generalProductStat;
-    }
-
-    private GeneralIngredientStat sumIngredientGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
-        GeneralIngredientStat generalIngredientStat = new GeneralIngredientStat();
-        for (GlobalStatAPA globalStat : globalStats) {
-            generalIngredientStat.setTotalIngredients(generalIngredientStat.getTotalIngredients()+globalStat.getIngredients().getGeneralStat().getTotalIngredients());
-            generalIngredientStat.setUsedIngredients(generalIngredientStat.getUsedIngredients()+globalStat.getIngredients().getGeneralStat().getUsedIngredients());
-            generalIngredientStat.setTotalUsedIngredients(generalIngredientStat.getTotalUsedIngredients()+globalStat.getIngredients().getGeneralStat().getTotalUsedIngredients());
-        }
-        return generalIngredientStat;
     }
 }
 

@@ -336,159 +336,110 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
             OrderStatus status
     );
 
-    @Aggregation(pipeline = {
-            // Filtro per pickupDate e status
-            "{'$match': {'pickupDate': ?0, 'status': ?1}}",
-
-            // Lookup per i prodotti in productsInPurchase
-            "{'$lookup': { " +
-                    "'from': 'products', " +
-                    "'localField': 'productsInPurchase._id', " +
-                    "'foreignField': '_id', " +
-                    "'as': 'productDetails' " +
-                    "}}",
-
-            // Lookup per i prodotti nei bundlesInPurchase.weightedProducts
-            "{'$unwind': { 'path': '$bundlesInPurchase', 'preserveNullAndEmptyArrays': true }}",
-            "{'$unwind': { 'path': '$bundlesInPurchase.weightedProducts', 'preserveNullAndEmptyArrays': true }}",
-            "{'$lookup': { " +
-                    "'from': 'products', " +
-                    "'localField': 'bundlesInPurchase.weightedProducts._id', " +
-                    "'foreignField': '_id', " +
-                    "'as': 'bundleProductDetails' " +
-                    "}}",
-
-            // Mappa gli ingredientIds da productDetails e bundleProductDetails (gestione null e vuoti)
-            "{'$project': { " +
-                    "'productIngredientIds': { '$reduce': { " +
-                    "'input': { '$ifNull': ['$productDetails', []] }, " +
-                    "'initialValue': [], " +
-                    "'in': { '$concatArrays': ['$$value', { '$ifNull': ['$$this.ingredientIds', []] }] } " +
-                    "} }, " +
-                    "'bundleIngredientIds': { '$reduce': { " +
-                    "'input': { '$ifNull': ['$bundleProductDetails', []] }, " +
-                    "'initialValue': [], " +
-                    "'in': { '$concatArrays': ['$$value', { '$ifNull': ['$$this.ingredientIds', []] }] } " +
-                    "} } " +
-                    "}}",
-
-            // Combina tutti gli ingredientIds (gestione null e vuoti)
-            "{'$addFields': { 'allIngredientIds': { '$setUnion': ['$productIngredientIds', '$bundleIngredientIds'] } }}",
-            "{'$unwind': { 'path': '$allIngredientIds', 'preserveNullAndEmptyArrays': true }}",
-
-            // Lookup per ottenere le categorie degli ingredienti
-            "{'$lookup': { " +
-                    "'from': 'ingredients', " +
-                    "'localField': 'allIngredientIds', " +
-                    "'foreignField': '_id', " +
-                    "'as': 'ingredientDetails' " +
-                    "}}",
-
-            // Estrarre solo le categorie degli ingredienti
-            "{'$project': { 'ingredientCategories': { '$map': { " +
-                    "'input': { '$ifNull': ['$ingredientDetails', []] }, " +
-                    "'as': 'ingredient', " +
-                    "'in': '$$ingredient.category' " +
-                    "} } }}",
-
-            // Rimuovi duplicati e gestisci categorie multiple
-            "{'$unwind': { 'path': '$ingredientCategories', 'preserveNullAndEmptyArrays': true }}",
-            "{'$group': { '_id': '$ingredientCategories' }}",
-            "{'$project': { '_id': 0, 'categoryId': '$_id' }}"
-    })
-    List<String> findDistinctCategoryIdsForIngredientsByDateAndStatus(
-            LocalDate date,
-            OrderStatus status
-    );
 
     @Aggregation(pipeline = {
             // Filtra per pickupDate e OrderStatus
             "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",
 
-            // Lookup per ottenere ingredientIds dai prodotti in productsInPurchase
+            // Espande la lista productsInPurchase (per gli acquisti diretti)
+            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
+
+            // Lookup su products per ottenere gli ingredientIds dai productsInPurchase
             "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
 
-            // Lookup per ottenere ingredientIds dai weightedProducts in bundlesInPurchase
+            // Espande i dettagli del prodotto
+            "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
+
+            // Espande la lista bundlesInPurchase (per gli acquisti nei bundle)
             "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+
+            // Espande la lista weightedProducts dentro bundlesInPurchase
             "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+
+            // Lookup su products per ottenere gli ingredientIds dai weightedProducts nei bundle
             "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
 
-            // Concatenazione degli ingredientIds da productDetails e bundleProductDetails
-            "{ $project: { " +
-                    "ingredientIds: { " +
-                    "$concatArrays: [ " +
-                    "{ $ifNull: ['$productDetails.ingredientIds', []] }, " +
-                    "{ $ifNull: ['$bundleProductDetails.ingredientIds', []] } " +
-                    "] " +
-                    "} " +
-                    "} }",
+            // Espande i dettagli del prodotto nel bundle
+            "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
 
-            // Calcola gli ingredienti unici
-            "{ $project: { uniqueIngredientIds: { $setUnion: ['$ingredientIds', []] } } }",
+            // Estrai gli ingredienti singolarmente invece di avere array annidati
+            "{ $project: { ingredientIds: { $concatArrays: [ { $ifNull: ['$productDetails.ingredientIds', []] }, { $ifNull: ['$bundleProductDetails.ingredientIds', []] } ] } } }",
 
-            // Raggruppa tutto in un unico documento e conta gli ingredienti unici
-            "{ $group: { _id: null, count: { $sum: { $size: '$uniqueIngredientIds' } } } }",
+            // Espande la lista ingredientIds in modo che ogni documento abbia un solo ingrediente
+            "{ $unwind: { path: '$ingredientIds', preserveNullAndEmptyArrays: true } }",
+
+            // Raggruppa tutti gli ingredienti unici
+            "{ $group: { _id: '$ingredientIds' } }",
+
+            // Conta il numero totale di ingredienti unici
+            "{ $group: { _id: null, count: { $sum: 1 } } }",
 
             // Proietta il risultato finale
             "{ $project: { _id: 0, count: 1 } }"
     })
-    Optional<Long> countUniqueIngredients(
-            LocalDate date,
-            OrderStatus status
-    );
+    Optional<Long> countUniqueIngredients(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
-            // Filtra per pickupDate e status
+            // Filtra per pickupDate e OrderStatus
             "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",
 
-            // Lookup per ottenere i dettagli dei prodotti in productsInPurchase
+            // Espande productsInPurchase
+            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
+
+            // Lookup su products per ottenere ingredientIds dai productsInPurchase
             "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
 
-            // Unwind per esplodere i bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            // Espande i dettagli del prodotto
+            "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
 
-            // Unwind per esplodere i weightedProducts dentro i bundlesInPurchase
+            // Calcola il numero di ingredienti per productsInPurchase
+            "{ $addFields: { productIngredientCount: { $multiply: [ { $size: { $ifNull: ['$productDetails.ingredientIds', []] } }, { $ifNull: ['$productsInPurchase.quantity', 1] } ] } } }",
+
+            // Espande bundlesInPurchase
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
             "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
 
-            // Lookup per ottenere i dettagli dei prodotti nei weightedProducts
+            // Lookup su products per ottenere ingredientIds dai weightedProducts nei bundle
             "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
 
-            // Proietta gli ingredientIds con la quantità moltiplicata e gestisce valori mancanti
-            "{ $project: { " +
-                    "productIngredients: { $reduce: { " +
-                    "  input: { $ifNull: ['$productDetails', []] }, " +
-                    "  initialValue: [], " +
-                    "  in: { $concatArrays: ['$$value', { $ifNull: ['$$this.ingredientIds', []] }] }" +
-                    "} }," +
-                    "bundleIngredients: { $reduce: { " +
-                    "  input: { $ifNull: ['$bundleProductDetails', []] }, " +
-                    "  initialValue: [], " +
-                    "  in: { $concatArrays: ['$$value', { $ifNull: ['$$this.ingredientIds', []] }] }" +
-                    "} }" +
-                    "} }",
+            // Espande i dettagli del prodotto nei bundle
+            "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
 
-            // Concatenazione degli ingredienti da productsInPurchase e bundlesInPurchase
-            "{ $addFields: { allIngredients: { $concatArrays: ['$productIngredients', '$bundleIngredients'] } } }",
+            // Calcola il numero di ingredienti per bundlesInPurchase
+            "{ $addFields: { bundleIngredientCount: { $multiply: [ { $size: { $ifNull: ['$bundleProductDetails.ingredientIds', []] } }, { $ifNull: ['$bundlesInPurchase.quantity', 1] } ] } } }",
 
-            // Raggruppa e somma il totale degli ingredienti
-            "{ $group: { _id: null, totalIngredients: { $sum: { $size: { $ifNull: ['$allIngredients', []] } } } } }",
+            // Somma gli ingredienti di entrambi i tipi di acquisti
+            "{ $group: { _id: null, totalIngredients: { $sum: { $add: [ '$productIngredientCount', '$bundleIngredientCount' ] } } } }",
 
             // Proietta il risultato finale
             "{ $project: { _id: 0, totalIngredients: 1 } }"
     })
-    Optional<Long> countTotalIngredients(LocalDate pickupDate, OrderStatus status);
+    Optional<Long> calculateTotalIngredients(LocalDate date, OrderStatus status);
+
+
+
 
 
     @Aggregation(pipeline = {
             "{ $match: { pickupDate: ?0, status: ?1 } }",
-            "{ $unwind: '$productsInPurchase' }",
+            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
             "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
-            "{ $unwind: '$productDetails' }",
-            "{ $unwind: '$productDetails.ingredientIds' }",
+            "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$productDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProduct', preserveNullAndEmptyArrays: true } }",
+            "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
+            "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundleProductDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+
             "{ $group: { _id: '$productDetails.ingredientIds' } }",
-            "{ $project: { _id: 0, ingredientId: '$_id' } }"
+            "{ $group: { _id: '$_id', ingredientId: { $first: '$_id' } } }",
+            "{ $project: { _id: 0, ingredientId: 1 } }"
     })
     List<String> findDistinctIngredientIds(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
             // Filtra per pickupDate e status
@@ -580,20 +531,33 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     Optional<Long> countTotalIngredientsByCategory(LocalDate date, OrderStatus status, String categoryId);
 
 
-
-
-
     @Aggregation(pipeline = {
             "{ $match: { pickupDate: ?0, status: ?1 } }",
-            "{ $unwind: '$productsInPurchase' }",
+
+            // Unwind prodotti acquistati e unione con products
+            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
             "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
-            "{ $unwind: '$productDetails' }",
-            "{ $unwind: '$productDetails.ingredientIds' }",
-            "{ $match: { 'productDetails.ingredientIds': ?2 } }",
-            "{ $project: { ingredientUsage: { $multiply: [1, '$productsInPurchase.quantity'] } } }",
+            "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$productDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+
+            // Unwind bundle acquistati e unione con products
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+            "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
+            "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundleProductDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
+
+            // Filtro per l'ingrediente specifico
+            "{ $match: { $or: [ { 'productDetails.ingredientIds': ?2 }, { 'bundleProductDetails.ingredientIds': ?2 } ] } }",
+
+            // Calcolo dell'uso dell'ingrediente nei prodotti e nei bundle
+            "{ $project: { ingredientUsage: { $sum: [ { $multiply: ['$productsInPurchase.quantity', 1] }, { $multiply: ['$bundlesInPurchase.quantity', 1] } ] } } }",
+
+            // Somma totale dell'uso dell'ingrediente
             "{ $group: { _id: null, totalUsage: { $sum: '$ingredientUsage' } } }",
             "{ $project: { _id: 0, totalUsage: 1 } }"
     })
     Optional<Long> countIngredientUsage(LocalDate date, OrderStatus status, String ingredientId);
+
 
 }
