@@ -248,7 +248,7 @@ public class GlobalStatMapperService {
                 GlobalCategoryStatDTO globalCategoryStatDTO = globalCategoryStats.get(globalCategoryStat.getIdCategory());
                 globalCategoryStatDTO.setTotalUsedIngredients(globalCategoryStatDTO.getTotalUsedIngredients()+globalCategoryStat.getTotalUsedIngredients());
                 globalCategoryStatDTO.setUsedIngredients(globalCategoryStatDTO.getUsedIngredients()+globalCategoryStat.getUsedIngredients());
-            } else {
+            } else if (globalCategoryStat.getIdCategory() != null){
                 String name = categoryRepository.findById(globalCategoryStat.getIdCategory()).get().getName();
                 GlobalCategoryStatDTO globalCategoryStatDTO = new GlobalCategoryStatDTO();
                 globalCategoryStatDTO.setIdCategory(globalCategoryStat.getIdCategory());

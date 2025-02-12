@@ -1,12 +1,14 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
+import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
 import com.twentyfive.apaapilayer.exceptions.GlobalStatNotFoundException;
 import com.twentyfive.apaapilayer.mappers.GlobalStatMapperService;
 import com.twentyfive.apaapilayer.models.DateRange;
 import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.repositories.GlobalStatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.GlobalStat;
 
@@ -45,5 +47,9 @@ public class GlobalStatService {
         }
         List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
         return globalStatMapperService.createGlobalStatDTOFromGlobalStat(globalStats);
+    }
+
+    public Page<ProductStatCategoryDTO> getProductStatCategory(DateRange date, int page, int size, String sortColumn, String sortDirection,String value) {
+        return null;
     }
 }
