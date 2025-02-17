@@ -3,11 +3,13 @@ package com.twentyfive.apaapilayer.controllers;
 import com.twentyfive.apaapilayer.job.TimeSlotRefreshScheduling;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.services.GlobalStatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,7 @@ public class TestController {
     private final ProductWeightedRepository productWeightedRepository;
     private final CategoryRepository categoryRepository;
     private final ProductStatRepository productStatRepository;
+    private final GlobalStatService globalStatService;
 
     @GetMapping("/populateJob")
     public void test(){
@@ -76,6 +79,16 @@ public class TestController {
             product.setStats(productStatAPA);
             productStatRepository.save(productStatAPA);
             productFixedRepository.save(product);
+        }
+    }
+
+    @GetMapping("/populateStats")
+    public void populateStats(){
+        LocalDate firstDay = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+
+        while (firstDay.isBefore(LocalDate.now())){
+            globalStatService.createByDate(firstDay);
+            firstDay = firstDay.plusDays(1);
         }
     }
 }

@@ -307,7 +307,13 @@ public class GlobalStatMapperService {
         GeneralIngredientStat generalIngredientStat = new GeneralIngredientStat();
 
         for (GlobalStatAPA globalStat : globalStats) {
-            generalIngredientStat.setTotalIngredients(generalIngredientStat.getTotalIngredients()+globalStat.getIngredients().getGeneralStat().getTotalIngredients());
+
+            generalIngredientStat.setTotalIngredients(
+                    Math.max(
+                            generalIngredientStat.getTotalIngredients(),
+                            globalStat.getIngredients().getGeneralStat().getTotalIngredients()
+                    ));
+
             generalIngredientStat.setTotalUsedIngredients(generalIngredientStat.getTotalUsedIngredients()+globalStat.getIngredients().getGeneralStat().getTotalUsedIngredients());
             generalIngredientStat.setUsedIngredients(generalIngredientStat.getUsedIngredients()+globalStat.getIngredients().getGeneralStat().getUsedIngredients());
         }
