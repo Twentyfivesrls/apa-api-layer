@@ -836,7 +836,7 @@ public class CustomerService {
 
         // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
         Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
-                .findTimeForNumSlots(minStartingDate, numSlotRequired);
+                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()));
 
         // Usa una TreeMap per garantire l'ordinamento
         return new TreeMap<>(availableTimes);
