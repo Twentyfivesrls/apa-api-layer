@@ -4,18 +4,11 @@ import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
-import com.twentyfive.apaapilayer.repositories.IngredientRepository;
-import com.twentyfive.apaapilayer.repositories.ProductKgRepository;
-import com.twentyfive.apaapilayer.repositories.ProductWeightedRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -23,9 +16,9 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapperService categoryMapperService;
-    private final ProductWeightedRepository productWeightedRepository;
-    private final ProductKgRepository productKgRepository;
-    private final IngredientRepository ingredientRepository;
+
+    private final String[] PRODUCT_CATEGORY = {"productWeighted","ProductKg","ProductFixed","Tray"};
+
 
 
     public List<CategoryAPA> getEnabledCategories(List<String> types) {
@@ -53,18 +46,27 @@ public class CategoryService {
 
     @Transactional
     public CategoryAPA save(CategoryAPA c){
-        if (c.getIdSection()!=null){
-            Optional<CategoryAPA> optCategory = categoryRepository.findByNameAndIdSection(c.getName(),c.getIdSection());
-            if (optCategory.isPresent()){
-                c.setId(optCategory.get().getId());
-            }
+        //Andremo a calcolare l'orderPriority per la nuova categoria
+        Integer max;
+
+        if (c.getIdSection() != null){
+            max = getEnabledCategories(Arrays.stream(PRODUCT_CATEGORY).toList())
+                    .stream()
+                    .map(CategoryAPA::getOrderPriority)
+                    .filter(Objects::nonNull)
+                    .max(Comparator.naturalOrder()).orElse(null);
+        } else {
+            max = (getAllActiveByIdSection(c.getIdSection())
+                    .stream()
+                    .map(CategoryAPA::getOrderPriority)
+                    .filter(Objects::nonNull)
+                    .max(Comparator.naturalOrder()).orElse(null));
         }
-        if (c.getType()!=null){
-            Optional<CategoryAPA> optCategory = categoryRepository.findByNameAndType(c.getName(),c.getType());
-            if(optCategory.isPresent()){
-                c.setId(optCategory.get().getId());
-            }
+
+        if (max != null){
+            c.setOrderPriority(max+1);
         }
+
         return categoryRepository.save(c);
     }
 

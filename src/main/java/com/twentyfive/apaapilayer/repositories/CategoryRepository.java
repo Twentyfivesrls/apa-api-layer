@@ -16,7 +16,6 @@ public interface CategoryRepository extends MongoRepository<CategoryAPA,String> 
     List<CategoryAPA> findAllByTypeAndEnabledTrueAndSoftDeletedFalse(String type);
     List<CategoryAPA> findAllByType(String type);
 
-    Optional<CategoryAPA> findByName(String name);
     Optional<CategoryAPA> findByNameAndIdSection(String name,String idSection);
     Optional<CategoryAPA> findByNameAndType(String name,String type);
 
@@ -26,10 +25,8 @@ public interface CategoryRepository extends MongoRepository<CategoryAPA,String> 
 
     List<CategoryAPA> findAllByIdSectionAndEnabledFalseAndSoftDeletedFalse(String id);
 
-    @Aggregation(pipeline = {
-            "{ $project: { _id: 1 } }"  // Proietta solo il campo _id per ogni documento
-    })
-    List<String> findAllIds();
+
+
 
 
 }
