@@ -600,6 +600,10 @@ public class ActiveOrderService {
                         }
                     }
                 }
+                case IN_PASTICCERIA -> {
+                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+                    activeOrderRepository.save(order);
+                }
                 case IN_PREPARAZIONE -> {
                     //String bakerNotification =StompUtilities.sendBakerNotification("new");
                     //producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
@@ -682,7 +686,7 @@ public class ActiveOrderService {
                 ProductInPurchase pIP = products.get(position);
                 if (location.equals("Nessun Luogo")) {
                     pIP.setLocation(null);
-                } else if (location.equals("In pasticceria")) {
+                } else if (location.equals("In preparazione")) {
                     pIP.setToPrepare(true);
                     pIP.setLocation(location);
                     pIP.setCounterNote(counterNote);
@@ -694,9 +698,13 @@ public class ActiveOrderService {
                 }
             }
             boolean noMoreToPrepare = order.getProductsInPurchase().stream()
-                    .allMatch(product -> product.getLocation() != null && !"In pasticceria".equals(product.getLocation())) &&
+                    .allMatch(product -> product.getLocation() != null
+                            && !"In pasticceria".equals(product.getLocation())
+                            && !"In preparazione".equals(product.getLocation())) &&
                     order.getBundlesInPurchase().stream()
-                            .allMatch(bundle -> bundle.getLocation() != null && !"In pasticceria".equals(bundle.getLocation()));
+                            .allMatch(bundle -> bundle.getLocation() != null
+                                    && !"In pasticceria".equals(bundle.getLocation())
+                                    && !"In preparazione".equals(bundle.getLocation()));
             if (noMoreToPrepare){
                 order.setStatus(OrderStatus.PRONTO);
                 CustomerAPA customer = getCustomerFromOrder(order);

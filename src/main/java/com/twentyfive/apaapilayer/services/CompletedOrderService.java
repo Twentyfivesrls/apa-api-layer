@@ -242,7 +242,7 @@ public class CompletedOrderService {
 
         if (toPrepare){
             //StompUtilities.sendBakerNotification(false);
-            activeOrder.setStatus(OrderStatus.IN_PREPARAZIONE);
+            activeOrder.setStatus(OrderStatus.IN_PASTICCERIA);
         } else {
             activeOrder.setStatus(OrderStatus.RICEVUTO);
         }
