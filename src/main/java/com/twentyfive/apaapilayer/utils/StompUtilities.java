@@ -32,6 +32,7 @@ public class StompUtilities {
             case ANNULLATO -> twentyfiveMessage.setContent("ANNULLATO");
             case RICEVUTO -> twentyfiveMessage.setContent("RICEVUTO");
             case IN_PREPARAZIONE -> twentyfiveMessage.setContent("IN_PREPARAZIONE");
+            case IN_PASTICCERIA -> twentyfiveMessage.setContent("IN_PASTICCERIA");
             case PRONTO -> twentyfiveMessage.setContent("PRONTO");
             case COMPLETO -> twentyfiveMessage.setContent("COMPLETO");
         }
