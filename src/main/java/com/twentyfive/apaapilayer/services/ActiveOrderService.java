@@ -672,7 +672,7 @@ public class ActiveOrderService {
                 BundleInPurchase bIP = bundles.get(position);
                 if (location.equals("Nessun Luogo")) {
                     bIP.setLocation(null);
-                } else if (location.equals("In pasticceria")) {
+                } else if (location.equals("In preparazione")) {
                     bIP.setToPrepare(true);
                     bIP.setLocation(location);
                     bIP.setCounterNote(counterNote);
@@ -718,7 +718,7 @@ public class ActiveOrderService {
             }
             if (!roles.contains("baker")){
                 if(alreadySomeToPrepare){
-                    if(location.equals("In pasticceria")){
+                    if(location.equals("In preparazione")){
                         TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
                         stompClientController.sendObjectMessage(twentyfiveMessage);
                     } else {
