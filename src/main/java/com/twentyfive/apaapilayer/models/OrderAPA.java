@@ -14,5 +14,5 @@ public class OrderAPA extends Order {
 
     private boolean bakerUnread; //status unread per pasticceria
     private boolean counterUnread = true; //status unread per bancone
-
+    private int counterUpdatedProducts;
 }

@@ -128,11 +128,14 @@ public class ActiveOrderService {
             dto.setId(order.getId());
             dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
             dto.setRealPrice(order.getTotalPrice());
+
+            //FIX ME HERE
             if(order.getPaymentId()!=null){
                 dto.setMethodPayment("Online");
             } else {
                 dto.setMethodPayment("Al ritiro");
             }
+
             dto.setPrice("€ " +String.format("%.2f", order.getTotalPrice()));
             String status = maskModifiedFromBakerForCustomers(order.getStatus());
             dto.setStatus(status);
@@ -810,12 +813,17 @@ public class ActiveOrderService {
 
             if(!(pathToDelete.isBlank() || pathToDelete == null)){
                 mediaManagerClientController.deleteMedia(pathToDelete.substring(1));
+            } else { //c'è da aumentare il prezzo degli ordini
+                order.setCounterUpdatedProducts(order.getCounterUpdatedProducts()+1);
+                order.setTotalPrice(order.getTotalPrice()+5);
             }
 
             if (file != null){
+                productInPurchase.setUpdated(true);
                 String path = String.format(FTP_PATH,order.getId());
                 String realName = mediaManagerClientController.uploadMedia(file, path);
                 productInPurchase.setAttachment("/"+String.format(FTP_PATH,order.getId())+"/"+realName);
+
             }
 
             return activeOrderRepository.save(order) != null;

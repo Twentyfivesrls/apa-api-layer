@@ -28,7 +28,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/orders")
-@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
+//@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
 public class ActiveOrderController {
 
     private final ActiveOrderService activeOrderService; // Assumi che OrderService sia iniettato correttamente
