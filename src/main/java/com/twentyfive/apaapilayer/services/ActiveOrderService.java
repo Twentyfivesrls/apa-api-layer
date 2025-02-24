@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.itextpdf.text.DocumentException;
+import com.twentyfive.apaapilayer.clients.MediaManagerClientController;
 import com.twentyfive.apaapilayer.clients.PaymentClientController;
 import com.twentyfive.apaapilayer.clients.StompClientController;
 import com.twentyfive.apaapilayer.dtos.*;
@@ -44,6 +45,8 @@ public class ActiveOrderService {
 
     private final String NOTIFICATION_TOPIC="twentyfive_internal_notifications";
 
+    private final String FTP_PATH="apa/orders/%s";
+
     private final EmailService emailService;
 
     private final ActiveOrderRepository activeOrderRepository;
@@ -64,9 +67,11 @@ public class ActiveOrderService {
     private final TimeSlotAPARepository timeSlotAPARepository;
 
     private final MongoTemplate mongoTemplate;
+    private final MediaManagerClientController mediaManagerClientController;
+    private final MediaManagerService mediaManagerService;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate, MediaManagerClientController mediaManagerClientController, MediaManagerService mediaManagerService) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -82,6 +87,8 @@ public class ActiveOrderService {
         this.settingRepository=settingRepository;
         this.timeSlotAPARepository=timeSlotAPARepository;
         this.mongoTemplate = mongoTemplate;
+        this.mediaManagerClientController = mediaManagerClientController;
+        this.mediaManagerService = mediaManagerService;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -770,35 +777,50 @@ public class ActiveOrderService {
         OrderAPA order = this.getById(id);
         List<ProductInPurchase> productsInPurchase = order.getProductsInPurchase();
 
-        if(!(updateOrderReq.getPosition()>=productsInPurchase.size())){
+        if(!(updateOrderReq.getPosition()>=productsInPurchase.size()) && order.getProductsInPurchase() != null){
+
             ProductInPurchase productInPurchase = productsInPurchase.get(updateOrderReq.getPosition());
 
-            List<Customization> newCustomizations = updateOrderReq.getCustomizations();
+            if(updateOrderReq.getCustomizations()!=null) {
+                List<Customization> newCustomizations = updateOrderReq.getCustomizations();
 
-            if(productInPurchase.getCustomization() != null){
-                List<Customization> oldCustomizations = productInPurchase.getCustomization();
+                if (productInPurchase.getCustomization() != null) {
+                    List<Customization> oldCustomizations = productInPurchase.getCustomization();
 
-                for (Customization newCustomization : newCustomizations) {
+                    for (Customization newCustomization : newCustomizations) {
 
-                    Optional<Customization> optCustomization = oldCustomizations.stream()
-                            .filter(c -> c.getName().equals(newCustomization.getName()))
-                            .findFirst();
+                        Optional<Customization> optCustomization = oldCustomizations.stream()
+                                .filter(c -> c.getName().equals(newCustomization.getName()))
+                                .findFirst();
 
-                    if (optCustomization.isPresent()){
-                        Customization customization = optCustomization.get();
-                        customization.setValue(newCustomization.getValue());
-                    } else {
-                        oldCustomizations.add(newCustomization);
+                        if (optCustomization.isPresent()) {
+                            Customization customization = optCustomization.get();
+                            customization.setValue(newCustomization.getValue());
+                        } else {
+                            oldCustomizations.add(newCustomization);
+                        }
+
                     }
 
+                } else {
+                    productInPurchase.setCustomization(newCustomizations);
                 }
-
-            } else {
-                productInPurchase.setCustomization(newCustomizations);
             }
+            String pathToDelete = productInPurchase.getAttachment()!=null ? productInPurchase.getAttachment() : "";
+
+            if(!(pathToDelete.isBlank() || pathToDelete == null)){
+                mediaManagerClientController.deleteMedia(pathToDelete.substring(1));
+            }
+
+            if (file != null){
+                String path = String.format(FTP_PATH,order.getId());
+                String realName = mediaManagerClientController.uploadMedia(file, path);
+                productInPurchase.setAttachment("/"+String.format(FTP_PATH,order.getId())+"/"+realName);
+            }
+
             return activeOrderRepository.save(order) != null;
         }
-        throw new IndexOutOfBoundsException("Non c'è alcun Prodotto con questa posizione nel carrelo " +updateOrderReq.getPosition());
+        throw new IndexOutOfBoundsException("Non c'è alcun prodotto con questa posizione nel carrelo " +updateOrderReq.getPosition());
     }
 }
 

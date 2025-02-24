@@ -1,5 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.dtos.LocationReq;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
@@ -72,9 +74,13 @@ public class ActiveOrderController {
 
     @PutMapping(value ="/update/{id}", consumes = "multipart/form-data")
     public ResponseEntity<Boolean> update(@PathVariable String id,
-                                          @RequestPart("updateOrderReq") UpdateOrderReq updateOrderReq,
-                                          @RequestPart("file") MultipartFile file) {
-        return ResponseEntity.ok().body(activeOrderService.updateOrder(id,updateOrderReq,file));
+                                          @RequestParam(value ="updateOrderReq", required = false) String updateOrderReq,
+                                          @RequestPart(value ="file", required = false) MultipartFile file) throws JsonProcessingException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        UpdateOrderReq updateOrderReqObj = objectMapper.readValue(updateOrderReq, UpdateOrderReq.class);
+
+        return ResponseEntity.ok().body(activeOrderService.updateOrder(id,updateOrderReqObj,file));
 
     }
 

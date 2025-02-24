@@ -10,7 +10,7 @@ public interface MediaManagerClientController {
 
     @PostMapping(value = "/uploadkkk/{path}", consumes = "multipart/form-data")
     String uploadMedia(@RequestPart("file") MultipartFile file,
-                                             @PathVariable("path") String path);
+                       @PathVariable("path") String path);
 
     @DeleteMapping(value = "/deletekkk/{path}")
     String deleteMedia(@PathVariable("path") String path);
