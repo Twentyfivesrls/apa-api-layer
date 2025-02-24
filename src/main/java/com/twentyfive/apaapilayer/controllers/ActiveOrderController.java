@@ -4,6 +4,7 @@ import com.itextpdf.text.DocumentException;
 import com.twentyfive.apaapilayer.dtos.LocationReq;
 import com.twentyfive.apaapilayer.dtos.OrderAPADTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsAPADTO;
+import com.twentyfive.apaapilayer.dtos.UpdateOrderReq;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.filters.OrderFilter;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.ByteArrayOutputStream;
@@ -66,6 +68,14 @@ public class ActiveOrderController {
         } else {
             return ResponseEntity.notFound().build(); // Restituisce 404 Not Found se l'ordine non esiste
         }
+    }
+
+    @PutMapping(value ="/update/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<Boolean> update(@PathVariable String id,
+                                          @RequestPart("updateOrderReq") UpdateOrderReq updateOrderReq,
+                                          @RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok().body(activeOrderService.updateOrder(id,updateOrderReq,file));
+
     }
 
     @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")

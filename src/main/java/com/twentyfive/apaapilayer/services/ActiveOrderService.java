@@ -8,6 +8,7 @@ import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.exceptions.InvalidItemException;
+import com.twentyfive.apaapilayer.exceptions.OrderNotFoundException;
 import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
@@ -21,12 +22,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import twentyfive.twentyfiveadapter.dto.groypalDaemon.PaypalCredentials;
 import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.BundleInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ItemInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.PieceInPurchase;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.ProductInPurchase;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
 import java.io.ByteArrayOutputStream;
@@ -762,5 +761,44 @@ public class ActiveOrderService {
         return customer;
     }
 
+    public OrderAPA getById(String id) {
+        return activeOrderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException("nessun ordine attivo trovato con questo id = " +id));
+    }
+
+    @Transactional
+    public Boolean updateOrder(String id, UpdateOrderReq updateOrderReq, MultipartFile file) {
+        OrderAPA order = this.getById(id);
+        List<ProductInPurchase> productsInPurchase = order.getProductsInPurchase();
+
+        if(!(updateOrderReq.getPosition()>=productsInPurchase.size())){
+            ProductInPurchase productInPurchase = productsInPurchase.get(updateOrderReq.getPosition());
+
+            List<Customization> newCustomizations = updateOrderReq.getCustomizations();
+
+            if(productInPurchase.getCustomization() != null){
+                List<Customization> oldCustomizations = productInPurchase.getCustomization();
+
+                for (Customization newCustomization : newCustomizations) {
+
+                    Optional<Customization> optCustomization = oldCustomizations.stream()
+                            .filter(c -> c.getName().equals(newCustomization.getName()))
+                            .findFirst();
+
+                    if (optCustomization.isPresent()){
+                        Customization customization = optCustomization.get();
+                        customization.setValue(newCustomization.getValue());
+                    } else {
+                        oldCustomizations.add(newCustomization);
+                    }
+
+                }
+
+            } else {
+                productInPurchase.setCustomization(newCustomizations);
+            }
+            return activeOrderRepository.save(order) != null;
+        }
+        throw new IndexOutOfBoundsException("Non c'è alcun Prodotto con questa posizione nel carrelo " +updateOrderReq.getPosition());
+    }
 }
 
