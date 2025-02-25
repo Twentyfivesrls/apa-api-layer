@@ -346,7 +346,7 @@ public class ActiveOrderService {
 
                 CategoryAPA category = categoryService.getById(productKg.getCategoryId());
                 switch(category.getName()){
-                    case "Semifreddo" -> productUpdateField = ProductUpdateField.TEXT;
+                    case "Semifreddi" -> productUpdateField = ProductUpdateField.TEXT;
                     case "Le Nostre Torte" -> productUpdateField = ProductUpdateField.ALL;
                 }
 

@@ -11,7 +11,6 @@ import com.twentyfive.apaapilayer.exceptions.CancelThresholdPassedException;
 import com.twentyfive.apaapilayer.models.OrderAPA;
 import com.twentyfive.apaapilayer.filters.OrderFilter;
 import com.twentyfive.apaapilayer.services.ActiveOrderService;
-import com.twentyfive.authorizationflow.services.AuthenticationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +27,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/orders")
-//@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
+@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
 public class ActiveOrderController {
 
     private final ActiveOrderService activeOrderService; // Assumi che OrderService sia iniettato correttamente
@@ -72,6 +71,7 @@ public class ActiveOrderController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_admin')")
     @PutMapping(value ="/update/{id}", consumes = "multipart/form-data")
     public ResponseEntity<Boolean> update(@PathVariable String id,
                                           @RequestParam(value ="updateOrderReq", required = false) String updateOrderReq,
