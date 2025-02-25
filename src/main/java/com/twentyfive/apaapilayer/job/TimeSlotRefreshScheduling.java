@@ -90,4 +90,63 @@ public class TimeSlotRefreshScheduling {
         timeSlotAPA.setNumSlotsMap(slotsMap);
         timeSlotAPARepository.save(timeSlotAPA);
     }
+
+    public void updateTimeSlot(SettingAPA oldSettings, SettingAPA newSettings) {
+        TimeSlotAPA timeSlot = timeSlotAPARepository.findById("66e951df4682b089c80a879b").get();
+        Map<LocalDate, Map<LocalTime, Integer>> numSlotsMap = timeSlot.getNumSlotsMap();
+
+        DateRange oldBusinessHours = oldSettings.getBusinessHours();
+        DateRange newBusinessHours = newSettings.getBusinessHours();
+
+        LocalTime oldStart = oldBusinessHours.getStartTime();
+        LocalTime oldEnd = oldBusinessHours.getEndTime();
+        LocalTime newStart = newBusinessHours.getStartTime();
+        LocalTime newEnd = newBusinessHours.getEndTime();
+
+        int oldMaxMorning = oldSettings.getMaxMorningOrder();
+        int oldMaxAfternoon = oldSettings.getMaxAfternoonOrder();
+        int newMaxMorning = newSettings.getMaxMorningOrder();
+        int newMaxAfternoon = newSettings.getMaxAfternoonOrder();
+
+        for (Map.Entry<LocalDate, Map<LocalTime, Integer>> dayEntry : numSlotsMap.entrySet()) {
+            Map<LocalTime, Integer> oldDaySlots = dayEntry.getValue();
+            Map<LocalTime, Integer> updatedDaySlots = new TreeMap<>();
+
+            LocalTime current = newStart;
+            while (!current.isAfter(newEnd)) {
+                int newMax = current.isBefore(LocalTime.of(14, 0)) ? newMaxMorning : newMaxAfternoon;
+                int oldMax = current.isBefore(LocalTime.of(14, 0)) ? oldMaxMorning : oldMaxAfternoon;
+                int newAvailable;
+
+                if (current.compareTo(oldStart) >= 0 && current.compareTo(oldEnd) <= 0 && oldDaySlots.containsKey(current)) {
+                    int oldAvailable = oldDaySlots.get(current);
+                    if (newMax < oldMax) {
+                        // Se il nuovo max è inferiore, impostiamo a newMax
+                        newAvailable = newMax;
+                    } else if (newMax > oldMax) {
+                        // Se il nuovo max è superiore, aggiungiamo la differenza all'available esistente
+                        newAvailable = oldAvailable + (newMax - oldMax);
+                        // Clamparlo a newMax se superato
+                        if (newAvailable > newMax) {
+                            newAvailable = newMax;
+                        }
+                    } else {
+                        // Se i max sono uguali, manteniamo il valore attuale
+                        newAvailable = oldAvailable;
+                    }
+                } else {
+                    // Se lo slot non esisteva precedentemente, lo inizializziamo a newMax
+                    newAvailable = newMax;
+                }
+
+                updatedDaySlots.put(current, newAvailable);
+                current = current.plusHours(1);
+            }
+            numSlotsMap.put(dayEntry.getKey(), updatedDaySlots);
+        }
+        timeSlotAPARepository.save(timeSlot);
+    }
+
+
+
 }

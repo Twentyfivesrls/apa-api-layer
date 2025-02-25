@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.job.TimeSlotRefreshScheduling;
 import com.twentyfive.apaapilayer.models.SettingAPA;
 import com.twentyfive.apaapilayer.repositories.SettingRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SettingService {
 
+    private final TimeSlotRefreshScheduling timeSlotRefreshScheduling;
+
     @Value("${setting.id}")
     private String settingId;
 
@@ -19,6 +22,7 @@ public class SettingService {
     public Boolean update(SettingAPA newSettings) {
         newSettings.setId(settingId);
 
+        timeSlotRefreshScheduling.updateTimeSlot(this.get(),newSettings);
         return settingRepository.save(newSettings) !=null;
     }
 
