@@ -893,11 +893,12 @@ public class CustomerService {
             Optional<ProductKgAPA> optPkg = productKgRepository.findById(productInPurchase.getId());
             if(optPkg.isPresent()){
                 ProductKgAPA productKg = optPkg.get();
+
                 name = productKg.getName();
                 price = productKg.getPricePerKg();
             }
         }
-        return new ProductInPurchaseDTO(productInPurchase, name, price);
+        return new ProductInPurchaseDTO(productInPurchase, name, price,ProductUpdateField.NONE);
     }
 
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {

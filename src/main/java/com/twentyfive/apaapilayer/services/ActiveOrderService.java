@@ -69,9 +69,10 @@ public class ActiveOrderService {
     private final MongoTemplate mongoTemplate;
     private final MediaManagerClientController mediaManagerClientController;
     private final MediaManagerService mediaManagerService;
+    private final CategoryService categoryService;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate, MediaManagerClientController mediaManagerClientController, MediaManagerService mediaManagerService) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate, MediaManagerClientController mediaManagerClientController, MediaManagerService mediaManagerService, CategoryService categoryService) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -89,6 +90,7 @@ public class ActiveOrderService {
         this.mongoTemplate = mongoTemplate;
         this.mediaManagerClientController = mediaManagerClientController;
         this.mediaManagerService = mediaManagerService;
+        this.categoryService = categoryService;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -324,6 +326,7 @@ public class ActiveOrderService {
         return dto;
     }
     private ProductInPurchaseDTO convertProductPurchaseToDTO(ProductInPurchase productInPurchase) {
+        ProductUpdateField productUpdateField = ProductUpdateField.NONE;
         String name ="";
         double price = 0;
         if(productInPurchase.isFixed()){
@@ -337,11 +340,18 @@ public class ActiveOrderService {
             Optional<ProductKgAPA> optPkg = productKgRepository.findById(productInPurchase.getId());
             if(optPkg.isPresent()){
                 ProductKgAPA productKg = optPkg.get();
+
+                CategoryAPA category = categoryService.getById(productKg.getCategoryId());
+                switch(category.getName()){
+                    case "Semifreddo" -> productUpdateField = ProductUpdateField.TEXT;
+                    case "Le Nostre Torte" -> productUpdateField = ProductUpdateField.ALL;
+                }
+
                 name = productKg.getName();
                 price = productKg.getPricePerKg();
             }
         }
-        return new ProductInPurchaseDTO(productInPurchase, name, price);
+        return new ProductInPurchaseDTO(productInPurchase, name, price, productUpdateField);
     }
 
     private PieceInPurchaseDTO convertPiecePurchaseToDTO(PieceInPurchase piece) {

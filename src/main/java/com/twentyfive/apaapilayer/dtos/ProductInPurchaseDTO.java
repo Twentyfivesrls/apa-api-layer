@@ -26,6 +26,7 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private List<Customization> customization = new ArrayList<>(); // Una mappa degli ingredienti personalizzati, dove la chiave è l'ID dell'ingrediente
     private List<IngredientsWithCategory> ingredients = new ArrayList<>(); // Una mappa degli ingredienti, dove la chiave è l'ID dell'ingrediente
     private List<Allergen> allergens;
+    private ProductUpdateField productUpdateField;
     private String attachment; // Un allegato, presumibilmente un URL a un'immagine o a un documento
     private String location; // Luogo in cui è depositato il prodotto
     private LocalDate deliveryDate; // La data di consegna del prodotto
@@ -34,13 +35,14 @@ public class ProductInPurchaseDTO extends ItemInPurchaseDTO{
     private String counterNote; //Nota da bancone, se disponibile
     private boolean fixed;
 
-    public ProductInPurchaseDTO(ProductInPurchase product, String name, double price) {
+    public ProductInPurchaseDTO(ProductInPurchase product, String name, double price,ProductUpdateField productUpdateField) {
         this.id = product.getId();
         this.name = name;
         this.price = price;
         this.weight = product.getWeight();
         this.quantity = product.getQuantity();
         this.shape = product.getShape();
+        this.productUpdateField = productUpdateField;
         this.customization = product.getCustomization();
         this.ingredients = product.getIngredients();
         this.toPrepare = product.isToPrepare();

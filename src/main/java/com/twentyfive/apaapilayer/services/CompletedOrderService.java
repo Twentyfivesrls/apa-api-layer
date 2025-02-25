@@ -173,7 +173,7 @@ public class CompletedOrderService {
                 price = productKg.getPricePerKg();
             }
         }
-        return new ProductInPurchaseDTO(productInPurchase, name, price);
+        return new ProductInPurchaseDTO(productInPurchase, name, price,ProductUpdateField.NONE);
     }
 
     private BundleInPurchaseDTO convertBundlePurchaseToDTO(BundleInPurchase bundleInPurchase) {
