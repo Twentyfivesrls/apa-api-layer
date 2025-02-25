@@ -131,9 +131,12 @@ public class ActiveOrderService {
             dto.setPickupDateTime((order.getPickupDate().atTime(order.getPickupTime())));
             dto.setRealPrice(order.getTotalPrice());
 
-            //FIX ME HERE
             if(order.getPaymentId()!=null){
-                dto.setMethodPayment("Online");
+                if(order.getCounterUpdatedProducts()>0){
+                    dto.setMethodPayment("Online (+"+order.getCounterUpdatedProducts()*5+"€)");
+                } else {
+                    dto.setMethodPayment("Online");
+                }
             } else {
                 dto.setMethodPayment("Al ritiro");
             }
