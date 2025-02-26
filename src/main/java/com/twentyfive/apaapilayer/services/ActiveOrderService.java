@@ -824,20 +824,22 @@ public class ActiveOrderService {
             }
             String pathToDelete = productInPurchase.getAttachment()!=null ? productInPurchase.getAttachment() : "";
 
-            if(!(pathToDelete.isBlank() || pathToDelete == null)){
-                mediaManagerClientController.deleteMedia(pathToDelete.substring(1));
-            } else if (file != null){ //c'è da aumentare il prezzo degli ordini
-                order.setCounterUpdatedProducts(order.getCounterUpdatedProducts()+1);
-                order.setTotalPrice(order.getTotalPrice()+5);
-            }
+            if (file != null) {
+                if (pathToDelete != null && !pathToDelete.isBlank()) {
+                    mediaManagerClientController.deleteMedia(pathToDelete.substring(1));
+                } else if (!productInPurchase.isUpdated()){
+                    // Aumenta il prezzo degli ordini se il file è presente ma il path da eliminare non è valido
+                    order.setCounterUpdatedProducts(order.getCounterUpdatedProducts() + 1);
+                    order.setTotalPrice(order.getTotalPrice() + 5);
+                }
 
-            if (file != null){
+                // Aggiornamento del prodotto e caricamento della nuova media
                 productInPurchase.setUpdated(true);
-                String path = String.format(FTP_PATH,order.getId());
+                String path = String.format(FTP_PATH, order.getId());
                 String realName = mediaManagerClientController.uploadMedia(file, path);
-                productInPurchase.setAttachment("/"+String.format(FTP_PATH,order.getId())+"/"+realName);
-
+                productInPurchase.setAttachment("/" + path + "/" + realName);
             }
+
 
             return activeOrderRepository.save(order) != null;
         }
