@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GlobalProductStatDTO {
-    private GeneralProductStat generalStat;
+    private GeneralProductStatDTO generalStat;
 
     private CustomCakeStat customCakeStat;
 

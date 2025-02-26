@@ -42,9 +42,11 @@ public class GlobalStatService {
     }
 
     public GlobalStatDTO getGlobalFilteredStats(DateRange date) {
+
         if(LocalDate.now().isAfter(date.getStartDate()) || LocalDate.now().isBefore(date.getEndDate())) {
             createByDate(LocalDate.now());
         }
+
         List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
         return globalStatMapperService.createGlobalStatDTOFromGlobalStat(globalStats);
     }
