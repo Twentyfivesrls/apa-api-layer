@@ -826,7 +826,7 @@ public class ActiveOrderService {
 
             if(!(pathToDelete.isBlank() || pathToDelete == null)){
                 mediaManagerClientController.deleteMedia(pathToDelete.substring(1));
-            } else { //c'è da aumentare il prezzo degli ordini
+            } else if (file != null){ //c'è da aumentare il prezzo degli ordini
                 order.setCounterUpdatedProducts(order.getCounterUpdatedProducts()+1);
                 order.setTotalPrice(order.getTotalPrice()+5);
             }
