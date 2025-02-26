@@ -15,6 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(orderEnabledInterceptor)
                 .addPathPatterns("/orders/**")
+                .addPathPatterns("/cart/**")
                 .excludePathPatterns("/orders/by-customer/**")
                 .excludePathPatterns("/orders/cancel/**");
     }
