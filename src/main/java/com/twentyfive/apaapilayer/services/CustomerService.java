@@ -810,7 +810,7 @@ public class CustomerService {
                 if (!now.isBefore(startTime) && now.isBefore(endTime)) {// richiesta fatta in orario lavorativo
                     if (customizedSemifreddo) {
                         if (now.isAfter(LocalTime.of(14, 0))) {
-                            minStartingDate = next(8);
+                            minStartingDate = next(startTime.getHour());
                         } else {
                             minStartingDate = LocalDateTime.now().plusHours(minDelay);
                         }
@@ -821,7 +821,7 @@ public class CustomerService {
                     }
                 } else {
                     if (!longWait) {
-                        minStartingDate = next(8);
+                        minStartingDate = next(startTime.getHour());
                     } else {
                         minStartingDate = next(12);  // Gestione orari personalizzati fuori dall'orario lavorativo
                     }
