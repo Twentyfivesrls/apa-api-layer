@@ -3,7 +3,6 @@ package com.twentyfive.apaapilayer.dtos.stats;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.stat.GeneralIngredientStat;
 
 import java.util.List;
 
@@ -11,6 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GlobalIngredientStatDTO {
-    private GeneralIngredientStat generalStat;
+    private GeneralIngredientStatDTO generalStat;
     private List<GlobalCategoryStatDTO> globalCategoryStats;
 }

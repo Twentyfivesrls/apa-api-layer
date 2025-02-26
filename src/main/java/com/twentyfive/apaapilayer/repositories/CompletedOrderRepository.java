@@ -33,11 +33,13 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     long countByPickupDateAndStatus(LocalDate pickupDate, String status);
 
     @Aggregation(pipeline = {
-            "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",
+            "{ $match: { 'pickupDate': ?0, 'status': ?1, 'customerId': { $ne: null } } }",
             "{ $group: { _id: '$customerId' } }",
-            "{ $count: 'uniqueCustomers' }"
+            "{ $project: { _id: 0, customerId: '$_id' } }"
     })
-    Optional<Long> countDistinctCustomerIdByPickupDateAndStatus(LocalDate pickupDate, OrderStatus status);
+    List<String> findDistinctCustomerIdsByPickupDateAndStatus(LocalDate pickupDate, OrderStatus status);
+
+
 
     @Aggregation(pipeline = {
             "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",
@@ -336,48 +338,23 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
             OrderStatus status
     );
 
-
     @Aggregation(pipeline = {
-            // Filtra per pickupDate e OrderStatus
             "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",
-
-            // Espande la lista productsInPurchase (per gli acquisti diretti)
             "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Lookup su products per ottenere gli ingredientIds dai productsInPurchase
             "{ $lookup: { from: 'products', localField: 'productsInPurchase._id', foreignField: '_id', as: 'productDetails' } }",
-
-            // Espande i dettagli del prodotto
             "{ $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }",
-
-            // Espande la lista bundlesInPurchase (per gli acquisti nei bundle)
             "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Espande la lista weightedProducts dentro bundlesInPurchase
             "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
-
-            // Lookup su products per ottenere gli ingredientIds dai weightedProducts nei bundle
             "{ $lookup: { from: 'products', localField: 'bundlesInPurchase.weightedProducts._id', foreignField: '_id', as: 'bundleProductDetails' } }",
-
-            // Espande i dettagli del prodotto nel bundle
             "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
-
-            // Estrai gli ingredienti singolarmente invece di avere array annidati
             "{ $project: { ingredientIds: { $concatArrays: [ { $ifNull: ['$productDetails.ingredientIds', []] }, { $ifNull: ['$bundleProductDetails.ingredientIds', []] } ] } } }",
-
-            // Espande la lista ingredientIds in modo che ogni documento abbia un solo ingrediente
             "{ $unwind: { path: '$ingredientIds', preserveNullAndEmptyArrays: true } }",
-
-            // Raggruppa tutti gli ingredienti unici
-            "{ $group: { _id: '$ingredientIds' } }",
-
-            // Conta il numero totale di ingredienti unici
-            "{ $group: { _id: null, count: { $sum: 1 } } }",
-
-            // Proietta il risultato finale
-            "{ $project: { _id: 0, count: 1 } }"
+            "{ $group: { _id: '$ingredientIds' } }",  // Raggruppa per ottenere valori unici
+            "{ $project: { _id: 0, ingredientId: '$_id' } }"  // Proietta solo gli ID
     })
-    Optional<Long> countUniqueIngredients(LocalDate date, OrderStatus status);
+    List<String> findUniqueIngredientIds(LocalDate date, OrderStatus status);
+
+
 
 
     @Aggregation(pipeline = {

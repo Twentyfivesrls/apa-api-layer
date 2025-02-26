@@ -5,6 +5,7 @@ import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import com.twentyfive.apaapilayer.utils.StringUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.StatLabel;
@@ -69,7 +70,7 @@ public class GlobalStatMapperService {
     private GeneralIngredientStat createGeneralIngredientStatByDate(LocalDate date) {
         GeneralIngredientStat generalIngredientStat = new GeneralIngredientStat();
         generalIngredientStat.setTotalIngredients(ingredientRepository.count());
-        generalIngredientStat.setUsedIngredients(completedOrderRepository.countUniqueIngredients(date,OrderStatus.COMPLETO).orElse(0L));
+        generalIngredientStat.setDistinctUsedIngredients(completedOrderRepository.findUniqueIngredientIds(date,OrderStatus.COMPLETO));
         generalIngredientStat.setTotalUsedIngredients(completedOrderRepository.calculateTotalIngredients(date,OrderStatus.COMPLETO).orElse(0L));
         return generalIngredientStat;
     }
@@ -176,7 +177,7 @@ public class GlobalStatMapperService {
         GeneralProductStat generalProductStat = new GeneralProductStat();
         generalProductStat.setTotalOrders(completedOrderRepository.countByPickupDateAndStatus(date,"COMPLETO"));
         generalProductStat.setTotalRevenue(completedOrderRepository.calculateTotalPriceByPickupDateAndStatus(date, OrderStatus.COMPLETO).orElse(0.0));
-        generalProductStat.setTotalCustomersServed(completedOrderRepository.countDistinctCustomerIdByPickupDateAndStatus(date, OrderStatus.COMPLETO).orElse(0L));
+        generalProductStat.setDistinctCustomerServed(completedOrderRepository.findDistinctCustomerIdsByPickupDateAndStatus(date, OrderStatus.COMPLETO));
         generalProductStat.setTotalProductsSold(completedOrderRepository.sumQuantitiesByPickupDateAndStatus(date, OrderStatus.COMPLETO).orElse(0L));
         return generalProductStat;
     }
@@ -292,19 +293,22 @@ public class GlobalStatMapperService {
     }
 
 
-    private GeneralProductStat sumGlobalGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
-        GeneralProductStat generalProductStat = new GeneralProductStat();
+    //FIXME DTO per questi due ci serve il numero di customerServed e ingredienti!
+
+
+    private GeneralProductStatDTO sumGlobalGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
+        GeneralProductStatDTO generalProductStat = new GeneralProductStatDTO();
         for (GlobalStatAPA globalStat : globalStats) {
             generalProductStat.setTotalRevenue(generalProductStat.getTotalRevenue()+globalStat.getProducts().getGeneralStat().getTotalRevenue());
             generalProductStat.setTotalProductsSold(generalProductStat.getTotalProductsSold()+globalStat.getProducts().getGeneralStat().getTotalProductsSold());
             generalProductStat.setTotalOrders(generalProductStat.getTotalOrders()+globalStat.getProducts().getGeneralStat().getTotalOrders());
-            generalProductStat.setTotalCustomersServed(generalProductStat.getTotalCustomersServed()+globalStat.getProducts().getGeneralStat().getTotalCustomersServed());
+            generalProductStat.setDistinctCustomerServed(StringUtilities.mergeUniqueValues(generalProductStat.getDistinctCustomerServed(),globalStat.getProducts().getGeneralStat().getDistinctCustomerServed()));
         }
         return generalProductStat;
     }
 
-    private GeneralIngredientStat sumIngredientGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
-        GeneralIngredientStat generalIngredientStat = new GeneralIngredientStat();
+    private GeneralIngredientStatDTO sumIngredientGeneralStatsFromGlobalStatList(List<GlobalStatAPA> globalStats) {
+        GeneralIngredientStatDTO generalIngredientStat = new GeneralIngredientStatDTO();
 
         for (GlobalStatAPA globalStat : globalStats) {
 
@@ -315,7 +319,7 @@ public class GlobalStatMapperService {
                     ));
 
             generalIngredientStat.setTotalUsedIngredients(generalIngredientStat.getTotalUsedIngredients()+globalStat.getIngredients().getGeneralStat().getTotalUsedIngredients());
-            generalIngredientStat.setUsedIngredients(generalIngredientStat.getUsedIngredients()+globalStat.getIngredients().getGeneralStat().getUsedIngredients());
+            generalIngredientStat.setDistinctUsedIngredients(StringUtilities.mergeUniqueValues(generalIngredientStat.getDistinctUsedIngredients(),globalStat.getIngredients().getGeneralStat().getDistinctUsedIngredients()));
         }
         return generalIngredientStat;
     }
