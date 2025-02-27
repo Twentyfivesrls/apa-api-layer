@@ -19,7 +19,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
+//    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/getAll")
     public ResponseEntity<List<CategoryAPA>> getAllByTypeInAndEnable(@RequestParam List<String> types) {
         return ResponseEntity.ok().body(categoryService.getEnabledCategories(types));
