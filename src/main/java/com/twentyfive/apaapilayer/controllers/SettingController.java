@@ -41,7 +41,7 @@ public class SettingController {
     }
     @GetMapping("/check-maintenance")
     public ResponseEntity<Boolean> checkMaintenance(){
-        return ResponseEntity.ok().body(settingService.get().isOrdersEnabled());
+        return ResponseEntity.ok().body(!(settingService.get().isOrdersEnabled()));
     }
 
     @PreAuthorize("hasRole('ROLE_admin')")
