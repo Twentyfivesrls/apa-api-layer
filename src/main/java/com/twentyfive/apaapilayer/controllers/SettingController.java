@@ -39,6 +39,10 @@ public class SettingController {
     public ResponseEntity<Boolean> isAlertOn(){
         return ResponseEntity.ok().body(settingService.get().isOrderReceivedAlert());
     }
+    @GetMapping("/check-maintenance")
+    public ResponseEntity<Boolean> checkMaintenance(){
+        return ResponseEntity.ok().body(settingService.get().isOrdersEnabled());
+    }
 
     @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping("/getAllRoles")
