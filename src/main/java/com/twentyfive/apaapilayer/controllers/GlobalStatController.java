@@ -1,5 +1,6 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
 import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
 import com.twentyfive.apaapilayer.models.DateRange;
@@ -39,14 +40,19 @@ public class GlobalStatController {
         return ResponseEntity.ok().body(globalStatService.getGlobalFilteredStats(date));
     }
 
+    @PostMapping("/getGlobalCategories")
+    public ResponseEntity<List<CategoryMinimalDTO>> getGlobalCategories(@RequestBody DateRange date){
+        return ResponseEntity.ok().body(globalStatService.getGlobalCategories(date));
+    }
+
     @PostMapping("/getProductStatCategory")
     public ResponseEntity<Page<ProductStatCategoryDTO>> getProductStatCategory(@RequestBody DateRange date,
                                                                                @RequestParam(value = "page", defaultValue ="0") int page,
                                                                                @RequestParam(value = "size", defaultValue ="5") int size,
-                                                                               @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
-                                                                               @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
-                                                                               @RequestParam(value ="value", defaultValue = "") String value){
-        return ResponseEntity.ok().body(globalStatService.getProductStatCategory(date,page,size,sortColumn,sortDirection,value));
+                                                                               @RequestParam(value = "sortColumn", defaultValue = "name") String sortColumn,
+                                                                               @RequestParam(value = "sortDirection", defaultValue = "ASC") String sortDirection,
+                                                                               @RequestParam(value = "categoryId") String categoryId){
+        return ResponseEntity.ok().body(globalStatService.getProductStatCategory(date,page,size,sortColumn,sortDirection,categoryId));
     }
 
 
