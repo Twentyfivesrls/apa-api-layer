@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SettingService {
@@ -28,5 +31,14 @@ public class SettingService {
 
     public SettingAPA get() {
         return settingRepository.findById(settingId).orElse(null);
+    }
+
+    public Boolean isTodayAvailable() {
+        List<LocalDate> inactivityDays = get().getInactivityDays();
+        LocalDate today = LocalDate.now();
+        if (inactivityDays.contains(today)) {
+            return false;
+        }
+        return true;
     }
 }

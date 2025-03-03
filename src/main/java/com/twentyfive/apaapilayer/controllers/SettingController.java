@@ -16,7 +16,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/settings")
-//@PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_baker') or hasRole('ROLE_counter')")
 public class SettingController {
     private final SettingService settingService;
 
@@ -50,6 +49,9 @@ public class SettingController {
         return ResponseEntity.ok().body(settingService.get().getRoles());
     }
 
-
+    @GetMapping("/isTodayAvailable")
+    public ResponseEntity<Boolean> isTodayAvailable(){
+        return ResponseEntity.ok().body(settingService.isTodayAvailable());
+    }
 
 }
