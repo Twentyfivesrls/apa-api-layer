@@ -3,6 +3,7 @@ package com.twentyfive.apaapilayer.services;
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
 import com.twentyfive.apaapilayer.dtos.stats.IngredientStatDTO;
+import com.twentyfive.apaapilayer.dtos.stats.OrderStatDTO;
 import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
 import com.twentyfive.apaapilayer.exceptions.GlobalStatNotFoundException;
 import com.twentyfive.apaapilayer.mappers.GlobalStatMapperService;
@@ -97,5 +98,11 @@ public class GlobalStatService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return PageUtilities.convertListToPageWithSorting(ingredientStatDTOs,pageable);
+    }
+
+    public OrderStatDTO getOrderStat(DateRange date) {
+        List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
+
+        return globalStatMapperService.createOrderStatFromGlobalStat(globalStats,date.getDaysBetween());
     }
 }

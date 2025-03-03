@@ -16,6 +16,8 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.StatLabel;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.stat.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -408,6 +410,57 @@ public class GlobalStatMapperService {
         return ingredientService.getById(ingredientId).getName();
     }
 
+    public OrderStatDTO createOrderStatFromGlobalStat(List<GlobalStatAPA> globalStats, long days) {
+        OrderStatDTO orderStat = new OrderStatDTO();
+
+        long totalOrders= countTotalOrders(globalStats);
+        double avgPrice = countTotalPrice(globalStats)/totalOrders;
+        double avgOrders = (double) totalOrders/days;
+        double avgCustomer = (double) totalOrders/countTotalCustomer(globalStats);
+
+        BigDecimal avgPriceRounded = new BigDecimal(avgPrice).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal avgOrdersRounded = new BigDecimal(avgOrders).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal avgCustomerRounded = new BigDecimal(avgCustomer).setScale(2, RoundingMode.HALF_UP);
+
+
+        orderStat.setTotalOrders(totalOrders);
+        orderStat.setAvgCustomer(avgCustomerRounded.doubleValue());
+        orderStat.setAvgOrders(avgOrdersRounded.doubleValue());
+        orderStat.setAvgPrice(avgPriceRounded.doubleValue());
+
+        return orderStat;
+    }
+
+    private double countTotalPrice(List<GlobalStatAPA> globalStats) {
+        long total = 0;
+
+        for (GlobalStatAPA globalStat : globalStats) {
+            total +=globalStat.getProducts().getGeneralStat().getTotalRevenue();
+        }
+
+        return total;
+    }
+
+    private long countTotalCustomer(List<GlobalStatAPA> globalStats) {
+        long totalCustomer = 0;
+
+        for (GlobalStatAPA globalStat : globalStats) {
+            totalCustomer += globalStat.getProducts().getGeneralStat().getDistinctCustomerServed().size(); //FIXME non solo quelli distinti
+        }
+
+        return totalCustomer > 0 ? totalCustomer : 1;
+
+    }
+
+    private long countTotalOrders(List<GlobalStatAPA> globalStats) {
+        long totalOrders = 0;
+
+        for (GlobalStatAPA globalStat : globalStats) {
+            totalOrders+=globalStat.getProducts().getGeneralStat().getTotalOrders();
+        }
+
+        return totalOrders;
+    }
 }
 
 
