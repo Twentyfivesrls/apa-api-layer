@@ -6,6 +6,7 @@ import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import com.twentyfive.apaapilayer.services.IngredientService;
 import com.twentyfive.apaapilayer.services.ProductFixedService;
 import com.twentyfive.apaapilayer.services.ProductKgService;
 import com.twentyfive.apaapilayer.utils.StringUtilities;
@@ -28,6 +29,7 @@ public class GlobalStatMapperService {
 
     private final ProductKgService productKgService;
     private final ProductFixedService productFixedService;
+    private final IngredientService ingredientService;
 
     public GlobalStatAPA createGlobalStatByDate(LocalDate date) {
         GlobalStatAPA globalStat = new GlobalStatAPA();
@@ -361,12 +363,12 @@ public class GlobalStatMapperService {
         return new ArrayList<>(productStatMap.values());
     }
 
-    private String getProductName(String type,String idProduct){
-        switch (type){
-            case "productFixed" ->{
+    private String getProductName(String type, String idProduct) {
+        switch (type) {
+            case "productFixed" -> {
                 return productFixedService.getById(idProduct).getName();
             }
-            case "productKg" ->{
+            case "productKg" -> {
                 return productKgService.getById(idProduct).getName();
             }
             default -> {
@@ -374,6 +376,38 @@ public class GlobalStatMapperService {
             }
         }
     }
+
+    public List<IngredientStatDTO> getListIngredientStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
+        // Mappa per raggruppare gli ingredienti per idIngredient
+        Map<String, IngredientStatDTO> ingredientStatMap = new HashMap<>();
+
+        // Cicla su ogni globalStat e sui suoi ingredienti
+        for (GlobalStatAPA globalStat : globalStats) {
+            for (CategoryIngredientStat categoryIngredientStat : globalStat.getIngredients().getCategoryStats()) {
+                String ingredientId = categoryIngredientStat.getIdIngredient();
+                long totalTimeUsed = categoryIngredientStat.getTotalTimeUsed();
+
+                // Se l'ingredientId è già presente nella mappa, somma il totalTimeUsed
+                ingredientStatMap.merge(ingredientId,
+                        new IngredientStatDTO(ingredientId, getIngredientName(ingredientId),totalTimeUsed),
+                        (existing, newEntry) -> {
+                            existing.setTotalTimeUsed(existing.getTotalTimeUsed() + newEntry.getTotalTimeUsed());
+                            return existing;
+                        });
+            }
+        }
+
+        // Restituisci la lista dei DTO
+        return new ArrayList<>(ingredientStatMap.values());
+    }
+
+    private String getIngredientName(String ingredientId) {
+        if (ingredientId == null) {
+            return "no ingredient found";
+        }
+        return ingredientService.getById(ingredientId).getName();
+    }
+
 }
 
 

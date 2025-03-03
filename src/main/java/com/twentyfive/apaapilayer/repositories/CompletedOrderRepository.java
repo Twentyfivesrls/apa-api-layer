@@ -407,11 +407,16 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
             "{ $unwind: { path: '$bundleProductDetails', preserveNullAndEmptyArrays: true } }",
             "{ $unwind: { path: '$bundleProductDetails.ingredientIds', preserveNullAndEmptyArrays: true } }",
 
+            // Filtra ingredientIds per rimuovere null
+            "{ $match: { 'productDetails.ingredientIds': { $ne: null } } }",
+            "{ $match: { 'bundleProductDetails.ingredientIds': { $ne: null } } }",
+
             "{ $group: { _id: '$productDetails.ingredientIds' } }",
             "{ $group: { _id: '$_id', ingredientId: { $first: '$_id' } } }",
             "{ $project: { _id: 0, ingredientId: 1 } }"
     })
     List<String> findDistinctIngredientIds(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
             // 1. Filtra per pickupDate e status

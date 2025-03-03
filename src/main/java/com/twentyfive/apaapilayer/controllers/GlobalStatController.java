@@ -2,6 +2,7 @@ package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
+import com.twentyfive.apaapilayer.dtos.stats.IngredientStatDTO;
 import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
 import com.twentyfive.apaapilayer.models.DateRange;
 import com.twentyfive.apaapilayer.models.GlobalStatAPA;
@@ -55,5 +56,13 @@ public class GlobalStatController {
         return ResponseEntity.ok().body(globalStatService.getProductStatCategory(date,page,size,sortColumn,sortDirection,categoryId));
     }
 
+    @PostMapping("/getIngredientStat")
+    public ResponseEntity<Page<IngredientStatDTO>> getIngredientStat(@RequestBody DateRange date,
+                                                                      @RequestParam(value = "page", defaultValue ="0") int page,
+                                                                      @RequestParam(value = "size", defaultValue ="5") int size,
+                                                                      @RequestParam(value = "sortColumn", defaultValue = "usedCount") String sortColumn,
+                                                                      @RequestParam(value = "sortDirection", defaultValue = "DESC") String sortDirection){
+        return ResponseEntity.ok().body(globalStatService.getIngredientStat(date,page,size,sortColumn,sortDirection));
+    }
 
 }
