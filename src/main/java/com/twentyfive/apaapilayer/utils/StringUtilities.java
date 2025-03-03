@@ -25,19 +25,27 @@ public class StringUtilities {
     }
 
     public static List<String> mergeUniqueValues(List<String> list1, List<String> list2) {
-        Set<String> set1 = new HashSet<>(Optional.ofNullable(list1).orElse(Collections.emptyList()));
-        Set<String> set2 = new HashSet<>(Optional.ofNullable(list2).orElse(Collections.emptyList()));
+        Set<String> uniqueElements = new LinkedHashSet<>();
+        Set<String> duplicates = new HashSet<>();
 
-        // Trova gli elementi unici in entrambe le liste
-        Set<String> uniqueValues = new HashSet<>(set1);
-        uniqueValues.addAll(set2); // Unione dei due set
+        // Aggiungi tutti gli elementi della prima lista
+        for (String s : Optional.ofNullable(list1).orElse(Collections.emptyList())) {
+            if (!uniqueElements.add(s)) { // Se l'elemento è già presente, è un duplicato
+                duplicates.add(s);
+            }
+        }
 
-        // Rimuove gli elementi comuni (quelli duplicati)
-        Set<String> intersection = new HashSet<>(set1);
-        intersection.retainAll(set2); // Mantiene solo gli elementi presenti in entrambi
+        // Aggiungi tutti gli elementi della seconda lista
+        for (String s : Optional.ofNullable(list2).orElse(Collections.emptyList())) {
+            if (!uniqueElements.add(s)) { // Se l'elemento è già presente, è un duplicato
+                duplicates.add(s);
+            }
+        }
 
-        uniqueValues.removeAll(intersection); // Rimuove i duplicati
+        // Rimuoviamo tutti gli elementi duplicati tra le due liste
+        uniqueElements.removeAll(duplicates);
 
-        return new ArrayList<>(uniqueValues);
+        return new ArrayList<>(uniqueElements);
     }
+
 }
