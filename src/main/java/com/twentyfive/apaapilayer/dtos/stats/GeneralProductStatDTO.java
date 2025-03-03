@@ -16,7 +16,7 @@ public class GeneralProductStatDTO {
     private List<String> distinctCustomerServed;
     private double totalRevenue; // Totale guadagnato
 
-    public long getTotalCustomerServed(){
+    public long getTotalCustomersServed(){
         return distinctCustomerServed != null ? distinctCustomerServed.size() : 0;
     }
 }
