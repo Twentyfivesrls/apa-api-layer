@@ -37,7 +37,24 @@ public class GlobalStatMapperService {
         GlobalStatAPA globalStat = new GlobalStatAPA();
         globalStat.setProducts(createGlobalProductStatByDate(date));
         globalStat.setIngredients(createGlobalIngredientStatByDate(date));
+        globalStat.setTrays(createGlobalTrayStatByDate(date));
         return globalStat;
+    }
+
+    private GlobalTrayStat createGlobalTrayStatByDate(LocalDate date) {
+        GlobalTrayStat globalTrayStat = new GlobalTrayStat();
+
+        globalTrayStat.setGeneralTrayStat(createGeneralTrayStatByDate(date));
+        return null;
+    }
+
+    private GeneralTrayStat createGeneralTrayStatByDate(LocalDate date) {
+        GeneralTrayStat generalTrayStat = new GeneralTrayStat();
+
+        generalTrayStat.setQuantity(completedOrderRepository.countTraysByDate(date));
+        generalTrayStat.setTotalWeight(completedOrderRepository.countTrayWeightByDate(date));
+        return null;
+
     }
 
     private GlobalIngredientStat createGlobalIngredientStatByDate(LocalDate date) {

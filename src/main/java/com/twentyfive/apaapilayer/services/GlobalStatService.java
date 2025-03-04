@@ -35,9 +35,11 @@ public class GlobalStatService {
     private final GlobalStatRepository globalStatRepository;
 
     public Boolean add(GlobalStatAPA globalStat) {
+
         if(globalStat.getId() == null) {
             globalStat.setId(LocalDate.now());
         }
+
         globalStatRepository.save(globalStat);
         return true;
     }

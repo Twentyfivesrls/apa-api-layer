@@ -647,4 +647,37 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     Optional<Long> countIngredientUsage(LocalDate date, OrderStatus status, String ingredientId);
 
 
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per la data specifica
+            "{ $match: { pickupDate: ?0 } }",
+
+            // 2. Conta il numero di bundle per ogni ordine (gestendo il caso di array nulli)
+            "{ $project: { bundleCount: { $size: { $ifNull: [\"$bundlesInPurchase\", []] } } } }",
+
+            // 3. Somma tutti i bundle trovati nella data specificata
+            "{ $group: { _id: null, totalBundles: { $sum: \"$bundleCount\" } } }",
+
+            // 4. Proietta solo il valore totale
+            "{ $project: { _id: 0, totalBundles: 1 } }"
+    })
+    long countTraysByDate(LocalDate date);
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per la data specificata
+            "{ $match: { pickupDate: ?0 } }",
+
+            // 2. Scompone l'array bundlesInPurchase
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+
+            // 3. Somma tutti i valori di measure.weight nei bundle
+            "{ $group: { _id: null, totalWeightSum: { $sum: { $toDouble: \"$bundlesInPurchase.measure.weight\" } } } }",
+
+            // 4. Proietta solo il valore totale della somma
+            "{ $project: { _id: 0, totalWeightSum: 1 } }"
+    })
+    double countTrayWeightByDate(LocalDate date);
+
+
+
+
 }
