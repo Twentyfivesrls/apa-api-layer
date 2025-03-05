@@ -65,6 +65,7 @@ public class CustomerService {
     private final ProductFixedRepository productFixedRepository;
     private final CouponMapperService couponMapperService;
     private final CouponRepository couponRepository;
+    private final SettingService settingService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -101,7 +102,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -124,6 +125,7 @@ public class CustomerService {
         this.productFixedRepository = productFixedRepository;
         this.couponMapperService = couponMapperService;
         this.couponRepository = couponRepository;
+        this.settingService = settingService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -281,6 +283,11 @@ public class CustomerService {
     }
     @Transactional
     public boolean buyItems(String customerId, BuyInfosDTO buyInfos) throws IOException {
+
+        if(!(settingService.isThisDayAvailable(buyInfos.getSelectedPickupDateTime().toLocalDate()))){
+            throw new InvalidOrderTimeException("Ci dispiace, non è possibile ordinare per questo giorno! " +buyInfos.getSelectedPickupDateTime().toLocalDate().toString());
+        }
+
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
         String email="";
         String firstName="";
@@ -318,7 +325,7 @@ public class CustomerService {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
                 } else {
-                    throw new InvalidOrderTimeException();
+                    throw new InvalidOrderTimeException("Ci dispiace! Non è più possibile ordinare a questo orario, ricaricare il carrello e riprovare!" +buyInfos.getSelectedPickupDateTime().toString());
                 }
                 timeSlotAPARepository.save(timeSlotAPA);
                 customerRepository.save(customer);

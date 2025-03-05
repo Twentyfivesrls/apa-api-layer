@@ -41,4 +41,12 @@ public class SettingService {
         }
         return true;
     }
+
+    public Boolean isThisDayAvailable(LocalDate date) {
+        List<LocalDate> inactivityDays = get().getInactivityDays();
+        if (inactivityDays.contains(date)) {
+            return false;
+        }
+        return true;
+    }
 }

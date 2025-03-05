@@ -57,8 +57,8 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(InvalidOrderTimeException.class)
     public ResponseEntity<ApiError> handleInvalidOrderTimeException (InvalidOrderTimeException ex) {
-        ApiError apiError = new ApiError(HttpStatus.I_AM_A_TEAPOT, "L'orario non è più disponibile! " + ex.getClass().getSimpleName());
-        return new ResponseEntity<>(apiError, HttpStatus.I_AM_A_TEAPOT);
+        ApiError apiError = new ApiError(HttpStatus.CONFLICT, ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
     }
     @ExceptionHandler(InvalidCouponException.class)
     public ResponseEntity<ApiError> handleInvalidCouponException (InvalidCouponException ex) {
