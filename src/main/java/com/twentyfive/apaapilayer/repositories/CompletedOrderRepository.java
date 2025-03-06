@@ -648,36 +648,135 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
-            // 1. Filtra gli ordini per la data specifica
-            "{ $match: { pickupDate: ?0 } }",
-
-            // 2. Conta il numero di bundle per ogni ordine (gestendo il caso di array nulli)
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
             "{ $project: { bundleCount: { $size: { $ifNull: [\"$bundlesInPurchase\", []] } } } }",
-
-            // 3. Somma tutti i bundle trovati nella data specificata
             "{ $group: { _id: null, totalBundles: { $sum: \"$bundleCount\" } } }",
-
-            // 4. Proietta solo il valore totale
-            "{ $project: { _id: 0, totalBundles: 1 } }"
+            "{ $project: { _id: 0, totalBundles: { $ifNull: [\"$totalBundles\", 0] } } }"
     })
-    long countTraysByDate(LocalDate date);
+    Optional<Long> countTraysByDate(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
-            // 1. Filtra gli ordini per la data specificata
-            "{ $match: { pickupDate: ?0 } }",
+            // 1. Filtra gli ordini per data e stato
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
 
             // 2. Scompone l'array bundlesInPurchase
             "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
 
-            // 3. Somma tutti i valori di measure.weight nei bundle
-            "{ $group: { _id: null, totalWeightSum: { $sum: { $toDouble: \"$bundlesInPurchase.measure.weight\" } } } }",
+            // 3. Somma il peso moltiplicato per la quantità di ogni bundle
+            "{ $group: { _id: null, totalWeightSum: { $sum: { $multiply: [ { $toDouble: { $ifNull: [\"$bundlesInPurchase.measure.weight\", 0.0] } }, { $ifNull: [\"$bundlesInPurchase.quantity\", 1] } ] } } } }",
 
-            // 4. Proietta solo il valore totale della somma
-            "{ $project: { _id: 0, totalWeightSum: 1 } }"
+            // 4. Proietta il risultato garantendo che sia un valore numerico
+            "{ $project: { _id: 0, totalWeightSum: { $ifNull: [\"$totalWeightSum\", 0.0] } } }"
     })
-    double countTrayWeightByDate(LocalDate date);
+    Optional<Double> countTrayWeightByDate(LocalDate date, OrderStatus status);
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+
+            // 2. Scompone l'array bundlesInPurchase
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+
+            // 3. Somma il totalPrice moltiplicato per la quantità del bundle
+            "{ $group: { _id: null, totalRevenue: { $sum: { $multiply: [ { $toDouble: { $ifNull: [\"$bundlesInPurchase.totalPrice\", 0.0] } }, { $ifNull: [\"$bundlesInPurchase.quantity\", 1] } ] } } } }",
+
+            // 4. Proietta il risultato garantendo che sia un valore numerico
+            "{ $project: { _id: 0, totalRevenue: { $ifNull: [\"$totalRevenue\", 0.0] } } }"
+    })
+    Optional<Double> countTotalRevenueByDate(LocalDate date, OrderStatus status);
 
 
 
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
 
+            // 2. Scompone l'array bundlesInPurchase
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+
+            // 3. Scompone l'array weightedProducts
+            "{ $unwind: { path: \"$bundlesInPurchase.weightedProducts\", preserveNullAndEmptyArrays: true } }",
+
+            // 4. Somma la quantità dei weightedProducts moltiplicata per la quantità del bundle
+            "{ $group: { _id: null, totalQuantity: { $sum: { $multiply: [ { $ifNull: [\"$bundlesInPurchase.weightedProducts.quantity\", 0] }, { $ifNull: [\"$bundlesInPurchase.quantity\", 1] } ] } } } }",
+
+            // 5. Proietta il risultato garantendo che sia un valore numerico
+            "{ $project: { _id: 0, totalQuantity: { $ifNull: [\"$totalQuantity\", 0] } } }"
+    })
+    Optional<Long> countTotalWeightedProductsByDate(LocalDate date, OrderStatus status);
+
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+
+            // 2. Verifica che bundlesInPurchase esista ed è non vuoto
+            "{ $match: { \"bundlesInPurchase\": { $exists: true, $ne: [] } } }",
+
+            // 3. Scompone l'array bundlesInPurchase per elaborare ogni bundle separatamente
+            "{ $unwind: \"$bundlesInPurchase\" }",
+
+            // 4. Filtra eventuali _id nulli
+            "{ $match: { \"bundlesInPurchase._id\": { $exists: true, $ne: null } } }",
+
+            // 5. Proietta solo l'ID del bundle come stringa
+            "{ $project: { _id: 0, trayId: { $toString: \"$bundlesInPurchase._id\" } } }"
+    })
+    List<String> findDistinctTrayIdsByDate(LocalDate date, OrderStatus orderStatus);
+
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+
+            // 2. Scompone l'array bundlesInPurchase per elaborare ogni bundle singolarmente
+            "{ $unwind: \"$bundlesInPurchase\" }",
+
+            // 3. Filtra solo il bundle con l'ID specificato
+            "{ $match: { \"bundlesInPurchase._id\": ?0 } }",
+
+            // 4. Somma tutte le quantità di quel tray
+            "{ $group: { _id: null, totalQuantity: { $sum: { $ifNull: [\"$bundlesInPurchase.quantity\", 0] } } } }",
+
+            // 5. Proietta solo il valore totale della quantità
+            "{ $project: { _id: 0, totalQuantity: 1 } }"
+    })
+    Optional<Long> countQuantityByTrayIdAndDate(String id, LocalDate date, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+
+            // 2. Scompone l'array bundlesInPurchase
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+
+            // 3. Filtra solo il bundle con l'ID specificato
+            "{ $match: { \"bundlesInPurchase._id\": ?0 } }",
+
+            // 4. Somma il totalPrice moltiplicato per la quantità del bundle
+            "{ $group: { _id: null, totalRevenue: { $sum: { $multiply: [ { $toDouble: { $ifNull: [\"$bundlesInPurchase.totalPrice\", 0.0] } }, { $ifNull: [\"$bundlesInPurchase.quantity\", 1] } ] } } } }",
+
+            // 5. Proietta il risultato garantendo che sia un valore numerico
+            "{ $project: { _id: 0, totalRevenue: { $ifNull: [\"$totalRevenue\", 0.0] } } }"
+    })
+    Optional<Double> countTotalRevenueByTrayIdAndDate(String trayId, LocalDate date, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            // 1. Filtra gli ordini per data e stato dell'ordine
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+
+            // 2. Scompone l'array bundlesInPurchase per elaborare ogni tray separatamente
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+
+            // 3. Filtra solo il bundle con l'ID specificato
+            "{ $match: { \"bundlesInPurchase._id\": ?0 } }",
+
+            // 4. Somma il weight moltiplicato per la quantità del tray
+            "{ $group: { _id: null, totalWeight: { $sum: { $multiply: [ { $toDouble: { $ifNull: [\"$bundlesInPurchase.measure.weight\", 0.0] } }, { $ifNull: [\"$bundlesInPurchase.quantity\", 1] } ] } } } }",
+
+            // 5. Proietta il risultato garantendo che sia un valore numerico
+            "{ $project: { _id: 0, totalWeight: { $ifNull: [\"$totalWeight\", 0.0] } } }"
+    })
+    Optional<Double> countTotalWeightByTrayIdAndDate(String trayId, LocalDate date, OrderStatus orderStatus);
 }

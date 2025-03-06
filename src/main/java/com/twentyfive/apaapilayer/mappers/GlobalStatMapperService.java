@@ -45,16 +45,40 @@ public class GlobalStatMapperService {
         GlobalTrayStat globalTrayStat = new GlobalTrayStat();
 
         globalTrayStat.setGeneralTrayStat(createGeneralTrayStatByDate(date));
+        globalTrayStat.setTrayStats(createTrayTypeStatByDate(date));
+        //TODO eccoci
+        globalTrayStat.setProductWeightedStats(null);
+        globalTrayStat.setTrayMeasureStat(null);
         return null;
+    }
+
+    private List<TrayStat> createTrayTypeStatByDate(LocalDate date) {
+
+        List<TrayStat> trayStats = new ArrayList<>();
+
+        List<String> trayIds = completedOrderRepository.findDistinctTrayIdsByDate(date, OrderStatus.COMPLETO);
+
+        for (String trayId : trayIds) {
+            TrayStat trayStat = new TrayStat();
+            trayStat.setId(trayId);
+            trayStat.setQuantity(completedOrderRepository.countQuantityByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0L));
+            trayStat.setTotalRevenue(completedOrderRepository.countTotalRevenueByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0.0));
+            trayStat.setTotalWeight(completedOrderRepository.countTotalWeightByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0.0));
+            trayStats.add(trayStat);
+        }
+
+        return trayStats;
     }
 
     private GeneralTrayStat createGeneralTrayStatByDate(LocalDate date) {
         GeneralTrayStat generalTrayStat = new GeneralTrayStat();
 
-        generalTrayStat.setQuantity(completedOrderRepository.countTraysByDate(date));
-        generalTrayStat.setTotalWeight(completedOrderRepository.countTrayWeightByDate(date));
-        return null;
+        generalTrayStat.setQuantity(completedOrderRepository.countTraysByDate(date, OrderStatus.COMPLETO).orElse(0L));
+        generalTrayStat.setTotalWeight(completedOrderRepository.countTrayWeightByDate(date, OrderStatus.COMPLETO).orElse(0.0));
+        generalTrayStat.setTotalRevenue(completedOrderRepository.countTotalRevenueByDate(date, OrderStatus.COMPLETO).orElse(0.0));
+        generalTrayStat.setTotalProductWeighted(completedOrderRepository.countTotalWeightedProductsByDate(date, OrderStatus.COMPLETO).orElse(0L));
 
+        return generalTrayStat;
     }
 
     private GlobalIngredientStat createGlobalIngredientStatByDate(LocalDate date) {
