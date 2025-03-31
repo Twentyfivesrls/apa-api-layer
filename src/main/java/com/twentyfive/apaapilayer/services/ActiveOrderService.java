@@ -242,7 +242,6 @@ public class ActiveOrderService {
                     .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
                     .collect(Collectors.toList());
             dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
-            return;
         }
         else if (roles.contains("baker")){
             // Filtra i prodotti con toPrepare = true
@@ -255,7 +254,6 @@ public class ActiveOrderService {
                     .filter(BundleInPurchase::isToPrepare).map(this::convertBundlePurchaseToDTO)
                     .collect(Collectors.toList());
             dto.setBundles(bundleDTOs);
-            return;
         }
         else if (roles.contains("customer")){
             //TODO mapActiveOrderToSummaryEmail unire i prodotti uguali aumentato quantità, consiglio di creare un nuovo metodo o controllare con i ruoli

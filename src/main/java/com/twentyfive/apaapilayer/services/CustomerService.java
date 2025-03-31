@@ -66,6 +66,7 @@ public class CustomerService {
     private final CouponMapperService couponMapperService;
     private final CouponRepository couponRepository;
     private final SettingService settingService;
+    private final CategoryService categoryService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -102,7 +103,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -126,6 +127,7 @@ public class CustomerService {
         this.couponMapperService = couponMapperService;
         this.couponRepository = couponRepository;
         this.settingService = settingService;
+        this.categoryService = categoryService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -458,20 +460,43 @@ public class CustomerService {
         }
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
-
         for (ItemInPurchase item : items) {
+
             int quantity = item.getQuantity();
             double unitPrice = item.getTotalPrice() / quantity;
 
             for (int i = 0; i < quantity; i++) {
 
                 if (item instanceof ProductInPurchase) {
+
+
                     ProductInPurchase originalPIP = (ProductInPurchase) item;
                     ProductInPurchase singlePIP = new ProductInPurchase();
+                    CategoryAPA category = null;
+
+                    if(originalPIP.isFixed()){
+                        Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(originalPIP.getId());
+                        if(optProductFixed.isPresent()){
+                            ProductFixedAPA productFixed = optProductFixed.get();
+                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productFixed.getIngredientIds());
+                            singlePIP.setIngredients(ingredientsFromProduct);
+                            productStatService.addBuyingCountProduct(productFixed, 1);
+
+                            category = categoryService.getById(productFixed.getCategoryId());
+                            productFixedRepository.save(productFixed);
+                        }
+                    } else {
+                        Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
+                        if (optProductKg.isPresent()) {
+                            ProductKgAPA productKgAPA = optProductKg.get();
+                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
+                            singlePIP.setIngredients(ingredientsFromProduct);
+                            productStatService.addBuyingCountProduct(productKgAPA, 1);
+                            productKgRepository.save(productKgAPA);
+                        }
+                    }
 
                     singlePIP.setId(originalPIP.getId());
-                    singlePIP.setQuantity(1);
-                    singlePIP.setTotalPrice(unitPrice);
                     singlePIP.setCustomization(originalPIP.getCustomization());
                     singlePIP.setFixed(originalPIP.isFixed());
                     singlePIP.setAttachment(originalPIP.getAttachment());
@@ -485,25 +510,15 @@ public class CustomerService {
                     singlePIP.setToPrepare(originalPIP.isToPrepare());
                     products.add(singlePIP);
 
-                    if(singlePIP.isFixed()){
-                        Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(originalPIP.getId());
-                        if(optProductFixed.isPresent()){
-                            ProductFixedAPA productFixed = optProductFixed.get();
-                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productFixed.getIngredientIds());
-                            singlePIP.setIngredients(ingredientsFromProduct);
-                            productStatService.addBuyingCountProduct(productFixed, 1);
-                            productFixedRepository.save(productFixed);
-                        }
+                    if(category != null && category.isAggregateQuantities()){
+                        singlePIP.setQuantity(quantity);
+                        singlePIP.setTotalPrice(item.getTotalPrice());
+                        break;
                     } else {
-                        Optional<ProductKgAPA> optProductKg = productKgRepository.findById(item.getId());
-                        if (optProductKg.isPresent()) {
-                            ProductKgAPA productKgAPA = optProductKg.get();
-                            List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
-                            singlePIP.setIngredients(ingredientsFromProduct);
-                            productStatService.addBuyingCountProduct(productKgAPA, 1);
-                            productKgRepository.save(productKgAPA);
-                        }
+                        singlePIP.setQuantity(1);
+                        singlePIP.setTotalPrice(unitPrice);
                     }
+
                 } else if (item instanceof BundleInPurchase) {
                     BundleInPurchase originalBIP = (BundleInPurchase) item;
                     BundleInPurchase singleBIP = new BundleInPurchase();
