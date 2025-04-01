@@ -1059,12 +1059,18 @@ public class CustomerService {
     }
 
     public String obtainDateIfTenDaysBefore() {
-        LocalDate date = settingService.obtainDateIfTenDaysBefore();
-        if(date !=null){
+        List<LocalDate> localDates = settingService.obtainConsecutiveDatesIfTenDaysBefore();
+        if(localDates !=null){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
-            String formattedDate = date.format(formatter);
+            if(localDates.size()==1){
+                String formattedDate = localDates.get(0).format(formatter);
+                return "Attenzione! il " + formattedDate + " Antica Pasticceria non riceverà ordini!";
+            } else {
+                String firstDay = localDates.get(0).format(formatter);
+                String lastDay = localDates.get(localDates.size()-1).format(formatter);
+                return "Attenzione! Antica Pasticceria non riceverà ordini dal " + firstDay + " al " + lastDay + " !";
+            }
 
-            return "Attenzione! il " + formattedDate + " Antica Pasticceria non riceverà ordini!";
         }
         return null;
     }
