@@ -1064,7 +1064,7 @@ public class CustomerService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
             if(localDates.size()==1){
                 String formattedDate = localDates.get(0).format(formatter);
-                return "Attenzione! il " + formattedDate + " Antica Pasticceria non riceverà ordini!";
+                return "Attenzione! Giorno " + formattedDate + " Antica Pasticceria non riceverà ordini!";
             } else {
                 String firstDay = localDates.get(0).format(formatter);
                 String lastDay = localDates.get(localDates.size()-1).format(formatter);
