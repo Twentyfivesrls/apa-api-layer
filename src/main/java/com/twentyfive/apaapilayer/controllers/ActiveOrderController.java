@@ -161,5 +161,6 @@ public class ActiveOrderController {
     public ResponseEntity<Boolean> setLocation(@RequestBody LocationReq locationReq) throws IOException {
         return ResponseEntity.ok().body(activeOrderService.setLocation(locationReq));
     }
+
 }
 

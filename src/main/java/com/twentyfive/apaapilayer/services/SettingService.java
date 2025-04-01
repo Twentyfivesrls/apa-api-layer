@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -48,5 +50,11 @@ public class SettingService {
             return false;
         }
         return true;
+    }
+
+    public LocalDate obtainDateIfTenDaysBefore(){
+        LocalDate today = LocalDate.now();
+        LocalDate maxDate = today.plusDays(10);
+       return get().getInactivityDays().stream().filter(date -> !date.isBefore(today) && !date.isAfter(maxDate)).min(Comparator.naturalOrder()).orElse(null);
     }
 }

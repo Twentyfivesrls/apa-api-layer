@@ -8,10 +8,7 @@ import com.twentyfive.apaapilayer.exceptions.*;
 import com.twentyfive.apaapilayer.mappers.CouponMapperService;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
-import com.twentyfive.apaapilayer.utils.JwtUtilities;
-import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
-import com.twentyfive.apaapilayer.utils.StompUtilities;
-import com.twentyfive.apaapilayer.utils.TemplateUtilities;
+import com.twentyfive.apaapilayer.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +32,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1058,5 +1056,16 @@ public class CustomerService {
     private void sendCustomerNotification(String customerId){
         TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customerId);
         stompClientController.sendObjectMessage(twentyfiveMessage);
+    }
+
+    public String obtainDateIfTenDaysBefore() {
+        LocalDate date = settingService.obtainDateIfTenDaysBefore();
+        if(date !=null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
+            String formattedDate = date.format(formatter);
+
+            return "Attenzione! il " + formattedDate + " Antica Pasticceria non riceverà ordini!";
+        }
+        return null;
     }
 }
