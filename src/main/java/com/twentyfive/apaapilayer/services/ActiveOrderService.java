@@ -692,7 +692,7 @@ public class ActiveOrderService {
                 BundleInPurchase bIP = bundles.get(position);
                 if (location.equals("Nessun Luogo")) {
                     bIP.setLocation(null);
-                } else if (location.equals("In preparazione")) {
+                } else if (location.equals("In pasticceria")) {
                     bIP.setToPrepare(true);
                     bIP.setLocation(location);
                     bIP.setCounterNote(counterNote);
@@ -706,7 +706,7 @@ public class ActiveOrderService {
                 ProductInPurchase pIP = products.get(position);
                 if (location.equals("Nessun Luogo")) {
                     pIP.setLocation(null);
-                } else if (location.equals("In preparazione")) {
+                } else if (location.equals("In pasticceria")) {
                     pIP.setToPrepare(true);
                     pIP.setLocation(location);
                     pIP.setCounterNote(counterNote);
