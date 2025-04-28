@@ -4,10 +4,12 @@ import com.twentyfive.apaapilayer.dtos.*;
 import com.twentyfive.apaapilayer.emails.EmailService;
 import com.twentyfive.apaapilayer.exceptions.InvalidCouponException;
 import com.twentyfive.apaapilayer.exceptions.InvalidCustomerIdException;
+import com.twentyfive.apaapilayer.filters.CouponFilter;
 import com.twentyfive.apaapilayer.mappers.CouponMapperService;
 import com.twentyfive.apaapilayer.mappers.SummaryOrderMapperService;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
+import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.JwtUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
@@ -44,7 +48,13 @@ public class CouponService {
 
     private final EmailService emailService;
 
-    public Page<CouponDTO> getAll(int page, int size, String sortColumn, String sortDirection,boolean expired) {
+    private final MongoTemplate mongoTemplate;
+
+    public Page<CouponDTO> getAll(int page, int size, String sortColumn, String sortDirection, CouponFilter filters) {
+        Query query = new Query();
+        query = FilterUtilities.applyCouponFilters(query, filters);
+
+
         Sort sort;
         if (sortColumn == null || sortColumn.isBlank() || sortDirection == null || sortDirection.isBlank()) {
             sort = Sort.by(Sort.Direction.ASC, "name");
@@ -52,7 +62,7 @@ public class CouponService {
             sort = Sort.by(Sort.Direction.fromString(sortDirection),sortColumn);
         }
         Pageable pageable= PageRequest.of(page,size,sort);
-        List<Coupon> coupons = couponRepository.findAllByExpiredAndSoftDeletedFalse(expired);
+        List<Coupon> coupons = mongoTemplate.find(query, Coupon.class);
         List<CouponDTO> dtos = couponMapperService.mapCouponsToDTO(coupons);
         return PageUtilities.convertListToPageWithSorting(dtos, pageable);
     }

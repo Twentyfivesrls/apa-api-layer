@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.*;
+import com.twentyfive.apaapilayer.filters.CouponFilter;
 import com.twentyfive.apaapilayer.services.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -8,24 +9,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
-import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Message;
 
 import java.io.IOException;
 
 @RestController
 @RequestMapping("/coupons")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_admin')")
+//@PreAuthorize("hasRole('ROLE_admin')")
 public class CouponController {
     private final CouponService couponService;
 
-    @GetMapping("/getAll")
+    @PostMapping("/getAll")
     public ResponseEntity<Page<CouponDTO>> getAll(@RequestParam(value = "page", defaultValue = "0") int page,
                                                   @RequestParam(value = "size", defaultValue = "25") int size,
                                                   @RequestParam(value = "sortColumn", defaultValue = "") String sortColumn,
                                                   @RequestParam(value = "sortDirection", defaultValue = "") String sortDirection,
-                                                  @RequestParam(value = "expired", defaultValue = "false") boolean expired) {
-        return ResponseEntity.ok().body(couponService.getAll(page,size,sortColumn,sortDirection,expired));
+                                                  @RequestBody(required = false) CouponFilter filters) {
+        return ResponseEntity.ok().body(couponService.getAll(page,size,sortColumn,sortDirection,filters));
 
     }
 

@@ -106,7 +106,7 @@ public class CouponMapperService {
             else if (numberRange.getMax() == null){
                 priceRange = "> "+numberRange.getMin();
             } else {
-                priceRange = numberRange.getMin()+"€- "+numberRange.getMax()+" €";
+                priceRange = numberRange.getMin()+"€ - "+numberRange.getMax()+" €";
             }
         }
         return priceRange;
