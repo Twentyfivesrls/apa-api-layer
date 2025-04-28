@@ -441,7 +441,7 @@ public class CustomerService {
 
     private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items,AppliedCoupon appliedCoupon) {
         OrderAPA order = new OrderAPA();
-        boolean toPrepare = false;
+        boolean toPrepare = true;
         if (buyInfos.getCustomInfo().getFirstName()!=null){
             order.setCustomInfo(buyInfos.getCustomInfo());
         } else {
@@ -471,15 +471,14 @@ public class CustomerService {
                     ProductInPurchase originalPIP = (ProductInPurchase) item;
                     ProductInPurchase singlePIP = new ProductInPurchase();
                     CategoryAPA category = null;
-
                     if(originalPIP.isFixed()){
                         Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(originalPIP.getId());
                         if(optProductFixed.isPresent()){
                             ProductFixedAPA productFixed = optProductFixed.get();
                             List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productFixed.getIngredientIds());
                             singlePIP.setIngredients(ingredientsFromProduct);
+                            singlePIP.setToPrepare(productFixed.isToPrepare());
                             productStatService.addBuyingCountProduct(productFixed, 1);
-
                             category = categoryService.getById(productFixed.getCategoryId());
                             productFixedRepository.save(productFixed);
                         }
@@ -489,6 +488,7 @@ public class CustomerService {
                             ProductKgAPA productKgAPA = optProductKg.get();
                             List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
                             singlePIP.setIngredients(ingredientsFromProduct);
+                            singlePIP.setToPrepare(productKgAPA.isToPrepare());
                             productStatService.addBuyingCountProduct(productKgAPA, 1);
                             productKgRepository.save(productKgAPA);
                         }
@@ -502,10 +502,9 @@ public class CustomerService {
                     singlePIP.setShape(originalPIP.getShape());
                     singlePIP.setAllergens(originalPIP.getAllergens());
 
-                    if (item.isToPrepare()){
+                    if (toPrepare){
                         singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
                     }
-                    singlePIP.setToPrepare(originalPIP.isToPrepare());
                     products.add(singlePIP);
 
                     if(category != null && category.isAggregateQuantities()){
@@ -522,10 +521,6 @@ public class CustomerService {
                     BundleInPurchase singleBIP = new BundleInPurchase();
 
                     singleBIP.setId(item.getId());
-                    if (item.isToPrepare()){
-                        singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
-                    }
-                    singleBIP.setToPrepare(item.isToPrepare());
                     singleBIP.setQuantity(1);
                     singleBIP.setTotalPrice(unitPrice);
                     singleBIP.setAllergens(originalBIP.getAllergens());
@@ -535,8 +530,8 @@ public class CustomerService {
                     bundles.add(singleBIP);
 
                     Optional<Tray> tray = trayRepository.findById(singleBIP.getId());
-
                     if (tray.isPresent()) {
+                        singleBIP.setToPrepare(tray.get().isToPrepare());
                         productStatService.addBuyingCountTray(tray.get(), 1);
                         for (PieceInPurchase piece : singleBIP.getWeightedProducts()) {
                             Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
@@ -546,11 +541,16 @@ public class CustomerService {
                             }
                         }
                     }
+                    if (toPrepare){
+                        singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
+                    }
                 }
             }
-            if(!toPrepare){
+            /*if(!toPrepare){
                 toPrepare = item.isToPrepare();
             }
+
+             */
         }
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
