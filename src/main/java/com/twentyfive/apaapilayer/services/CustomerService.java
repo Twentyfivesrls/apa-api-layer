@@ -441,7 +441,7 @@ public class CustomerService {
 
     private OrderAPA createOrderFromItems(CustomerAPA customer,BuyInfosDTO buyInfos,List<ItemInPurchase> items,AppliedCoupon appliedCoupon) {
         OrderAPA order = new OrderAPA();
-        boolean toPrepare = true;
+        boolean toPrepare = false;
         if (buyInfos.getCustomInfo().getFirstName()!=null){
             order.setCustomInfo(buyInfos.getCustomInfo());
         } else {
@@ -502,7 +502,8 @@ public class CustomerService {
                     singlePIP.setShape(originalPIP.getShape());
                     singlePIP.setAllergens(originalPIP.getAllergens());
 
-                    if (toPrepare){
+                    if (singlePIP.isToPrepare()){
+                        toPrepare = true;
                         singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
                     }
                     products.add(singlePIP);
@@ -541,7 +542,8 @@ public class CustomerService {
                             }
                         }
                     }
-                    if (toPrepare){
+                    if (singleBIP.isToPrepare()){
+                        toPrepare = true;
                         singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
                     }
                 }
