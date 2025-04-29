@@ -44,7 +44,8 @@ public class ProductMapperService {
                 customizableIngredients,
                 realPrice,
                 realWeight,
-                productFixed.getImageUrl()
+                productFixed.getImageUrl(),
+                productFixed.isToPrepare()
         );
     }
 
@@ -61,7 +62,8 @@ public class ProductMapperService {
                 customizableIngredients,
                 realPrice,
                 product.getWeightRange(),
-                product.getImageUrl()
+                product.getImageUrl(),
+                product.isToPrepare()
         );
     }
 }

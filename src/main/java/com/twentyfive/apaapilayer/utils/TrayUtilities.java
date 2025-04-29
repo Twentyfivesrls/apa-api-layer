@@ -22,6 +22,7 @@ public class TrayUtilities {
         dto.setPricePerKg(tray.getPricePerKg());
         dto.setImageUrl(tray.getImageUrl());
         dto.setAllergens(realAllergens);
+        dto.setToPrepare(tray.isToPrepare());
         return dto;
     }
 

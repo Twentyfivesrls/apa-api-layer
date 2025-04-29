@@ -717,12 +717,17 @@ public class ActiveOrderService {
                     pIP.setLocation(location);
                 }
             }
-            boolean noMoreToPrepare = order.getProductsInPurchase().stream()
-                    .allMatch(product -> product.getLocation() != null
-                            && !"In pasticceria".equals(product.getLocation())) &&
-                    order.getBundlesInPurchase().stream()
-                            .allMatch(bundle -> bundle.getLocation() != null
-                                    && !"In pasticceria".equals(bundle.getLocation()));
+            boolean noMoreToPrepare =
+                    order.getProductsInPurchase().stream()
+                            .allMatch(product -> product.getLocation() != null &&
+                                    !"In pasticceria".equals(product.getLocation()) &&
+                                    !"In preparazione".equals(product.getLocation()))
+                            &&
+                            order.getBundlesInPurchase().stream()
+                                    .allMatch(bundle -> bundle.getLocation() != null &&
+                                            !"In pasticceria".equals(bundle.getLocation()) &&
+                                            !"In preparazione".equals(bundle.getLocation()));
+
             if (noMoreToPrepare){
                 order.setStatus(OrderStatus.PRONTO);
                 CustomerAPA customer = getCustomerFromOrder(order);

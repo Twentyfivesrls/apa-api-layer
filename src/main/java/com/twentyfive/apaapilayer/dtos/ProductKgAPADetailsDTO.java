@@ -25,4 +25,5 @@ public class ProductKgAPADetailsDTO {
     private String pricePerKg;
     private WeightRange weightRange;
     private String imageUrl;
+    private boolean toPrepare;
 }

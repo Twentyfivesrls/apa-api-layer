@@ -50,6 +50,7 @@ public class ProductWeightedService {
         dto.setRealWeight(product.getWeight());
         dto.setWeight("Kg " +product.getWeight());
         dto.setDescription(product.getDescription());
+        dto.setToPrepare(product.isToPrepare());
         List<String> idingredienti = product.getIngredientIds();
         List<String> nomeIngredienti = new ArrayList<>();
         List<Allergen> allergeni = new ArrayList<>();

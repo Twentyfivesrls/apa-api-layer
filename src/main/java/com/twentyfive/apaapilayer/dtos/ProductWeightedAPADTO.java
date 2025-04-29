@@ -24,5 +24,6 @@ public class ProductWeightedAPADTO {
     private String imageUrl;//immagine
     private boolean active;
     private String description;
+    private boolean toPrepare;
 
 }
