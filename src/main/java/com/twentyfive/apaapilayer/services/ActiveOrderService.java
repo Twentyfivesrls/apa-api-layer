@@ -673,6 +673,9 @@ public class ActiveOrderService {
                     bIP.setLocation(location);
                     bIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
+                    order.setStatus(OrderStatus.IN_PASTICCERIA);
+                }else if (location.equals("In preparazione")){
+                    bIP.setLocation(location);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     bIP.setToPrepare(false);
@@ -687,6 +690,9 @@ public class ActiveOrderService {
                     pIP.setLocation(location);
                     pIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
+                    order.setStatus(OrderStatus.IN_PASTICCERIA);
+                } else if (location.equals("In preparazione")){
+                    pIP.setLocation(location);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     pIP.setToPrepare(false);
