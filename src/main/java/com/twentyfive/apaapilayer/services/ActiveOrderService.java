@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.ANNULLATO;
-import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.MODIFICATO_DA_PASTICCERIA;
 
 @Service
 public class ActiveOrderService {
@@ -142,8 +141,8 @@ public class ActiveOrderService {
             }
 
             dto.setPrice("€ " +String.format("%.2f", order.getTotalPrice()));
-            String status = maskModifiedFromBakerForCustomers(order.getStatus());
-            dto.setStatus(status);
+            //String status = maskModifiedFromBakerForCustomers(order.getStatus());
+            dto.setStatus(order.getStatus().getStatus());
             dto.setUnread(order.isUnread());
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
@@ -169,14 +168,6 @@ public class ActiveOrderService {
         } catch(Exception e){
             throw new RuntimeException("Error retrieving roles user!");
         }
-    }
-
-    private String maskModifiedFromBakerForCustomers(OrderStatus orderStatus) throws IOException{
-        List<String> roles = JwtUtilities.getRoles();
-        if(roles.contains("customer") && orderStatus.equals(MODIFICATO_DA_PASTICCERIA)){ //Mascheriamo modificato da pasticceria con "in preparazione"
-            return OrderStatus.IN_PREPARAZIONE.getStatus();
-        }
-        return orderStatus.getStatus();
     }
 
     public OrderDetailsAPADTO getDetailsById(String id) throws IOException {
@@ -207,8 +198,8 @@ public class ActiveOrderService {
         dto.setTotalPrice(order.getTotalPrice());
         dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
-        String status = maskModifiedFromBakerForCustomers(order.getStatus());
-        dto.setStatus(status);
+        //String status = maskModifiedFromBakerForCustomers(order.getStatus());
+        dto.setStatus(order.getStatus().getStatus());
         dto.setOrderNote(order.getNote());
         dto.setUnread(order.isUnread());
         dto.setAppliedCoupon(order.getAppliedCoupon());
@@ -571,20 +562,13 @@ public class ActiveOrderService {
                     CustomerAPA customer = optCustomer.get();
                     firstName= customer.getFirstName();
                     email = customer.getEmail();
-                    if(!(status.toUpperCase().equals(MODIFICATO_DA_PASTICCERIA))){
                     String customerNotification = StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()), customer.getId());
                     producerPool.send(customerNotification,1,NOTIFICATION_TOPIC);
-                }
                 }
             } else {
                 firstName= order.getCustomInfo().getFirstName();
                 email = order.getCustomInfo().getEmail();
             }
-            /*if(order.getStatus() == OrderStatus.IN_PREPARAZIONE && !(status.toUpperCase().equals("IN_PREPARAZIONE") || status.toUpperCase().equals("MODIFICATO_DA_PASTICCERIA"))){
-                String bakerNotification =StompUtilities.sendBakerNotification("changed");
-                producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
-            }
-             */
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
                     String fullName ="";
@@ -634,14 +618,6 @@ public class ActiveOrderService {
                 case PRONTO -> {
                     emailService.sendEmail(email, OrderStatus.valueOf(status.toUpperCase()),TemplateUtilities.populateEmail(firstName,order.getId()));
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                    activeOrderRepository.save(order);
-                }
-                case MODIFICATO_DA_PASTICCERIA -> {
-                    //String adminNotification = StompUtilities.sendAdminNotification();
-                    //producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
-                    orderIsPrepared(order);
-                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                    order.setUnread(true);
                     activeOrderRepository.save(order);
                 }
                 case RICEVUTO -> {
