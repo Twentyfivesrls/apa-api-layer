@@ -60,7 +60,6 @@ public class IngredientController {
     @PostMapping("/save")
     public ResponseEntity<IngredientAPA> save(@RequestBody IngredientAPA i) {
         try {
-            System.out.println("prova");
             return ResponseEntity.ok().body(ingredientService.save(i));
         } catch (Exception e){
             throw new ExistingFieldException();
