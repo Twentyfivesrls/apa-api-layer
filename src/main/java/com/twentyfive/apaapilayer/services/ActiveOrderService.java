@@ -719,12 +719,10 @@ public class ActiveOrderService {
             }
             boolean noMoreToPrepare = order.getProductsInPurchase().stream()
                     .allMatch(product -> product.getLocation() != null
-                            && !"In pasticceria".equals(product.getLocation())
-                            && !"In preparazione".equals(product.getLocation())) &&
+                            && !"In pasticceria".equals(product.getLocation())) &&
                     order.getBundlesInPurchase().stream()
                             .allMatch(bundle -> bundle.getLocation() != null
-                                    && !"In pasticceria".equals(bundle.getLocation())
-                                    && !"In preparazione".equals(bundle.getLocation()));
+                                    && !"In pasticceria".equals(bundle.getLocation()));
             if (noMoreToPrepare){
                 order.setStatus(OrderStatus.PRONTO);
                 CustomerAPA customer = getCustomerFromOrder(order);
@@ -738,7 +736,7 @@ public class ActiveOrderService {
             }
             if (!roles.contains("baker")){
                 if(alreadySomeToPrepare){
-                    if(location.equals("In preparazione")){
+                    if(location.equals("In pasticceria")){
                         TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
                         stompClientController.sendObjectMessage(twentyfiveMessage);
                     } else {
