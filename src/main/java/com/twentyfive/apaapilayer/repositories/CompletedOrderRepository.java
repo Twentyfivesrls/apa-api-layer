@@ -184,27 +184,35 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     );
 
     @Aggregation(pipeline = {
+            // 1. Filtro ordini per stato e data
             "{ $match: { status: ?1, pickupDate: ?2 } }",
+
+            // 2. Estrai gli _id dei prodotti acquistati
             "{ $project: { " +
-                    "    productIds: { $map: { input: '$productsInPurchase', as: 'product', in: '$$product._id' } }, " +
-                    "    bundleIds: { $map: { input: '$bundlesInPurchase', as: 'bundle', in: '$$bundle._id' } } " +
+                    "productIds: { $map: { input: '$productsInPurchase', as: 'product', in: '$$product._id' } } " +
                     "} }",
+
+            // 3. Join con la collezione products
             "{ $lookup: { from: 'products', localField: 'productIds', foreignField: '_id', as: 'products' } }",
-            "{ $lookup: { from: 'trays', localField: 'bundleIds', foreignField: '_id', as: 'trays' } }",
+
+            // 4. Filtro per categoria
             "{ $project: { " +
-                    "    filteredProductIds: { $filter: { input: '$products', as: 'product', cond: { $eq: ['$$product.categoryId', ?0] } } }, " +
-                    "    filteredTrayIds: { $filter: { input: '$trays', as: 'tray', cond: { $eq: ['$$tray.categoryId', ?0] } } } " +
+                    "filteredProductIds: { $filter: { input: '$products', as: 'product', cond: { $eq: ['$$product.categoryId', ?0] } } } " +
                     "} }",
+
+            // 5. Estrai solo gli _id
             "{ $project: { " +
-                    "    finalIds: { $concatArrays: [ " +
-                    "        { $map: { input: '$filteredProductIds', as: 'product', in: '$$product._id' } }, " +
-                    "        { $map: { input: '$filteredTrayIds', as: 'tray', in: '$$tray._id' } } " +
-                    "    ] } " +
+                    "finalIds: { $map: { input: '$filteredProductIds', as: 'product', in: '$$product._id' } } " +
                     "} }",
+
+            // 6. Flatten array in documenti singoli
             "{ $unwind: '$finalIds' }",
+
+            // 7. Proiezione finale
             "{ $project: { _id: '$finalIds' } }"
     })
     Set<String> findProductIdsByCategoryAndStatus(String categoryId, OrderStatus status, LocalDate pickupDate);
+
 
 
 
@@ -314,28 +322,28 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
+            // 1. Filtro per data e stato
+            "{ '$match': { 'pickupDate': ?0, 'status': ?1 } }",
 
-            "{'$match': {'pickupDate': ?0, 'status': ?1}}",
+            // 2. Lookup su products per ogni _id in productsInPurchase
+            "{ '$lookup': { 'from': 'products', 'localField': 'productsInPurchase._id', 'foreignField': '_id', 'as': 'productDetails' } }",
 
-            "{'$lookup': {'from': 'products', 'localField': 'productsInPurchase._id', 'foreignField': '_id', 'as': 'productDetails'}}",
+            // 3. Estrai tutti i categoryId dei prodotti acquistati
+            "{ '$project': { " +
+                    "'productCategoryIds': { '$map': { 'input': '$productDetails', 'as': 'product', 'in': '$$product.categoryId' } }" +
+                    "} }",
 
-            "{'$lookup': {'from': 'trays', 'localField': 'bundlesInPurchase._id', 'foreignField': '_id', 'as': 'bundleDetails'}}",
+            // 4. Unwind per ottenere una riga per ogni categoryId
+            "{ '$unwind': '$productCategoryIds' }",
 
-            "{'$project': {'productCategoryIds': {'$map': {'input': '$productDetails', 'as': 'product', 'in': '$$product.categoryId'}}, 'bundleCategoryIds': {'$map': {'input': '$bundleDetails', 'as': 'bundle', 'in': '$$bundle.categoryId'}}}}",
+            // 5. Group per rimuovere duplicati
+            "{ '$group': { '_id': '$productCategoryIds' } }",
 
-            "{'$addFields': {'allCategoryIds': {'$setUnion': ['$productCategoryIds', '$bundleCategoryIds']}}}",
-
-            "{'$unwind': '$allCategoryIds'}",
-
-            "{'$group': {'_id': '$allCategoryIds'}}",
-
-            "{'$project': {'_id': 0, 'categoryId': '$_id'}}"
-
+            // 6. Proiezione finale pulita
+            "{ '$project': { '_id': 0, 'categoryId': '$_id' } }"
     })
-    List<String> findDistinctCategoryIdsByDateAndStatus(
-            LocalDate date,
-            OrderStatus status
-    );
+    List<String> findDistinctCategoryIdsByDateAndStatus(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
             "{ $match: { 'pickupDate': ?0, 'status': ?1 } }",

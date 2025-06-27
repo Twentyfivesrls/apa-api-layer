@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.repositories.TrayRepository;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import com.twentyfive.apaapilayer.services.ProductFixedService;
 import com.twentyfive.apaapilayer.services.ProductKgService;
+import com.twentyfive.apaapilayer.services.TrayService;
 import com.twentyfive.apaapilayer.utils.StringUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class GlobalStatMapperService {
     private final IngredientService ingredientService;
     private final IngredientMapperService ingredientMapperService;
     private final TrayRepository trayRepository;
+    private final TrayService trayService;
 
     public GlobalStatAPA createGlobalStatByDate(LocalDate date) {
         GlobalStatAPA globalStat = new GlobalStatAPA();
@@ -534,6 +536,9 @@ public class GlobalStatMapperService {
             }
             case "productKg" -> {
                 return productKgService.getById(idProduct).getName();
+            }
+            case "tray" -> {
+                return trayService.getById(idProduct).getName();
             }
             default -> {
                 return "No Matching Product Name";
