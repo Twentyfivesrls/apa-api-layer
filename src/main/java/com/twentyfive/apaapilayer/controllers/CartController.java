@@ -157,4 +157,8 @@ public class CartController {
         return ResponseEntity.ok().body(customerService.countCart(id));
     }
 
+    @GetMapping("/check-inactivity")
+    public ResponseEntity<String> checkInactivity() {
+        return ResponseEntity.ok().body(customerService.obtainDateIfTenDaysBefore());
+    }
 }

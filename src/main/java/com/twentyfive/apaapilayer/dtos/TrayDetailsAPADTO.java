@@ -24,4 +24,5 @@ public class TrayDetailsAPADTO {
     private String description;
     private String imageUrl;
     private double pricePerKg;
+    private boolean toPrepare;
 }

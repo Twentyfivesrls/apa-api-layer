@@ -22,9 +22,6 @@ public class OrderEnabledInterceptor implements HandlerInterceptor {
         if (roles.contains("customer") && !settingService.get().isOrdersEnabled()) {
             throw new SiteIsClosedException("Antica Pasticceria Rende is under maintenance! Thank you for the patience!");
         }
-        if (!settingService.isTodayAvailable()){
-            throw new SiteIsClosedException("Antica Pasticceria Rende today doesn't receive orders! Thank you for the patience!");
-        }
         return true;
     }
 }

@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.ANNULLATO;
-import static twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus.MODIFICATO_DA_PASTICCERIA;
 
 @Service
 public class ActiveOrderService {
@@ -142,8 +141,8 @@ public class ActiveOrderService {
             }
 
             dto.setPrice("€ " +String.format("%.2f", order.getTotalPrice()));
-            String status = maskModifiedFromBakerForCustomers(order.getStatus());
-            dto.setStatus(status);
+            //String status = maskModifiedFromBakerForCustomers(order.getStatus());
+            dto.setStatus(order.getStatus().getStatus());
             dto.setUnread(order.isUnread());
             dto.setBakerUnread(order.isBakerUnread());
             dto.setCounterUnread(order.isCounterUnread());
@@ -169,14 +168,6 @@ public class ActiveOrderService {
         } catch(Exception e){
             throw new RuntimeException("Error retrieving roles user!");
         }
-    }
-
-    private String maskModifiedFromBakerForCustomers(OrderStatus orderStatus) throws IOException{
-        List<String> roles = JwtUtilities.getRoles();
-        if(roles.contains("customer") && orderStatus.equals(MODIFICATO_DA_PASTICCERIA)){ //Mascheriamo modificato da pasticceria con "in preparazione"
-            return OrderStatus.IN_PREPARAZIONE.getStatus();
-        }
-        return orderStatus.getStatus();
     }
 
     public OrderDetailsAPADTO getDetailsById(String id) throws IOException {
@@ -207,8 +198,8 @@ public class ActiveOrderService {
         dto.setTotalPrice(order.getTotalPrice());
         dto.setPaymentId(order.getPaymentId());
         dto.setPickupDateTime(order.getPickupDate().atTime(order.getPickupTime()));
-        String status = maskModifiedFromBakerForCustomers(order.getStatus());
-        dto.setStatus(status);
+        //String status = maskModifiedFromBakerForCustomers(order.getStatus());
+        dto.setStatus(order.getStatus().getStatus());
         dto.setOrderNote(order.getNote());
         dto.setUnread(order.isUnread());
         dto.setAppliedCoupon(order.getAppliedCoupon());
@@ -242,7 +233,6 @@ public class ActiveOrderService {
                     .map(this::convertBundlePurchaseToDTO) // Utilizza il metodo di conversione definito
                     .collect(Collectors.toList());
             dto.setBundles(bundleDTOs); // Assumi che esista un getter che restituisca i bundle
-            return;
         }
         else if (roles.contains("baker")){
             // Filtra i prodotti con toPrepare = true
@@ -255,7 +245,6 @@ public class ActiveOrderService {
                     .filter(BundleInPurchase::isToPrepare).map(this::convertBundlePurchaseToDTO)
                     .collect(Collectors.toList());
             dto.setBundles(bundleDTOs);
-            return;
         }
         else if (roles.contains("customer")){
             //TODO mapActiveOrderToSummaryEmail unire i prodotti uguali aumentato quantità, consiglio di creare un nuovo metodo o controllare con i ruoli
@@ -573,20 +562,13 @@ public class ActiveOrderService {
                     CustomerAPA customer = optCustomer.get();
                     firstName= customer.getFirstName();
                     email = customer.getEmail();
-                    if(!(status.toUpperCase().equals(MODIFICATO_DA_PASTICCERIA))){
                     String customerNotification = StompUtilities.sendChangedStatusNotification(OrderStatus.valueOf(status.toUpperCase()), customer.getId());
                     producerPool.send(customerNotification,1,NOTIFICATION_TOPIC);
-                }
                 }
             } else {
                 firstName= order.getCustomInfo().getFirstName();
                 email = order.getCustomInfo().getEmail();
             }
-            /*if(order.getStatus() == OrderStatus.IN_PREPARAZIONE && !(status.toUpperCase().equals("IN_PREPARAZIONE") || status.toUpperCase().equals("MODIFICATO_DA_PASTICCERIA"))){
-                String bakerNotification =StompUtilities.sendBakerNotification("changed");
-                producerPool.send(bakerNotification,1,NOTIFICATION_TOPIC);
-            }
-             */
             switch(OrderStatus.valueOf(status.toUpperCase())) {
                 case ANNULLATO -> {
                     String fullName ="";
@@ -638,14 +620,6 @@ public class ActiveOrderService {
                     order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     activeOrderRepository.save(order);
                 }
-                case MODIFICATO_DA_PASTICCERIA -> {
-                    //String adminNotification = StompUtilities.sendAdminNotification();
-                    //producerPool.send(adminNotification,1,NOTIFICATION_TOPIC);
-                    orderIsPrepared(order);
-                    order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
-                    order.setUnread(true);
-                    activeOrderRepository.save(order);
-                }
                 case RICEVUTO -> {
                     optOrder.get().setStatus(OrderStatus.valueOf(status.toUpperCase()));
                     activeOrderRepository.save(optOrder.get());
@@ -694,11 +668,14 @@ public class ActiveOrderService {
                 BundleInPurchase bIP = bundles.get(position);
                 if (location.equals("Nessun Luogo")) {
                     bIP.setLocation(null);
-                } else if (location.equals("In preparazione")) {
+                } else if (location.equals("In pasticceria")) {
                     bIP.setToPrepare(true);
                     bIP.setLocation(location);
                     bIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
+                    order.setStatus(OrderStatus.IN_PASTICCERIA);
+                }else if (location.equals("In preparazione")){
+                    bIP.setLocation(location);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     bIP.setToPrepare(false);
@@ -708,25 +685,31 @@ public class ActiveOrderService {
                 ProductInPurchase pIP = products.get(position);
                 if (location.equals("Nessun Luogo")) {
                     pIP.setLocation(null);
-                } else if (location.equals("In preparazione")) {
+                } else if (location.equals("In pasticceria")) {
                     pIP.setToPrepare(true);
                     pIP.setLocation(location);
                     pIP.setCounterNote(counterNote);
                     order.setBakerUnread(true);
+                    order.setStatus(OrderStatus.IN_PASTICCERIA);
+                } else if (location.equals("In preparazione")){
+                    pIP.setLocation(location);
                     order.setStatus(OrderStatus.IN_PREPARAZIONE);
                 } else {
                     pIP.setToPrepare(false);
                     pIP.setLocation(location);
                 }
             }
-            boolean noMoreToPrepare = order.getProductsInPurchase().stream()
-                    .allMatch(product -> product.getLocation() != null
-                            && !"In pasticceria".equals(product.getLocation())
-                            && !"In preparazione".equals(product.getLocation())) &&
-                    order.getBundlesInPurchase().stream()
-                            .allMatch(bundle -> bundle.getLocation() != null
-                                    && !"In pasticceria".equals(bundle.getLocation())
-                                    && !"In preparazione".equals(bundle.getLocation()));
+            boolean noMoreToPrepare =
+                    order.getProductsInPurchase().stream()
+                            .allMatch(product -> product.getLocation() != null &&
+                                    !"In pasticceria".equals(product.getLocation()) &&
+                                    !"In preparazione".equals(product.getLocation()))
+                            &&
+                            order.getBundlesInPurchase().stream()
+                                    .allMatch(bundle -> bundle.getLocation() != null &&
+                                            !"In pasticceria".equals(bundle.getLocation()) &&
+                                            !"In preparazione".equals(bundle.getLocation()));
+
             if (noMoreToPrepare){
                 order.setStatus(OrderStatus.PRONTO);
                 CustomerAPA customer = getCustomerFromOrder(order);
@@ -740,7 +723,7 @@ public class ActiveOrderService {
             }
             if (!roles.contains("baker")){
                 if(alreadySomeToPrepare){
-                    if(location.equals("In preparazione")){
+                    if(location.equals("In pasticceria")){
                         TwentyfiveMessage twentyfiveMessage = StompUtilities.sendBakerUpdateNotification(order.getId(), location);
                         stompClientController.sendObjectMessage(twentyfiveMessage);
                     } else {

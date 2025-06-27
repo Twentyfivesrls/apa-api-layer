@@ -47,15 +47,15 @@ public class CategoryService {
     @Transactional
     public CategoryAPA save(CategoryAPA c){
         //Andremo a calcolare l'orderPriority per la nuova categoria
-        Integer max;
+        Integer max = null;
 
-        if (c.getIdSection() != null){
+        if (c.getIdSection() != null) {
             max = getEnabledCategories(Arrays.stream(PRODUCT_CATEGORY).toList())
                     .stream()
                     .map(CategoryAPA::getOrderPriority)
                     .filter(Objects::nonNull)
                     .max(Comparator.naturalOrder()).orElse(null);
-        } else {
+        } else if(c.getId() != null) {
             max = (getAllActiveByIdSection(c.getIdSection())
                     .stream()
                     .map(CategoryAPA::getOrderPriority)
@@ -63,7 +63,7 @@ public class CategoryService {
                     .max(Comparator.naturalOrder()).orElse(null));
         }
 
-        if (max != null){
+        if (max != null && c.getId()== null){
             c.setOrderPriority(max+1);
         }
 

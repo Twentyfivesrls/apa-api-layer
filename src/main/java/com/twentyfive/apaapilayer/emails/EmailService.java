@@ -35,8 +35,8 @@ public class EmailService {
     private final String templateCanceled = "orderCanceled";
     private final String subjectCanceled = "Il tuo ordine n.%s è stato annullato!";
 
-    private final String templatePreparation = "orderPreparation";
-    private final String subjectPreparation = "Il tuo ordine n.%s è in preparazione!";
+//    private final String templatePreparation = "orderPreparation";
+//    private final String subjectPreparation = "Il tuo ordine n.%s è in preparazione!";
 
     private final String templateReady = "orderReady";
     private final String subjectReady = "Il tuo ordine n.%s è pronto!";
@@ -59,10 +59,11 @@ public class EmailService {
                 subject = String.format(subjectReceived,variables.get("orderId"));
                 templateName=templateReceived;
             }
-            case IN_PREPARAZIONE -> {
+            /*case IN_PREPARAZIONE -> {
                 subject = String.format(subjectPreparation,variables.get("orderId"));
                 templateName=templatePreparation;
             }
+             */
             case PRONTO -> {
                 subject = String.format(subjectReady,variables.get("orderId"));
                 templateName=templateReady;

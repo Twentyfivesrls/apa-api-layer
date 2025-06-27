@@ -3,6 +3,8 @@ package com.twentyfive.apaapilayer.mappers;
 import com.twentyfive.apaapilayer.dtos.CustomizableIngredientDTO;
 import com.twentyfive.apaapilayer.dtos.IngredientMinimalAPADTO;
 import com.twentyfive.apaapilayer.models.IngredientAPA;
+import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
 
@@ -11,13 +13,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class IngredientMapperService {
-
-    public String ingredientsIdToIngredientsName(List<IngredientAPA> ingredients) {
-        return ingredients.stream()
-                .map(IngredientAPA::getName)  // Estrae il nome da ciascun ingrediente
-                .collect(Collectors.joining(", "));  // Concatena i nomi separati da virgola e spazio
-    }
+    private final IngredientRepository ingredientRepository;
 
     public List<String> ingredientsIdToIngredientsNameList(List<IngredientAPA> ingredients) {
         return ingredients.stream()
@@ -50,4 +48,8 @@ public class IngredientMapperService {
         );
     }
 
+    public List<IngredientMinimalAPADTO> ingredientsIdToMinimalIngredientDTO(List<String> ingredientIds) {
+        List<IngredientAPA> ingredients = ingredientRepository.findAllById(ingredientIds);
+        return mapListIngredientToMinimalListIngredient(ingredients);
+    }
 }

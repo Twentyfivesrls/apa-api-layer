@@ -8,10 +8,7 @@ import com.twentyfive.apaapilayer.exceptions.*;
 import com.twentyfive.apaapilayer.mappers.CouponMapperService;
 import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
-import com.twentyfive.apaapilayer.utils.JwtUtilities;
-import com.twentyfive.apaapilayer.utils.ReflectionUtilities;
-import com.twentyfive.apaapilayer.utils.StompUtilities;
-import com.twentyfive.apaapilayer.utils.TemplateUtilities;
+import com.twentyfive.apaapilayer.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +32,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +63,8 @@ public class CustomerService {
     private final ProductFixedRepository productFixedRepository;
     private final CouponMapperService couponMapperService;
     private final CouponRepository couponRepository;
+    private final SettingService settingService;
+    private final CategoryService categoryService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -101,7 +101,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -124,6 +124,8 @@ public class CustomerService {
         this.productFixedRepository = productFixedRepository;
         this.couponMapperService = couponMapperService;
         this.couponRepository = couponRepository;
+        this.settingService = settingService;
+        this.categoryService = categoryService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -281,6 +283,11 @@ public class CustomerService {
     }
     @Transactional
     public boolean buyItems(String customerId, BuyInfosDTO buyInfos) throws IOException {
+
+        if(!(settingService.isThisDayAvailable(buyInfos.getSelectedPickupDateTime().toLocalDate()))){
+            throw new InvalidOrderTimeException("Ci dispiace, non è possibile ordinare per questo giorno! " +buyInfos.getSelectedPickupDateTime().toLocalDate().toString());
+        }
+
         Optional<CustomerAPA> optCustomer = customerRepository.findById(customerId);
         String email="";
         String firstName="";
@@ -318,7 +325,7 @@ public class CustomerService {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
                 } else {
-                    throw new InvalidOrderTimeException();
+                    throw new InvalidOrderTimeException("Ci dispiace! Non è più possibile ordinare a questo orario, ricaricare il carrello e riprovare!" +buyInfos.getSelectedPickupDateTime().toString());
                 }
                 timeSlotAPARepository.save(timeSlotAPA);
                 customerRepository.save(customer);
@@ -451,40 +458,28 @@ public class CustomerService {
         }
         List<ProductInPurchase> products = new ArrayList<>();
         List<BundleInPurchase> bundles = new ArrayList<>();
-
         for (ItemInPurchase item : items) {
+
             int quantity = item.getQuantity();
             double unitPrice = item.getTotalPrice() / quantity;
 
             for (int i = 0; i < quantity; i++) {
 
                 if (item instanceof ProductInPurchase) {
+
+
                     ProductInPurchase originalPIP = (ProductInPurchase) item;
                     ProductInPurchase singlePIP = new ProductInPurchase();
-
-                    singlePIP.setId(originalPIP.getId());
-                    singlePIP.setQuantity(1);
-                    singlePIP.setTotalPrice(unitPrice);
-                    singlePIP.setCustomization(originalPIP.getCustomization());
-                    singlePIP.setFixed(originalPIP.isFixed());
-                    singlePIP.setAttachment(originalPIP.getAttachment());
-                    singlePIP.setWeight(originalPIP.getWeight());
-                    singlePIP.setShape(originalPIP.getShape());
-                    singlePIP.setAllergens(originalPIP.getAllergens());
-
-                    if (item.isToPrepare()){
-                        singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
-                    }
-                    singlePIP.setToPrepare(originalPIP.isToPrepare());
-                    products.add(singlePIP);
-
-                    if(singlePIP.isFixed()){
+                    CategoryAPA category = null;
+                    if(originalPIP.isFixed()){
                         Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(originalPIP.getId());
                         if(optProductFixed.isPresent()){
                             ProductFixedAPA productFixed = optProductFixed.get();
                             List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productFixed.getIngredientIds());
                             singlePIP.setIngredients(ingredientsFromProduct);
+                            singlePIP.setToPrepare(productFixed.isToPrepare());
                             productStatService.addBuyingCountProduct(productFixed, 1);
+                            category = categoryService.getById(productFixed.getCategoryId());
                             productFixedRepository.save(productFixed);
                         }
                     } else {
@@ -493,19 +488,40 @@ public class CustomerService {
                             ProductKgAPA productKgAPA = optProductKg.get();
                             List<IngredientsWithCategory> ingredientsFromProduct = findIngredientsFromProduct(productKgAPA.getIngredientIds());
                             singlePIP.setIngredients(ingredientsFromProduct);
+                            singlePIP.setToPrepare(productKgAPA.isToPrepare());
                             productStatService.addBuyingCountProduct(productKgAPA, 1);
                             productKgRepository.save(productKgAPA);
                         }
                     }
+
+                    singlePIP.setId(originalPIP.getId());
+                    singlePIP.setCustomization(originalPIP.getCustomization());
+                    singlePIP.setFixed(originalPIP.isFixed());
+                    singlePIP.setAttachment(originalPIP.getAttachment());
+                    singlePIP.setWeight(originalPIP.getWeight());
+                    singlePIP.setShape(originalPIP.getShape());
+                    singlePIP.setAllergens(originalPIP.getAllergens());
+
+                    if (singlePIP.isToPrepare()){
+                        toPrepare = true;
+                        singlePIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
+                    }
+                    products.add(singlePIP);
+
+                    if(category != null && category.isAggregateQuantities()){
+                        singlePIP.setQuantity(quantity);
+                        singlePIP.setTotalPrice(item.getTotalPrice());
+                        break;
+                    } else {
+                        singlePIP.setQuantity(1);
+                        singlePIP.setTotalPrice(unitPrice);
+                    }
+
                 } else if (item instanceof BundleInPurchase) {
                     BundleInPurchase originalBIP = (BundleInPurchase) item;
                     BundleInPurchase singleBIP = new BundleInPurchase();
 
                     singleBIP.setId(item.getId());
-                    if (item.isToPrepare()){
-                        singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
-                    }
-                    singleBIP.setToPrepare(item.isToPrepare());
                     singleBIP.setQuantity(1);
                     singleBIP.setTotalPrice(unitPrice);
                     singleBIP.setAllergens(originalBIP.getAllergens());
@@ -515,8 +531,8 @@ public class CustomerService {
                     bundles.add(singleBIP);
 
                     Optional<Tray> tray = trayRepository.findById(singleBIP.getId());
-
                     if (tray.isPresent()) {
+                        singleBIP.setToPrepare(tray.get().isToPrepare());
                         productStatService.addBuyingCountTray(tray.get(), 1);
                         for (PieceInPurchase piece : singleBIP.getWeightedProducts()) {
                             Optional<ProductWeightedAPA> productWeightedAPA = productWeightedRepository.findById(piece.getId());
@@ -526,11 +542,17 @@ public class CustomerService {
                             }
                         }
                     }
+                    if (singleBIP.isToPrepare()){
+                        toPrepare = true;
+                        singleBIP.setLocation("In pasticceria"); // se è da preparare va subito in pasticceria
+                    }
                 }
             }
-            if(!toPrepare){
+            /*if(!toPrepare){
                 toPrepare = item.isToPrepare();
             }
+
+             */
         }
         order.setProductsInPurchase(products);
         order.setBundlesInPurchase(bundles);
@@ -1036,5 +1058,22 @@ public class CustomerService {
     private void sendCustomerNotification(String customerId){
         TwentyfiveMessage twentyfiveMessage = StompUtilities.sendCustomerNotification(customerId);
         stompClientController.sendObjectMessage(twentyfiveMessage);
+    }
+
+    public String obtainDateIfTenDaysBefore() {
+        List<LocalDate> localDates = settingService.obtainConsecutiveDatesIfTenDaysBefore();
+        if(localDates !=null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
+            if(localDates.size()==1){
+                String formattedDate = localDates.get(0).format(formatter);
+                return "Attenzione! Giorno " + formattedDate + " Antica Pasticceria non riceverà ordini!";
+            } else {
+                String firstDay = localDates.get(0).format(formatter);
+                String lastDay = localDates.get(localDates.size()-1).format(formatter);
+                return "Attenzione! Antica Pasticceria non riceverà ordini dal " + firstDay + " al " + lastDay + " !";
+            }
+
+        }
+        return null;
     }
 }

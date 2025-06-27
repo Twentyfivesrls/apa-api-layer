@@ -23,4 +23,5 @@ public class ProductFixedAPADetailsDTO {
     private String price;
     private String weight;
     private String imageUrl;
+    private boolean toPrepare;
 }

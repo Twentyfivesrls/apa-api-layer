@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,4 +42,41 @@ public class SettingService {
         }
         return true;
     }
+
+    public Boolean isThisDayAvailable(LocalDate date) {
+        List<LocalDate> inactivityDays = get().getInactivityDays();
+        if (inactivityDays.contains(date)) {
+            return false;
+        }
+        return true;
+    }
+
+    public List<LocalDate> obtainConsecutiveDatesIfTenDaysBefore() {
+        LocalDate today = LocalDate.now();
+        LocalDate maxDate = today.plusDays(10);
+
+        List<LocalDate> sortedDates = get().getInactivityDays().stream()
+                .filter(date -> !date.isBefore(today) && !date.isAfter(maxDate))
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (sortedDates.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<LocalDate> consecutiveDates = new ArrayList<>();
+        LocalDate firstDate = sortedDates.get(0);
+        consecutiveDates.add(firstDate);
+
+        for (int i = 1; i < sortedDates.size(); i++) {
+            if (sortedDates.get(i).equals(consecutiveDates.get(consecutiveDates.size() - 1).plusDays(1))) {
+                consecutiveDates.add(sortedDates.get(i));
+            } else {
+                break; // Interruzione se le date non sono consecutive
+            }
+        }
+
+        return consecutiveDates;
+    }
+
 }

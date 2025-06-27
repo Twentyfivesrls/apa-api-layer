@@ -12,6 +12,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Bundle;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tray extends Bundle {
+    private boolean toPrepare = true; //Il prodotto se è da preparare o meno
     @DBRef
     private ProductStatAPA stats;
 }

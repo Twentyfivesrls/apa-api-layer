@@ -7,6 +7,10 @@ import com.twentyfive.apaapilayer.dtos.BundleInPurchaseDTO;
 import com.twentyfive.apaapilayer.dtos.OrderDetailsPrintAPADTO;
 import com.twentyfive.apaapilayer.dtos.PieceInPurchaseDTO;
 import com.twentyfive.apaapilayer.dtos.ProductInPurchaseDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.Customization;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.IngredientsWithCategory;
 
@@ -18,7 +22,17 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 public class PdfUtilities {
+    private static Environment environment;
+
+    @Autowired
+    public PdfUtilities(Environment env) {
+        PdfUtilities.environment = env;
+    }
+
+
+
     public static ByteArrayOutputStream generatePdfStream(OrderDetailsPrintAPADTO orderDetails) throws DocumentException, IOException {
         Document document = new Document(PageSize.A5);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -36,12 +50,12 @@ public class PdfUtilities {
         }
 
         // Write order details
-        Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
-        Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL);
-        Font boldFont = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD);
-        Font normalFont = new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL);
-        Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
-        Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
+        Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+        Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
+        Font boldFont = new Font(Font.FontFamily.HELVETICA, 15, Font.BOLD);
+        Font normalFont = new Font(Font.FontFamily.HELVETICA, 15, Font.NORMAL);
+        Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+        Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 19, Font.BOLD);
 
         // Customer info aligned to the right and smaller
         addRightAlignedParagraph(document, "ID Ordine: ", orderDetails.getId(), smallBoldFont, smallNormalFont);
@@ -62,6 +76,7 @@ public class PdfUtilities {
             for (ProductInPurchaseDTO product : orderDetails.getProducts()) {
                 document.add(new Paragraph(product.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
+                document.add(createParagraph("Quantità: ", product.getQuantity() +" pz", boldFont, normalFont));
                 if(product.getIngredients() != null){
                     for(IngredientsWithCategory ingredients: product.getIngredients()){
                         document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
@@ -74,27 +89,32 @@ public class PdfUtilities {
                         document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
                     }
                 } else {
+                    boolean addingWeightAndShape = true;
                     for(Customization customization : product.getCustomization()){
                         document.add(createParagraph(customization.getName() + ": ", Arrays.stream(customization.getValue())
                                 .sequential()
                                 .collect(Collectors.joining(", ")), boldFont, normalFont));
-                        if(customization.getName().equals("Base")) {
+                        if(addingWeightAndShape) {
+                            addingWeightAndShape = false;
                             document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
-                            document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                            if(product.getShape()!=null){
+                                document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
+                            }
                         }
                     }
                 }
                 if (product.getAttachment() != null && !product.getAttachment().isEmpty()) {
+                    String composedUrl=environment.getProperty("layer.url")+"/download"+product.getAttachment();
                     try {
-                        Image image = Image.getInstance(new URL(product.getAttachment()));
+                        Image image = Image.getInstance(new URL(composedUrl));
                         image.scaleToFit(80, 80); // Fixed small dimensions
                         document.add(image);
                     } catch (MalformedURLException e) {
                         // Handle URL exception
-                        document.add(createParagraph("Url di riferimento non valido: ", product.getAttachment(), boldFont, normalFont));
+                        document.add(createParagraph("Url di riferimento non valido: ", composedUrl, boldFont, normalFont));
                     } catch (IOException e) {
                         // Handle image fetching exception
-                        document.add(createParagraph("Problemi a caricare l'immagine: ", product.getAttachment(), boldFont, normalFont));
+                        document.add(createParagraph("Problemi a caricare l'immagine: ",composedUrl, boldFont, normalFont));
                     }
                 }
                 document.add(new Paragraph("\n"));

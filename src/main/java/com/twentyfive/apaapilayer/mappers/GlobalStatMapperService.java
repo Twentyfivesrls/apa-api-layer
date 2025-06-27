@@ -32,6 +32,7 @@ public class GlobalStatMapperService {
     private final ProductKgService productKgService;
     private final ProductFixedService productFixedService;
     private final IngredientService ingredientService;
+    private final IngredientMapperService ingredientMapperService;
 
     public GlobalStatAPA createGlobalStatByDate(LocalDate date) {
         GlobalStatAPA globalStat = new GlobalStatAPA();
@@ -388,6 +389,7 @@ public class GlobalStatMapperService {
                             new ProductStatCategoryDTO(
                                     productStat.getIdProduct(),
                                     getProductName(category.getType(), productStat.getIdProduct()),
+                                    getIngredientNames(category.getType(),productStat.getIdProduct()),
                                     productStat.getQuantity(),
                                     productStat.getTotalWeight(),
                                     productStat.getTotalRevenue()
@@ -404,6 +406,16 @@ public class GlobalStatMapperService {
         }
 
         return new ArrayList<>(productStatMap.values());
+    }
+
+    private String getIngredientNames(String type, String idProduct) {
+        List<String> ingredients = switch (type) {
+            case "productFixed" -> productFixedService.getById(idProduct).getIngredients();
+            case "productKg" -> productKgService.getById(idProduct).getIngredients();
+            default -> Collections.emptyList();
+        };
+
+        return String.join(", ", ingredients);
     }
 
     private String getProductName(String type, String idProduct) {
