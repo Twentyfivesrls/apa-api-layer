@@ -1,10 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
-import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.IngredientStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.OrderStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
+import com.twentyfive.apaapilayer.dtos.stats.*;
 import com.twentyfive.apaapilayer.models.DateRange;
 import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.services.GlobalStatService;
@@ -37,14 +34,26 @@ public class GlobalStatController {
         return ResponseEntity.ok().body(globalStatService.createByDate(date));
     }
 
+    //Stats globali
     @PostMapping("/getGlobalFilteredStats")
     public ResponseEntity<GlobalStatDTO> getGlobalFilteredStats(@RequestBody DateRange date){
         return ResponseEntity.ok().body(globalStatService.getGlobalFilteredStats(date));
     }
 
+
+    //Per ottenere le categorie
     @PostMapping("/getGlobalCategories")
     public ResponseEntity<List<CategoryMinimalDTO>> getGlobalCategories(@RequestBody DateRange date){
         return ResponseEntity.ok().body(globalStatService.getGlobalCategories(date));
+    }
+
+    @PostMapping("/getProductWeightedStatCategory")
+    public ResponseEntity<Page<ProductWeightedStatCategoryDTO>> getProductWeightedStatCategory(@RequestBody DateRange date,
+                                                                                               @RequestParam(value = "page", defaultValue ="0") int page,
+                                                                                               @RequestParam(value = "size", defaultValue ="5") int size,
+                                                                                               @RequestParam(value = "sortColumn", defaultValue = "name") String sortColumn,
+                                                                                               @RequestParam(value = "sortDirection", defaultValue = "ASC") String sortDirection){
+        return ResponseEntity.ok().body(globalStatService.getProductWeightedStatCategory(date,page,size,sortColumn,sortDirection));
     }
 
     @PostMapping("/getProductStatCategory")
@@ -69,6 +78,10 @@ public class GlobalStatController {
     @PostMapping("/getOrderStat")
     public ResponseEntity<OrderStatDTO> getOrderStat(@RequestBody DateRange date){
         return ResponseEntity.ok().body(globalStatService.getOrderStat(date));
+    }
+    @PostMapping("/getTrayStat")
+    public ResponseEntity<GlobalTrayStatDTO> getTrayStat(@RequestBody DateRange date){
+        return ResponseEntity.ok().body(globalStatService.getTrayStat(date));
     }
 
 }

@@ -6,9 +6,11 @@ import com.twentyfive.apaapilayer.models.GlobalStatAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import com.twentyfive.apaapilayer.repositories.CompletedOrderRepository;
 import com.twentyfive.apaapilayer.repositories.IngredientRepository;
+import com.twentyfive.apaapilayer.repositories.TrayRepository;
 import com.twentyfive.apaapilayer.services.IngredientService;
 import com.twentyfive.apaapilayer.services.ProductFixedService;
 import com.twentyfive.apaapilayer.services.ProductKgService;
+import com.twentyfive.apaapilayer.services.TrayService;
 import com.twentyfive.apaapilayer.utils.StringUtilities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,12 +35,86 @@ public class GlobalStatMapperService {
     private final ProductFixedService productFixedService;
     private final IngredientService ingredientService;
     private final IngredientMapperService ingredientMapperService;
+    private final TrayRepository trayRepository;
+    private final TrayService trayService;
 
     public GlobalStatAPA createGlobalStatByDate(LocalDate date) {
         GlobalStatAPA globalStat = new GlobalStatAPA();
         globalStat.setProducts(createGlobalProductStatByDate(date));
         globalStat.setIngredients(createGlobalIngredientStatByDate(date));
+        globalStat.setTrays(createGlobalTrayStatByDate(date));
         return globalStat;
+    }
+
+    private GlobalTrayStat createGlobalTrayStatByDate(LocalDate date) {
+        GlobalTrayStat globalTrayStat = new GlobalTrayStat();
+
+        globalTrayStat.setGeneralTrayStat(createGeneralTrayStatByDate(date));
+        globalTrayStat.setTrayStats(createTrayTypeStatByDate(date));
+        globalTrayStat.setProductWeightedStats(createTrayProductWeightedStatByDate(date));
+        globalTrayStat.setTrayMeasureStat(createTrayMeasureStatByDate(date));
+        return globalTrayStat;
+    }
+
+    private TrayMeasureStat createTrayMeasureStatByDate(LocalDate date) {
+
+        List<MeasureStat> measureStats = new ArrayList<>();
+
+        List<String> labels = completedOrderRepository.findDistinctTrayMeasureByDate(date, OrderStatus.COMPLETO);
+
+        for (String label : labels) {
+            MeasureStat measureStat = new MeasureStat();
+            measureStat.setLabel(label);
+            measureStat.setQuantity(completedOrderRepository.countQuantityByTrayMeasureAndDate(label, date, OrderStatus.COMPLETO).orElse(0L));
+            measureStats.add(measureStat);
+        }
+        return new TrayMeasureStat(measureStats);
+    }
+
+    private List<ProductWeightedStat> createTrayProductWeightedStatByDate(LocalDate date) {
+        List<ProductWeightedStat> productWeightedStats = new ArrayList<>();
+
+        List<String> productWeightedIds = completedOrderRepository.findDistinctTrayProductWeightedIdByDate(date, OrderStatus.COMPLETO);
+
+        for (String productWeightedId : productWeightedIds) {
+            ProductWeightedStat productWeightedStat = new ProductWeightedStat();
+
+            productWeightedStat.setIdProduct(productWeightedId);
+            productWeightedStat.setQuantity(completedOrderRepository.countTrayProductWeightedById(productWeightedId,date, OrderStatus.COMPLETO).orElse(0L));
+            productWeightedStat.setTotalWeight(completedOrderRepository.countWeightTrayProductWeightedById(productWeightedId,date, OrderStatus.COMPLETO).orElse(0.0));
+
+            productWeightedStats.add(productWeightedStat);
+        }
+        return productWeightedStats;
+    }
+
+    private List<TrayStat> createTrayTypeStatByDate(LocalDate date) {
+
+        List<TrayStat> trayStats = new ArrayList<>();
+
+        List<String> trayIds = completedOrderRepository.findDistinctTrayIdsByDate(date, OrderStatus.COMPLETO);
+
+        for (String trayId : trayIds) {
+            TrayStat trayStat = new TrayStat();
+            trayStat.setId(trayId);
+            trayStat.setQuantity(completedOrderRepository.countQuantityByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0L));
+            trayStat.setTotalRevenue(completedOrderRepository.countTotalRevenueByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0.0));
+            trayStat.setTotalWeight(completedOrderRepository.countTotalWeightByTrayIdAndDate(trayId,date,OrderStatus.COMPLETO).orElse(0.0));
+            trayStats.add(trayStat);
+        }
+
+        return trayStats;
+    }
+
+    private GeneralTrayStat createGeneralTrayStatByDate(LocalDate date) {
+        GeneralTrayStat generalTrayStat = new GeneralTrayStat();
+
+        generalTrayStat.setQuantity(completedOrderRepository.countTraysByDate(date, OrderStatus.COMPLETO).orElse(0L));
+        generalTrayStat.setTotalWeight(completedOrderRepository.countTrayWeightByDate(date, OrderStatus.COMPLETO).orElse(0.0));
+        generalTrayStat.setTotalRevenue(completedOrderRepository.countTotalRevenueByDate(date, OrderStatus.COMPLETO).orElse(0.0));
+        generalTrayStat.setTotalProductWeighted(completedOrderRepository.countTotalWeightedProductsByDate(date, OrderStatus.COMPLETO).orElse(0L));
+
+        return generalTrayStat;
     }
 
     private GlobalIngredientStat createGlobalIngredientStatByDate(LocalDate date) {
@@ -200,6 +276,46 @@ public class GlobalStatMapperService {
         return globalStat;
     }
 
+    public GlobalTrayStatDTO createGlobalTrayStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
+        GlobalTrayStatDTO globalStat = new GlobalTrayStatDTO();
+        globalStat.setGeneralStat(createGeneralTrayStatDTOFromGlobalStat(globalStats));
+        globalStat.setMeasureStats(createMeasureStatDTOFromGlobalStatList(globalStats));
+        globalStat.setTrayStats(createGeneralGeneralTraySingleStatDTOFromGlobalStatList(globalStats));
+        return globalStat;
+    }
+
+    private List<GeneralTraySingleStatDTO> createGeneralGeneralTraySingleStatDTOFromGlobalStatList(List<GlobalStatAPA> globalStats) {
+        Map<String,GeneralTraySingleStatDTO> generalTraySingleStatDTOMap = new HashMap<>();
+        for (GlobalStatAPA globalStatAPA : globalStats) {
+            createOrUploadKeyForGeneralTraySingleStat(globalStatAPA, generalTraySingleStatDTOMap);
+        }
+        return new ArrayList<>(generalTraySingleStatDTOMap.values());
+    }
+
+
+
+    private List<GeneralMeasureStatDTO> createMeasureStatDTOFromGlobalStatList(List<GlobalStatAPA> globalStats) {
+        Map<String, GeneralMeasureStatDTO> globalTrayStat = new HashMap<>(globalStats.size());
+        for (GlobalStatAPA globalStatAPA : globalStats) {
+            createOrUploadKeyForGlobalTrayStats(globalStatAPA, globalTrayStat);
+        }
+        return new ArrayList<>(globalTrayStat.values());
+
+    }
+
+    private GeneralTrayStatDTO createGeneralTrayStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
+        GeneralTrayStatDTO generalStat = new GeneralTrayStatDTO();
+        for (GlobalStatAPA globalStat : globalStats) {
+            generalStat.setQuantity(generalStat.getQuantity() + globalStat.getTrays().getGeneralTrayStat().getQuantity());
+            generalStat.setTotalProductWeighted(generalStat.getTotalProductWeighted() + globalStat.getTrays().getGeneralTrayStat().getTotalProductWeighted());
+            generalStat.setTotalRevenue(generalStat.getTotalRevenue() + globalStat.getTrays().getGeneralTrayStat().getTotalRevenue());
+            generalStat.setTotalWeight(generalStat.getTotalWeight() + globalStat.getTrays().getGeneralTrayStat().getTotalWeight());
+        }
+        return generalStat;
+
+    }
+
+
     private GlobalProductStatDTO createGlobalProductStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
         GlobalProductStatDTO globalProductStatDTO = new GlobalProductStatDTO();
         globalProductStatDTO.setGeneralStat(sumGlobalGeneralStatsFromGlobalStatList(globalStats));
@@ -230,6 +346,42 @@ public class GlobalStatMapperService {
             createOrUploadKeyForDashboardStats(globalStatAPA, dashboardStats);
         }
         return new ArrayList<>(dashboardStats.values());
+    }
+
+    private void createOrUploadKeyForGlobalTrayStats(GlobalStatAPA globalStatAPA, Map<String, GeneralMeasureStatDTO> globalTrayStat) {
+        for ( MeasureStat trayMeasureStat : globalStatAPA.getTrays().getTrayMeasureStat().getMeasureStats()) {
+            if (globalTrayStat.containsKey(trayMeasureStat.getLabel())) {
+                GeneralMeasureStatDTO generalMeasureStatDTO = globalTrayStat.get(trayMeasureStat.getLabel());
+                generalMeasureStatDTO.setPieces(generalMeasureStatDTO.getPieces() + trayMeasureStat.getQuantity());
+            } else {
+                GeneralMeasureStatDTO generalMeasureStatDTO = new GeneralMeasureStatDTO();
+                generalMeasureStatDTO.setLabel(trayMeasureStat.getLabel());
+                generalMeasureStatDTO.setPieces(trayMeasureStat.getQuantity());
+                globalTrayStat.put(trayMeasureStat.getLabel(), generalMeasureStatDTO);
+            }
+        }
+
+    }
+
+    private void createOrUploadKeyForGeneralTraySingleStat(GlobalStatAPA globalStatAPA, Map<String, GeneralTraySingleStatDTO> generalTraySingleStatDTOMap) {
+        for (TrayStat trayStat : globalStatAPA.getTrays().getTrayStats()) {
+            if (generalTraySingleStatDTOMap.containsKey(trayStat.getId())){
+                GeneralTraySingleStatDTO globalTraySingleStatDTO = generalTraySingleStatDTOMap.get(trayStat.getId());
+                globalTraySingleStatDTO.setPrice(globalTraySingleStatDTO.getPrice() + trayStat.getTotalRevenue());
+                globalTraySingleStatDTO.setQuantity(globalTraySingleStatDTO.getQuantity() + trayStat.getQuantity());
+                globalTraySingleStatDTO.setWeight(globalTraySingleStatDTO.getWeight() + trayStat.getTotalWeight());
+            } else {
+                String name = trayRepository.findById(trayStat.getId()).get().getName();
+                GeneralTraySingleStatDTO globalTraySingleStatDTO = new GeneralTraySingleStatDTO();
+                globalTraySingleStatDTO.setId(trayStat.getId());
+                globalTraySingleStatDTO.setName(name);
+                globalTraySingleStatDTO.setPrice(trayStat.getTotalRevenue());
+                globalTraySingleStatDTO.setQuantity(trayStat.getQuantity());
+                globalTraySingleStatDTO.setWeight(trayStat.getTotalWeight());
+                generalTraySingleStatDTOMap.put(trayStat.getId(), globalTraySingleStatDTO);
+
+            }
+        }
     }
 
     private void createOrUploadKeyForDashboardStats(GlobalStatAPA globalStatAPA, Map<String, DashboardProductStatDTO> dashboardStats) {
@@ -370,7 +522,7 @@ public class GlobalStatMapperService {
     private String getIngredientNames(String type, String idProduct) {
         List<String> ingredients = switch (type) {
             case "productFixed" -> productFixedService.getById(idProduct).getIngredients();
-            case "productKg" -> productKgService.getById(idProduct).getIngredients();
+            case "productKg","productWeighted" -> productKgService.getById(idProduct).getIngredients();
             default -> Collections.emptyList();
         };
 
@@ -385,11 +537,39 @@ public class GlobalStatMapperService {
             case "productKg" -> {
                 return productKgService.getById(idProduct).getName();
             }
+            case "tray" -> {
+                return trayService.getById(idProduct).getName();
+            }
             default -> {
                 return "No Matching Product Name";
             }
         }
     }
+
+    public List<ProductWeightedStatCategoryDTO> getProductWeightedStatCategoryDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
+// Mappa per raggruppare gli ingredienti per idIngredient
+        Map<String, ProductWeightedStatCategoryDTO> productWeightedStatMap = new HashMap<>();
+
+        // Cicla su ogni globalStat e sui suoi ingredienti
+        for (GlobalStatAPA globalStat : globalStats) {
+            for (ProductWeightedStat productWeightedStat : globalStat.getTrays().getProductWeightedStats()) {
+                String productWeightedId = productWeightedStat.getIdProduct();
+                long quantity = productWeightedStat.getQuantity();
+                double weight = productWeightedStat.getTotalWeight();
+
+                // Se l'productWeightedId è già presente nella mappa, somma il quantity
+                productWeightedStatMap.merge(productWeightedId,
+                        new ProductWeightedStatCategoryDTO(productWeightedId, getProductName(productWeightedId),getIngredientNames("productWeighted",productWeightedId),quantity,weight),
+                        (existing, newEntry) -> {
+                            existing.setQuantity(existing.getQuantity() + newEntry.getQuantity());
+                            existing.setTotalWeight(existing.getTotalWeight() + newEntry.getTotalWeight());
+                            return existing;
+                        });
+            }
+        }
+
+        // Restituisci la lista dei DTO
+        return new ArrayList<>(productWeightedStatMap.values());    }
 
     public List<IngredientStatDTO> getListIngredientStatDTOFromGlobalStat(List<GlobalStatAPA> globalStats) {
         // Mappa per raggruppare gli ingredienti per idIngredient
@@ -421,6 +601,13 @@ public class GlobalStatMapperService {
         }
         return ingredientService.getById(ingredientId).getName();
     }
+    private String getProductName(String productId) {
+        if (productId == null) {
+            return "no product found";
+        }
+        return productFixedService.getById(productId).getName();
+    }
+
 
     public OrderStatDTO createOrderStatFromGlobalStat(List<GlobalStatAPA> globalStats, long days) {
         OrderStatDTO orderStat = new OrderStatDTO();
