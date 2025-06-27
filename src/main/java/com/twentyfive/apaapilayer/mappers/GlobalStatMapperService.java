@@ -47,10 +47,41 @@ public class GlobalStatMapperService {
 
         globalTrayStat.setGeneralTrayStat(createGeneralTrayStatByDate(date));
         globalTrayStat.setTrayStats(createTrayTypeStatByDate(date));
-        //TODO eccoci
-        globalTrayStat.setProductWeightedStats(null);
-        globalTrayStat.setTrayMeasureStat(null);
-        return null;
+        globalTrayStat.setProductWeightedStats(createTrayProductWeightedStatByDate(date));
+        globalTrayStat.setTrayMeasureStat(createTrayMeasureStatByDate(date));
+        return globalTrayStat;
+    }
+
+    private TrayMeasureStat createTrayMeasureStatByDate(LocalDate date) {
+
+        List<MeasureStat> measureStats = new ArrayList<>();
+
+        List<String> labels = completedOrderRepository.findDistinctTrayMeasureByDate(date, OrderStatus.COMPLETO);
+
+        for (String label : labels) {
+            MeasureStat measureStat = new MeasureStat();
+            measureStat.setLabel(label);
+            measureStat.setQuantity(completedOrderRepository.countQuantityByTrayMeasureAndDate(label, date, OrderStatus.COMPLETO).orElse(0L));
+            measureStats.add(measureStat);
+        }
+        return new TrayMeasureStat(measureStats);
+    }
+
+    private List<ProductWeightedStat> createTrayProductWeightedStatByDate(LocalDate date) {
+        List<ProductWeightedStat> productWeightedStats = new ArrayList<>();
+
+        List<String> productWeightedIds = completedOrderRepository.findDistinctTrayProductWeightedIdByDate(date, OrderStatus.COMPLETO);
+
+        for (String productWeightedId : productWeightedIds) {
+            ProductWeightedStat productWeightedStat = new ProductWeightedStat();
+
+            productWeightedStat.setIdProduct(productWeightedId);
+            productWeightedStat.setQuantity(completedOrderRepository.countTrayProductWeightedById(productWeightedId,date, OrderStatus.COMPLETO).orElse(0L));
+            productWeightedStat.setTotalWeight(completedOrderRepository.countWeightTrayProductWeightedById(productWeightedId,date, OrderStatus.COMPLETO).orElse(0.0));
+
+            productWeightedStats.add(productWeightedStat);
+        }
+        return productWeightedStats;
     }
 
     private List<TrayStat> createTrayTypeStatByDate(LocalDate date) {

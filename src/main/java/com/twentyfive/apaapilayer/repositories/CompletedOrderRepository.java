@@ -1,6 +1,5 @@
 package com.twentyfive.apaapilayer.repositories;
 
-import com.paypal.orders.Order;
 import com.twentyfive.apaapilayer.models.CompletedOrderAPA;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -779,4 +778,98 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
             "{ $project: { _id: 0, totalWeight: { $ifNull: [\"$totalWeight\", 0.0] } } }"
     })
     Optional<Double> countTotalWeightByTrayIdAndDate(String trayId, LocalDate date, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+            "{ $project: { productId: '$bundlesInPurchase.weightedProducts._id' } }",
+            "{ $group: { _id: '$productId' } }",
+            "{ $project: { _id: 0, productId: '$_id' } }"
+    })
+    List<String> findDistinctTrayProductWeightedIdByDate(LocalDate pickupDate, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+            "{ $match: { $expr: { $eq: [ { $toString: '$bundlesInPurchase.weightedProducts._id' }, ?0 ] } } }",
+            "{ $project: { quantity: { $ifNull: ['$bundlesInPurchase.weightedProducts.quantity', 0] } } }",
+            "{ $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }",
+            "{ $project: { _id: 0, totalQuantity: 1 } }"
+    })
+    Optional<Long> countTrayProductWeightedById(String productWeightedId, LocalDate date, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            // 1. Filtro per pickupDate e status
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+
+            // 2. Srotola bundles e weightedProducts
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+            "{ $unwind: { path: '$bundlesInPurchase.weightedProducts', preserveNullAndEmptyArrays: true } }",
+
+            // 3. Filtro per productWeightedId (con $toString)
+            "{ $match: { $expr: { $eq: [ { $toString: '$bundlesInPurchase.weightedProducts._id' }, ?0 ] } } }",
+
+            // 4. Project quantity (cast a double) + productId
+            "{ $project: { " +
+                    "productId: '$bundlesInPurchase.weightedProducts._id', " +
+                    "quantity: { $toDouble: { $ifNull: ['$bundlesInPurchase.weightedProducts.quantity', 0] } } " +
+                    "} }",
+
+            // 5. Somma quantity per prodotto
+            "{ $group: { _id: '$productId', totalQuantity: { $sum: '$quantity' } } }",
+
+            // 6. Join con 'products'
+            "{ $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'productData' } }",
+            "{ $unwind: { path: '$productData', preserveNullAndEmptyArrays: true } }",
+
+            // 7. Calcola totalWeight = totalQuantity * product.weight
+            "{ $project: { totalWeight: { $multiply: ['$totalQuantity', { $toDouble: { $ifNull: ['$productData.weight', 0] } }] } } }"
+    })
+    Optional<Double> countWeightTrayProductWeightedById(String productWeightedId, LocalDate date, OrderStatus orderStatus);
+
+
+    @Aggregation(pipeline = {
+            // 1. Filtro per data e stato
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+
+            // 2. Srotola i bundles
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+
+            // 3. Proietta la label
+            "{ $project: { label: '$bundlesInPurchase.measure.label' } }",
+
+            // 4. Rimuovi duplicati raggruppando per label
+            "{ $group: { _id: '$label' } }",
+
+            // 5. Proietta come campo semplice per Spring
+            "{ $project: { _id: 0, label: '$_id' } }"
+    })
+    List<String> findDistinctTrayMeasureByDate(LocalDate date, OrderStatus orderStatus);
+
+    @Aggregation(pipeline = {
+            // 1. Filtro per data e stato
+            "{ $match: { pickupDate: ?1, status: ?2 } }",
+
+            // 2. Srotola i bundle
+            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
+
+            // 3. Estrai label e quantity in un project intermedio
+            "{ $project: { " +
+                    "label: '$bundlesInPurchase.measure.label', " +
+                    "quantity: { $ifNull: ['$bundlesInPurchase.quantity', 0] }" +
+                    "} }",
+
+            // 4. Filtra solo le label richieste
+            "{ $match: { label: ?0 } }",
+
+            // 5. Somma le quantity
+            "{ $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }",
+
+            // 6. Output pulito
+            "{ $project: { _id: 0, totalQuantity: 1 } }"
+    })
+    Optional<Long> countQuantityByTrayMeasureAndDate(String measure, LocalDate date, OrderStatus orderStatus);
+
 }
