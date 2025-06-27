@@ -1,10 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
-import com.twentyfive.apaapilayer.dtos.stats.GlobalStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.IngredientStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.OrderStatDTO;
-import com.twentyfive.apaapilayer.dtos.stats.ProductStatCategoryDTO;
+import com.twentyfive.apaapilayer.dtos.stats.*;
 import com.twentyfive.apaapilayer.exceptions.GlobalStatNotFoundException;
 import com.twentyfive.apaapilayer.mappers.GlobalStatMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
@@ -65,6 +62,13 @@ public class GlobalStatService {
         return globalStatMapperService.createGlobalStatDTOFromGlobalStat(globalStats);
     }
 
+
+    public GlobalTrayStatDTO getTrayStat(DateRange date) {
+        List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
+
+        return globalStatMapperService.createGlobalTrayStatDTOFromGlobalStat(globalStats);
+    }
+
     public Page<ProductStatCategoryDTO> getProductStatCategory(DateRange date, int page, int size, String sortColumn, String sortDirection,String categoryId) {
 
         List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
@@ -91,6 +95,18 @@ public class GlobalStatService {
         return categoryService.getAllMinimalByListId(categoryIds);
     }
 
+
+    public Page<ProductWeightedStatCategoryDTO> getProductWeightedStatCategory(DateRange date, int page, int size, String sortColumn, String sortDirection) {
+        List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
+
+        List<ProductWeightedStatCategoryDTO> productWeightedStatCategoryDTOS = globalStatMapperService.getProductWeightedStatCategoryDTOFromGlobalStat(globalStats);
+
+        Sort sort = Sort.by(Sort.Direction.valueOf(sortDirection.toUpperCase()), sortColumn);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return PageUtilities.convertListToPageWithSorting(productWeightedStatCategoryDTOS,pageable);
+    }
+
     public Page<IngredientStatDTO> getIngredientStat(DateRange date, int page, int size, String sortColumn, String sortDirection) {
         List<GlobalStatAPA> globalStats = globalStatRepository.findByIdBetweenInclusive(date.getStartDate(), date.getEndDate());
 
@@ -107,4 +123,5 @@ public class GlobalStatService {
 
         return globalStatMapperService.createOrderStatFromGlobalStat(globalStats,date.getDaysBetween());
     }
+
 }

@@ -707,22 +707,29 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
-            // 1. Filtra gli ordini per data e stato dell'ordine
+            // 1. Filtro per data e stato
             "{ $match: { pickupDate: ?0, status: ?1 } }",
 
-            // 2. Verifica che bundlesInPurchase esista ed è non vuoto
-            "{ $match: { \"bundlesInPurchase\": { $exists: true, $ne: [] } } }",
+            // 2. bundle deve esistere ed essere non vuoto
+            "{ $match: { 'bundlesInPurchase': { $exists: true, $ne: [] } } }",
 
-            // 3. Scompone l'array bundlesInPurchase per elaborare ogni bundle separatamente
-            "{ $unwind: \"$bundlesInPurchase\" }",
+            // 3. Srotola bundles
+            "{ $unwind: '$bundlesInPurchase' }",
 
-            // 4. Filtra eventuali _id nulli
-            "{ $match: { \"bundlesInPurchase._id\": { $exists: true, $ne: null } } }",
+            // 4. Solo quelli con _id valido
+            "{ $match: { 'bundlesInPurchase._id': { $exists: true, $ne: null } } }",
 
-            // 5. Proietta solo l'ID del bundle come stringa
-            "{ $project: { _id: 0, trayId: { $toString: \"$bundlesInPurchase._id\" } } }"
+            // 5. Converte l'ObjectId in stringa
+            "{ $project: { trayId: { $toString: '$bundlesInPurchase._id' } } }",
+
+            // 6. Raggruppa per trayId per eliminare duplicati
+            "{ $group: { _id: '$trayId' } }",
+
+            // 7. Proietta lista semplice
+            "{ $project: { _id: 0, trayId: '$_id' } }"
     })
     List<String> findDistinctTrayIdsByDate(LocalDate date, OrderStatus orderStatus);
+
 
 
     @Aggregation(pipeline = {
