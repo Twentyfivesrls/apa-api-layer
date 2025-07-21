@@ -662,6 +662,14 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
     })
     Optional<Long> countTraysByDate(LocalDate date, OrderStatus status);
 
+    @Aggregation(pipeline = {
+            "{ $match: { pickupDate: ?0, status: ?1 } }",
+            "{ $unwind: { path: \"$bundlesInPurchase\", preserveNullAndEmptyArrays: true } }",
+            "{ $group: { _id: null, totalPrice: { $sum: { $ifNull: [\"$bundlesInPurchase.totalPrice\", 0] } } } }",
+            "{ $project: { _id: 0, totalPrice: 1 } }"
+    })
+    Optional<Double> countTotalPriceTraysByDate(LocalDate date, OrderStatus status);
+
 
     @Aggregation(pipeline = {
             // 1. Filtra gli ordini per data e stato
