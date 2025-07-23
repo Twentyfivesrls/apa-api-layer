@@ -559,19 +559,23 @@ public class GlobalStatMapperService {
 
         // Cicla su ogni globalStat e sui suoi ingredienti
         for (GlobalStatAPA globalStat : globalStats) {
-            for (ProductWeightedStat productWeightedStat : globalStat.getTrays().getProductWeightedStats()) {
-                String productWeightedId = productWeightedStat.getIdProduct();
-                long quantity = productWeightedStat.getQuantity();
-                double weight = productWeightedStat.getTotalWeight();
+            if(globalStat.getTrays().getProductWeightedStats() != null && globalStat.getTrays().getProductWeightedStats().size() > 0) {
+                for (ProductWeightedStat productWeightedStat : globalStat.getTrays().getProductWeightedStats()) {
+                    if (productWeightedStat.getIdProduct() != null) {
+                        String productWeightedId = productWeightedStat.getIdProduct();
+                        long quantity = productWeightedStat.getQuantity();
+                        double weight = productWeightedStat.getTotalWeight();
 
-                // Se l'productWeightedId è già presente nella mappa, somma il quantity
-                productWeightedStatMap.merge(productWeightedId,
-                        new ProductWeightedStatCategoryDTO(productWeightedId, getProductName(productWeightedId),getIngredientNames("productWeighted",productWeightedId),quantity,weight),
-                        (existing, newEntry) -> {
-                            existing.setQuantity(existing.getQuantity() + newEntry.getQuantity());
-                            existing.setTotalWeight(existing.getTotalWeight() + newEntry.getTotalWeight());
-                            return existing;
-                        });
+                        // Se l'productWeightedId è già presente nella mappa, somma il quantity
+                        productWeightedStatMap.merge(productWeightedId,
+                                new ProductWeightedStatCategoryDTO(productWeightedId, getProductName(productWeightedId), getIngredientNames("productWeighted", productWeightedId), quantity, weight),
+                                (existing, newEntry) -> {
+                                    existing.setQuantity(existing.getQuantity() + newEntry.getQuantity());
+                                    existing.setTotalWeight(existing.getTotalWeight() + newEntry.getTotalWeight());
+                                    return existing;
+                                });
+                    }
+                }
             }
         }
 
