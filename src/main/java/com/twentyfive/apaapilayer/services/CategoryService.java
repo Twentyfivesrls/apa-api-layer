@@ -33,7 +33,7 @@ public class CategoryService {
     }
 
     public List<CategoryMinimalDTO> getAllMinimalByListId(List<String> ids){
-        List<CategoryAPA> categories = categoryRepository.findAllById(ids);
+        List<CategoryAPA> categories = categoryRepository.findAllByIdInOrderByOrderPriority(ids);
         List<CategoryMinimalDTO> dto = categoryMapperService.ListCategoryAPAToListMinimalDTO(categories);
         return dto;
     }
