@@ -230,7 +230,7 @@ public class GlobalStatMapperService {
     }
 
     private List<StatLabel> createStatLabels(LocalDate date) {
-        List<StatLabel> statLabels = new ArrayList<>(4);
+        List<StatLabel> statLabels = new ArrayList<>();
 
 
         StatLabel personalizedCake = new StatLabel();
@@ -239,23 +239,23 @@ public class GlobalStatMapperService {
         personalizedCake.setValue(completedOrderRepository.sumTotalPriceByPickupDateStatusAndProductId(date, OrderStatus.COMPLETO, "6679566c03d8511e7a0d449c").orElse(0.0));
         statLabels.add(personalizedCake);
 
-        StatLabel highCakeStat = new StatLabel();
-        highCakeStat.setLabel("Alte");
-        highCakeStat.setTotal(completedOrderRepository.sumQuantityByCategoryId(date, OrderStatus.COMPLETO, "6717a7d453e7c62ae1fb38e9").orElse(0L));
-        highCakeStat.setValue(completedOrderRepository.sumTotalPriceByCategoryId(date, OrderStatus.COMPLETO, "6717a7d453e7c62ae1fb38e9").orElse(0.0));
-        statLabels.add(highCakeStat);
+        StatLabel trayStat = new StatLabel();
+        trayStat.setLabel("Vassoi");
+        trayStat.setTotal(completedOrderRepository.countTraysByDate(date, OrderStatus.COMPLETO).orElse(0L));
+        trayStat.setValue(completedOrderRepository.countTotalPriceTraysByDate(date, OrderStatus.COMPLETO).orElse(0.0));
+        statLabels.add(trayStat);
 
-        StatLabel planCakeStat = new StatLabel();
-        planCakeStat.setLabel("A Piani");
-        planCakeStat.setTotal(completedOrderRepository.sumQuantityByCategoryId(date, OrderStatus.COMPLETO, "670d2da65ab21a706dfa3c58").orElse(0L));
-        planCakeStat.setValue(completedOrderRepository.sumTotalPriceByCategoryId(date, OrderStatus.COMPLETO, "670d2da65ab21a706dfa3c58").orElse(0.0));
-        statLabels.add(planCakeStat);
-
-        StatLabel customCakeStat = new StatLabel();
-        customCakeStat.setLabel("Torte custom vendute");
-        customCakeStat.setTotal(personalizedCake.getTotal() + highCakeStat.getTotal() + planCakeStat.getTotal());
-        customCakeStat.setValue(personalizedCake.getValue() + highCakeStat.getValue() + planCakeStat.getValue());
-        statLabels.add(customCakeStat);
+//        StatLabel planCakeStat = new StatLabel();
+//        planCakeStat.setLabel("A Piani");
+//        planCakeStat.setTotal(completedOrderRepository.sumQuantityByCategoryId(date, OrderStatus.COMPLETO, "670d2da65ab21a706dfa3c58").orElse(0L));
+//        planCakeStat.setValue(completedOrderRepository.sumTotalPriceByCategoryId(date, OrderStatus.COMPLETO, "670d2da65ab21a706dfa3c58").orElse(0.0));
+//        statLabels.add(planCakeStat);
+//
+//        StatLabel customCakeStat = new StatLabel();
+//        customCakeStat.setLabel("Torte custom vendute");
+//        customCakeStat.setTotal(personalizedCake.getTotal() + trayStat.getTotal() + planCakeStat.getTotal());
+//        customCakeStat.setValue(personalizedCake.getValue() + trayStat.getValue() + planCakeStat.getValue());
+//        statLabels.add(customCakeStat);
 
         return statLabels;
     }
@@ -350,6 +350,13 @@ public class GlobalStatMapperService {
 
     private void createOrUploadKeyForGlobalTrayStats(GlobalStatAPA globalStatAPA, Map<String, GeneralMeasureStatDTO> globalTrayStat) {
         for ( MeasureStat trayMeasureStat : globalStatAPA.getTrays().getTrayMeasureStat().getMeasureStats()) {
+            String label = trayMeasureStat.getLabel();
+
+            if (label == null || label.trim().isEmpty()) {
+                // Puoi anche loggare un warning se vuoi:
+                // log.warn("Trovata tray con label nulla o vuota, ignorata.");
+                continue;
+            }
             if (globalTrayStat.containsKey(trayMeasureStat.getLabel())) {
                 GeneralMeasureStatDTO generalMeasureStatDTO = globalTrayStat.get(trayMeasureStat.getLabel());
                 generalMeasureStatDTO.setPieces(generalMeasureStatDTO.getPieces() + trayMeasureStat.getQuantity());
@@ -552,19 +559,23 @@ public class GlobalStatMapperService {
 
         // Cicla su ogni globalStat e sui suoi ingredienti
         for (GlobalStatAPA globalStat : globalStats) {
-            for (ProductWeightedStat productWeightedStat : globalStat.getTrays().getProductWeightedStats()) {
-                String productWeightedId = productWeightedStat.getIdProduct();
-                long quantity = productWeightedStat.getQuantity();
-                double weight = productWeightedStat.getTotalWeight();
+            if(globalStat.getTrays().getProductWeightedStats() != null && globalStat.getTrays().getProductWeightedStats().size() > 0) {
+                for (ProductWeightedStat productWeightedStat : globalStat.getTrays().getProductWeightedStats()) {
+                    if (productWeightedStat.getIdProduct() != null) {
+                        String productWeightedId = productWeightedStat.getIdProduct();
+                        long quantity = productWeightedStat.getQuantity();
+                        double weight = productWeightedStat.getTotalWeight();
 
-                // Se l'productWeightedId è già presente nella mappa, somma il quantity
-                productWeightedStatMap.merge(productWeightedId,
-                        new ProductWeightedStatCategoryDTO(productWeightedId, getProductName(productWeightedId),getIngredientNames("productWeighted",productWeightedId),quantity,weight),
-                        (existing, newEntry) -> {
-                            existing.setQuantity(existing.getQuantity() + newEntry.getQuantity());
-                            existing.setTotalWeight(existing.getTotalWeight() + newEntry.getTotalWeight());
-                            return existing;
-                        });
+                        // Se l'productWeightedId è già presente nella mappa, somma il quantity
+                        productWeightedStatMap.merge(productWeightedId,
+                                new ProductWeightedStatCategoryDTO(productWeightedId, getProductName(productWeightedId), getIngredientNames("productWeighted", productWeightedId), quantity, weight),
+                                (existing, newEntry) -> {
+                                    existing.setQuantity(existing.getQuantity() + newEntry.getQuantity());
+                                    existing.setTotalWeight(existing.getTotalWeight() + newEntry.getTotalWeight());
+                                    return existing;
+                                });
+                    }
+                }
             }
         }
 
@@ -617,9 +628,9 @@ public class GlobalStatMapperService {
         double avgOrders = (double) totalOrders/days;
         double avgCustomer = (double) totalOrders/countTotalCustomer(globalStats);
 
-        BigDecimal avgPriceRounded = new BigDecimal(avgPrice).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal avgOrdersRounded = new BigDecimal(avgOrders).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal avgCustomerRounded = new BigDecimal(avgCustomer).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal avgPriceRounded = toSafeBigDecimal(avgPrice);
+        BigDecimal avgOrdersRounded = toSafeBigDecimal(avgOrders);
+        BigDecimal avgCustomerRounded = toSafeBigDecimal(avgCustomer);
 
 
         orderStat.setTotalOrders(totalOrders);
@@ -660,6 +671,14 @@ public class GlobalStatMapperService {
 
         return totalOrders;
     }
+
+    private BigDecimal toSafeBigDecimal(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+    }
+
 }
 
 

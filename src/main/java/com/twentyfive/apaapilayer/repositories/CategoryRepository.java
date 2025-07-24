@@ -1,7 +1,6 @@
 package com.twentyfive.apaapilayer.repositories;
 
 import com.twentyfive.apaapilayer.models.CategoryAPA;
-import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +11,7 @@ import java.util.Optional;
 public interface CategoryRepository extends MongoRepository<CategoryAPA,String> {
 
     List<CategoryAPA> findAllByTypeInAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(List<String> types);
+    List<CategoryAPA> findAllByIdInOrderByOrderPriority(List<String> types);
     List<CategoryAPA> findAllByTypeInAndEnabledFalseAndSoftDeletedFalseOrderByNameAsc(List<String> types);
     List<CategoryAPA> findAllByTypeAndEnabledTrueAndSoftDeletedFalse(String type);
     List<CategoryAPA> findAllByType(String type);
