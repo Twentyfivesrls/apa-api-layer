@@ -1,9 +1,11 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
+import com.twentyfive.apaapilayer.dtos.SaveCustomTimeReq;
 import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,8 @@ import java.util.*;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+
+    private final CustomTimeCategoryService customTimeCategoryService;
     private final CategoryMapperService categoryMapperService;
 
     private final String[] PRODUCT_CATEGORY = {"productWeighted","ProductKg","ProductFixed","Tray"};
@@ -41,7 +45,7 @@ public class CategoryService {
         return categoryRepository.findAllByTypeInAndEnabledFalseAndSoftDeletedFalseOrderByNameAsc(types);
     }
     public CategoryAPA getById(String id){
-        return categoryRepository.findById(id).orElse(null);
+        return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No category found for this id: "+id));
     }
 
     @Transactional
@@ -128,5 +132,11 @@ public class CategoryService {
     public List<CategoryAPA> getAllDisabledByIdSection(String id) {
         return categoryRepository.findAllByIdSectionAndEnabledFalseAndSoftDeletedFalse(id);
 
+    }
+
+    public boolean saveCustomTime(SaveCustomTimeReq req) {
+        CategoryAPA category = getById(req.getCategoryId());
+        customTimeCategoryService.saveOrUpdate(category,req.getStart(),req.getEnd());
+        return true;
     }
 }

@@ -782,6 +782,7 @@ public class CustomerService {
         boolean longWait = false;
         boolean customizableProduct = false;
         for (ItemInPurchase item : items) {
+            //TODO prendere category e salvarsi il range più piccolo tra le varie spese
             boolean noSlotRequired = false;
             if(item instanceof ProductInPurchase){
                 ProductInPurchase pIP = (ProductInPurchase) item;
@@ -857,6 +858,7 @@ public class CustomerService {
 
 
         // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
+        //TODO passare il range di orari piccoli e poi filtrare
         Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
                 .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()));
 

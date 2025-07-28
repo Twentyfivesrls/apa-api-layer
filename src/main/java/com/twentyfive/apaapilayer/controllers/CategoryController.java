@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
+import com.twentyfive.apaapilayer.dtos.SaveCustomTimeReq;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.services.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -85,4 +86,12 @@ public class CategoryController {
 
     }
 
+
+    //CUSTOMTIMECATEGORY APIS
+
+    //@PreAuthorize("hasRole('ROLE_admin')")
+    @PostMapping("/save-custom-time")
+    public ResponseEntity<Boolean> saveCustomTime(@RequestBody SaveCustomTimeReq req){
+        return ResponseEntity.ok().body(categoryService.saveCustomTime(req));
+    }
 }
