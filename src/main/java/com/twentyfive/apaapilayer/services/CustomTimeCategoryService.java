@@ -21,11 +21,15 @@ public class CustomTimeCategoryService {
         return customTimeCategoryRepository.findByCategory(category).orElseThrow(() -> new EntityNotFoundException("No custom time found for this category: "+category.getName()));
     }
 
+    public boolean existsByCategory(CategoryAPA category) {
+        return customTimeCategoryRepository.existsByCategory(category);
+    }
+
     public void saveOrUpdate(CategoryAPA category, LocalTime start, LocalTime end){
         CustomTimeCategoryAPA customTimeCategory;
 
         //SE ESISTE è UNA PUT
-        if(customTimeCategoryRepository.existsByCategory(category)){
+        if(existsByCategory(category)){
             customTimeCategory = findByCategory(category);
 
             customTimeCategory.setStart(start);

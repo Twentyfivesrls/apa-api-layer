@@ -10,6 +10,7 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
@@ -55,6 +57,7 @@ public class CustomerService {
     private final IngredientRepository ingredientRepository;
     private final AllergenRepository allergenRepository;
     private final TimeSlotAPARepository timeSlotAPARepository;
+    private final CustomTimeCategoryService customTimeCategoryService;
 
     private final CategoryRepository categoryRepository;
 
@@ -101,7 +104,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -126,6 +129,7 @@ public class CustomerService {
         this.couponRepository = couponRepository;
         this.settingService = settingService;
         this.categoryService = categoryService;
+        this.customTimeCategoryService = customTimeCategoryService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -320,8 +324,55 @@ public class CustomerService {
                         couponUsageService.save(customer.getId(),coupon.getId());
                     }
                 }
+
+                LocalTime bestStart = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
+                LocalTime bestEnd = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+
+                CategoryAPA category = null;
+
+                for (ItemInPurchase item : selectedItems) {
+                    if (item instanceof ProductInPurchase) {
+                        ProductInPurchase productInPurchase = (ProductInPurchase) item;
+                        if (productInPurchase.isFixed()) {
+                            Optional<ProductFixedAPA> optProductFixed = productFixedRepository.findById(productInPurchase.getId());
+                            if (optProductFixed.isPresent()) {
+                                ProductFixedAPA productFixed = optProductFixed.get();
+                                category = categoryService.getById(productFixed.getCategoryId());
+                            }
+                        } else {
+                            Optional<ProductKgAPA> optProductKg = productKgRepository.findById(productInPurchase.getId());
+                            if (optProductKg.isPresent()) {
+                                ProductKgAPA productKg = optProductKg.get();
+                                category = categoryService.getById(productKg.getCategoryId());
+
+                            }
+                        }
+                    } else {
+                        Optional<Tray> optTray = trayRepository.findById(item.getId());
+                        if (optTray.isPresent()) {
+                            Tray tray = optTray.get();
+                            category = categoryService.getById(tray.getCategoryId());
+                        }
+                    }
+
+                    if(customTimeCategoryService.existsByCategory(category)) {
+
+                        CustomTimeCategoryAPA customTimeCategory = customTimeCategoryService.findByCategory(category);
+                        LocalTime start = customTimeCategory.getStart();
+                        LocalTime end = customTimeCategory.getEnd();
+
+                        if (start.isAfter(bestStart)) {
+                            bestStart = start;
+                        }
+                        if (end.isBefore(bestEnd)) {
+                            bestEnd = end;
+                        }
+
+                    }
+                }
+
                 OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
-                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
+                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd)) {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
                 } else {
@@ -776,17 +827,21 @@ public class CustomerService {
 
         Integer minDelay = settingRepository.findAll().get(0).getMinOrderDelay();
         List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
+
         int numSlotRequired = 0;
         boolean bigSemifreddo = false;
         boolean customizedSemifreddo = false;
         boolean longWait = false;
         boolean customizableProduct = false;
+
+        CategoryAPA category = null;
+        LocalTime bestStart = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
+        LocalTime bestEnd = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+
         for (ItemInPurchase item : items) {
-            //TODO prendere category e salvarsi il range più piccolo tra le varie spese
             boolean noSlotRequired = false;
             if(item instanceof ProductInPurchase){
                 ProductInPurchase pIP = (ProductInPurchase) item;
-                Category category;
                 if (pIP.isFixed()){
                     ProductFixedAPA productFixed = productFixedRepository.findById(pIP.getId()).orElseThrow(() -> new InvalidItemException());
                     category = categoryRepository.findById(productFixed.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
@@ -817,9 +872,27 @@ public class CustomerService {
             }
             if(item instanceof BundleInPurchase){
                 Tray tray = trayRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
+                category = categoryService.getById(tray.getCategoryId());
                 if (tray.isCustomized()){
                     longWait = true;
                 }
+            }
+
+            //Check se ci sono orari custom
+
+            if(customTimeCategoryService.existsByCategory(category)) {
+
+                CustomTimeCategoryAPA customTimeCategory = customTimeCategoryService.findByCategory(category);
+                LocalTime start = customTimeCategory.getStart();
+                LocalTime end = customTimeCategory.getEnd();
+
+                if (start.isAfter(bestStart)) {
+                    bestStart = start;
+                }
+                if (end.isBefore(bestEnd)) {
+                    bestEnd = end;
+                }
+
             }
         }
 
@@ -858,9 +931,8 @@ public class CustomerService {
 
 
         // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
-        //TODO passare il range di orari piccoli e poi filtrare
         Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
-                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()));
+                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()),bestStart, bestEnd);
 
         // Usa una TreeMap per garantire l'ordinamento
         return new TreeMap<>(availableTimes);
