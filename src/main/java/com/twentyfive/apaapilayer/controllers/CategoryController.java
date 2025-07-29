@@ -1,9 +1,11 @@
 package com.twentyfive.apaapilayer.controllers;
 
+import com.twentyfive.apaapilayer.dtos.CategoryCustomHoursDTO;
 import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.SaveCustomTimeReq;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.services.CategoryService;
+import com.twentyfive.apaapilayer.services.CustomTimeCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +21,7 @@ import java.util.Map;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CustomTimeCategoryService customTimeCategoryService;
 
 //    @PreAuthorize("hasRole('ROLE_admin') or hasRole('ROLE_customer')")
     @GetMapping("/getAll")
@@ -94,4 +97,16 @@ public class CategoryController {
     public ResponseEntity<Boolean> saveCustomTime(@RequestBody SaveCustomTimeReq req){
         return ResponseEntity.ok().body(categoryService.saveCustomTime(req));
     }
+
+    //@PreAuthorize("hasRole('ROLE_admin')")
+    @GetMapping("/get-all-without-custom")
+    public ResponseEntity<List<CategoryMinimalDTO>> getAllWithoutCustom(@RequestParam List<String> types) {
+        return ResponseEntity.ok().body(categoryService.getAllWithoutCustom(types));
+    }
+
+    @GetMapping("/get-all-with-custom")
+    public ResponseEntity<List<CategoryCustomHoursDTO>> getAllCategoriesWithCustomHours() {
+        return ResponseEntity.ok().body(customTimeCategoryService.getAllCategoriesWithCustomHours());
+    }
+
 }

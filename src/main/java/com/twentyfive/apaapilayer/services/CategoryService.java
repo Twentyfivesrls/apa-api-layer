@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.dtos.CategoryMinimalDTO;
 import com.twentyfive.apaapilayer.dtos.SaveCustomTimeReq;
 import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
+import com.twentyfive.apaapilayer.models.CustomTimeCategoryAPA;
 import com.twentyfive.apaapilayer.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -34,6 +36,25 @@ public class CategoryService {
         List<CategoryMinimalDTO> dto = categoryMapperService.ListCategoryAPAToListMinimalDTO(allCategory);
 
         return dto;
+    }
+
+
+    public List<CategoryMinimalDTO> getAllWithoutCustom(List<String> types) {
+        List<CategoryAPA> categories = categoryRepository.findAllByTypeInAndEnabledTrueAndSoftDeletedFalseOrderByOrderPriorityAsc(types);
+        List<CustomTimeCategoryAPA> customHours = customTimeCategoryService.findAll();
+
+        //Categorie senza un orario custom definito
+        List<CategoryAPA> filteredCategories = categories.stream()
+                .filter(category -> customHours.stream()
+                        .noneMatch(custom ->
+                                custom.getCategory() != null &&
+                                        custom.getCategory().getId().equals(category.getId())
+                        )
+                )
+                .collect(Collectors.toList());
+
+
+        return categoryMapperService.ListCategoryAPAToListMinimalDTO(filteredCategories);
     }
 
     public List<CategoryMinimalDTO> getAllMinimalByListId(List<String> ids){
