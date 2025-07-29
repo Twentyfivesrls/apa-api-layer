@@ -1,21 +1,24 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.dtos.CategoryCustomHoursDTO;
+import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.CustomTimeCategoryAPA;
 import com.twentyfive.apaapilayer.repositories.CustomTimeCategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public class CustomTimeCategoryService {
     private final CustomTimeCategoryRepository customTimeCategoryRepository;
+    private final CategoryMapperService categoryMapperService;
 
-    public CustomTimeCategoryService(CustomTimeCategoryRepository customTimeCategoryRepository) {
+    public CustomTimeCategoryService(CustomTimeCategoryRepository customTimeCategoryRepository, CategoryMapperService categoryMapperService) {
         this.customTimeCategoryRepository = customTimeCategoryRepository;
+        this.categoryMapperService = categoryMapperService;
     }
 
     public CustomTimeCategoryAPA findByCategory(CategoryAPA category) {
@@ -43,5 +46,11 @@ public class CustomTimeCategoryService {
             customTimeCategory.setEnd(end);
         }
         customTimeCategoryRepository.save(customTimeCategory);
+    }
+
+    public List<CategoryCustomHoursDTO> getAllCategoriesWithCustomHours(){
+        List<CustomTimeCategoryAPA> customTimeCategories = findAll();
+
+        return categoryMapperService.ListCategoryCustomHoursDTO(customTimeCategories);
     }
 }
