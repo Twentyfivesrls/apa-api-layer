@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class CustomTimeCategoryService {
@@ -19,6 +20,10 @@ public class CustomTimeCategoryService {
 
     public CustomTimeCategoryAPA findByCategory(CategoryAPA category) {
         return customTimeCategoryRepository.findByCategory(category).orElseThrow(() -> new EntityNotFoundException("No custom time found for this category: "+category.getName()));
+    }
+
+    public List<CustomTimeCategoryAPA> findAll() {
+        return customTimeCategoryRepository.findAll();
     }
 
     public void saveOrUpdate(CategoryAPA category, LocalTime start, LocalTime end){

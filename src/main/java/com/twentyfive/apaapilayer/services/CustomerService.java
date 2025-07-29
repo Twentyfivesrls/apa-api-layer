@@ -321,7 +321,7 @@ public class CustomerService {
                     }
                 }
                 OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
-                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems))) {
+                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),null,null)) {
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
                 } else {
@@ -860,7 +860,7 @@ public class CustomerService {
         // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
         //TODO passare il range di orari piccoli e poi filtrare
         Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
-                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()));
+                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()),null,null);
 
         // Usa una TreeMap per garantire l'ordinamento
         return new TreeMap<>(availableTimes);

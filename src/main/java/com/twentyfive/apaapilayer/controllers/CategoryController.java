@@ -94,4 +94,10 @@ public class CategoryController {
     public ResponseEntity<Boolean> saveCustomTime(@RequestBody SaveCustomTimeReq req){
         return ResponseEntity.ok().body(categoryService.saveCustomTime(req));
     }
+
+    //@PreAuthorize("hasRole('ROLE_admin')")
+    @GetMapping("/get-all-without-custom")
+    public ResponseEntity<List<CategoryMinimalDTO>> getAllWithoutCustom(@RequestParam List<String> types) {
+        return ResponseEntity.ok().body(categoryService.getAllWithoutCustom(types));
+    }
 }
