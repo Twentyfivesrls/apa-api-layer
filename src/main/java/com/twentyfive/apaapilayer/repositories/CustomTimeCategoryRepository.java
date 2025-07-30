@@ -12,4 +12,6 @@ public interface CustomTimeCategoryRepository extends MongoRepository<CustomTime
     boolean existsByCategory(CategoryAPA category);
 
     Optional<CustomTimeCategoryAPA> findByCategory(CategoryAPA category);
+
+    Optional<CustomTimeCategoryAPA> findByCategory_Id(String categoryId);
 }

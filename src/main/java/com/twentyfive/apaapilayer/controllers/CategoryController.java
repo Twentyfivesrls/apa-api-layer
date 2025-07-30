@@ -109,4 +109,9 @@ public class CategoryController {
         return ResponseEntity.ok().body(customTimeCategoryService.getAllCategoriesWithCustomHours());
     }
 
+    @DeleteMapping("/delete-custom-time/{categoryId}")
+    public ResponseEntity<Boolean> deleteCustomTime(@PathVariable String categoryId) {
+        return ResponseEntity.ok().body(customTimeCategoryService.deleteCustomTime(categoryId));
+        }
+
 }

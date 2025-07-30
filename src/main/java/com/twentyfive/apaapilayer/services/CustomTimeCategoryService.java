@@ -25,6 +25,10 @@ public class CustomTimeCategoryService {
         return customTimeCategoryRepository.findByCategory(category).orElseThrow(() -> new EntityNotFoundException("No custom time found for this category: "+category.getName()));
     }
 
+    public CustomTimeCategoryAPA findByCategoryId(String categoryId) {
+        return customTimeCategoryRepository.findByCategory_Id(categoryId).orElseThrow(() -> new EntityNotFoundException("No custom time found for this category ID: "+categoryId));
+    }
+
     public List<CustomTimeCategoryAPA> findAll() {
         return customTimeCategoryRepository.findAll();
     }
@@ -56,5 +60,13 @@ public class CustomTimeCategoryService {
         List<CustomTimeCategoryAPA> customTimeCategories = findAll();
 
         return categoryMapperService.ListCategoryCustomHoursDTO(customTimeCategories);
+    }
+
+    public boolean deleteCustomTime(String categoryId) {
+        CustomTimeCategoryAPA customTimeCategory = findByCategoryId(categoryId);
+        
+        customTimeCategoryRepository.delete(customTimeCategory);
+
+        return true;
     }
 }
