@@ -156,7 +156,7 @@ public class CategoryService {
     }
 
     public boolean saveCustomTime(SaveCustomTimeReq req) {
-        CategoryAPA category = getById(req.getCategoryId());
+        CategoryAPA category = getById(req.getId());
         customTimeCategoryService.saveOrUpdate(category,req.getStart(),req.getEnd());
         return true;
     }

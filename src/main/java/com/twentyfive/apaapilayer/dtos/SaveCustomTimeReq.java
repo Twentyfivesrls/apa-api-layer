@@ -10,7 +10,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SaveCustomTimeReq {
-    private String categoryId;
+    private String id;
     private LocalTime start;
     private LocalTime end;
 }
