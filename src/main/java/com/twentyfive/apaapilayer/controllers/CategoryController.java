@@ -93,8 +93,8 @@ public class CategoryController {
     //CUSTOMTIMECATEGORY APIS
 
     //@PreAuthorize("hasRole('ROLE_admin')")
-    @PostMapping("/save-custom-time")
-    public ResponseEntity<Boolean> saveCustomTime(@RequestBody SaveCustomTimeReq req){
+    @PostMapping("/save-massive-custom-time")
+    public ResponseEntity<Boolean> saveCustomTime(@RequestBody List<SaveCustomTimeReq> req){
         return ResponseEntity.ok().body(categoryService.saveCustomTime(req));
     }
 
