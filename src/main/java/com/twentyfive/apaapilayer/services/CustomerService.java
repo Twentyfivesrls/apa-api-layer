@@ -390,7 +390,7 @@ public class CustomerService {
                     bestStart = startTime;
                 }
 
-                if((bestEnd == null) || (oneToPrepare && bestEnd.isBefore(endTime))){
+                if((bestEnd == null) || (oneToPrepare && bestEnd.isAfter(endTime))){
                     bestEnd = endTime;
                 }
 
@@ -946,7 +946,7 @@ public class CustomerService {
             bestStart = startTime;
         }
 
-        if((bestEnd == null) || (oneToPrepare && bestEnd.isBefore(endTime))){
+        if((bestEnd == null) || (oneToPrepare && bestEnd.isAfter(endTime))){
             bestEnd = endTime;
         }
         LocalDateTime minStartingDate;
