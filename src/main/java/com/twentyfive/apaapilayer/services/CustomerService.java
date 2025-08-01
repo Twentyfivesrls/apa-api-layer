@@ -325,8 +325,9 @@ public class CustomerService {
                     }
                 }
 
-                LocalTime bestStart = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
-                LocalTime bestEnd = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+                LocalTime bestStart = null;
+                LocalTime bestEnd = null;
+                boolean oneToPrepare = false;
 
                 CategoryAPA category = null;
 
@@ -338,6 +339,10 @@ public class CustomerService {
                             if (optProductFixed.isPresent()) {
                                 ProductFixedAPA productFixed = optProductFixed.get();
                                 category = categoryService.getById(productFixed.getCategoryId());
+
+                                if(productFixed.isToPrepare()){
+                                    oneToPrepare = true;
+                                }
                             }
                         } else {
                             Optional<ProductKgAPA> optProductKg = productKgRepository.findById(productInPurchase.getId());
@@ -345,6 +350,9 @@ public class CustomerService {
                                 ProductKgAPA productKg = optProductKg.get();
                                 category = categoryService.getById(productKg.getCategoryId());
 
+                                if(productKg.isToPrepare()){
+                                    oneToPrepare = true;
+                                }
                             }
                         }
                     } else {
@@ -352,6 +360,10 @@ public class CustomerService {
                         if (optTray.isPresent()) {
                             Tray tray = optTray.get();
                             category = categoryService.getById(tray.getCategoryId());
+
+                            if(tray.isToPrepare()){
+                                oneToPrepare = true;
+                            }
                         }
                     }
 
@@ -361,21 +373,36 @@ public class CustomerService {
                         LocalTime start = customTimeCategory.getStart();
                         LocalTime end = customTimeCategory.getEnd();
 
-                        if (start.isAfter(bestStart)) {
+                        if (bestStart == null || start.isAfter(bestStart)) {
                             bestStart = start;
                         }
-                        if (end.isBefore(bestEnd)) {
+                        if (bestEnd == null || end.isAfter(bestEnd)) {
                             bestEnd = end;
                         }
 
                     }
                 }
 
+                LocalTime startTime = settingService.get().getBusinessHours().getStartTime();
+                LocalTime endTime = settingService.get().getBusinessHours().getStartTime();
+
+                if((bestStart == null) || (oneToPrepare && bestStart.isBefore(startTime))){
+                    bestStart = startTime;
+                }
+
+                if((bestEnd == null) || (oneToPrepare && bestEnd.isBefore(endTime))){
+                    bestEnd = endTime;
+                }
+
                 OrderAPA order = createOrderFromItems(customer, buyInfos,selectedItems,appliedCoupon);
-                if(timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd)) {
+
+                try {
+                    if(oneToPrepare){
+                        timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd);
+                    }
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
-                } else {
+                } catch (Exception e) {
                     throw new InvalidOrderTimeException("Ci dispiace! Non è più possibile ordinare a questo orario, ricaricare il carrello e riprovare!" +buyInfos.getSelectedPickupDateTime().toString());
                 }
                 timeSlotAPARepository.save(timeSlotAPA);
@@ -472,6 +499,7 @@ public class CustomerService {
 
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
+                //TODO BUG SUL CONTEGGIO slot required.
                 Optional<CategoryAPA> optCategory = categoryRepository.findById(pip.getId());
                 if(optCategory.isPresent()){
                     CategoryAPA category = optCategory.get();
@@ -829,14 +857,17 @@ public class CustomerService {
         List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
 
         int numSlotRequired = 0;
+
         boolean bigSemifreddo = false;
         boolean customizedSemifreddo = false;
         boolean longWait = false;
         boolean customizableProduct = false;
+        boolean oneToPrepare = false;
 
         CategoryAPA category = null;
-        LocalTime bestStart = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
-        LocalTime bestEnd = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+
+        LocalTime bestStart = null;
+        LocalTime bestEnd = null;
 
         for (ItemInPurchase item : items) {
             boolean noSlotRequired = false;
@@ -848,11 +879,17 @@ public class CustomerService {
                     if(productFixed.getPossibleCustomizations() != null){
                         customizableProduct = true;
                     }
+                    if(productFixed.isToPrepare()){
+                        oneToPrepare = true;
+                    }
                 } else {
                     ProductKgAPA productKg = productKgRepository.findById(item.getId()).orElseThrow(() -> new InvalidItemException());
                     category = categoryRepository.findById(productKg.getCategoryId()).orElseThrow(() -> new InvalidCategoryException());
                     if (category.getName().equals("Torte Secche") || category.getName().equals("Dolci Festività") || category.getName().equals("Semifreddi")) {
                         noSlotRequired = true;
+                    }
+                    if(productKg.isToPrepare()){
+                        oneToPrepare = true;
                     }
                 }
                 if(!noSlotRequired){
@@ -876,6 +913,9 @@ public class CustomerService {
                 if (tray.isCustomized()){
                     longWait = true;
                 }
+                if (tray.isToPrepare()){
+                    oneToPrepare = true;
+                }
             }
 
             //Check se ci sono orari custom
@@ -886,20 +926,29 @@ public class CustomerService {
                 LocalTime start = customTimeCategory.getStart();
                 LocalTime end = customTimeCategory.getEnd();
 
-                if (start.isAfter(bestStart)) {
+                if (bestStart == null || start.isAfter(bestStart)) {
                     bestStart = start;
                 }
-                if (end.isBefore(bestEnd)) {
+                if (bestEnd == null || end.isAfter(bestEnd)) {
                     bestEnd = end;
                 }
 
             }
         }
 
+
         // Determina l'orario di partenza
         LocalTime now = LocalTime.now();
         LocalTime startTime = settingRepository.findAll().get(0).getBusinessHours().getStartTime();
         LocalTime endTime = settingRepository.findAll().get(0).getBusinessHours().getEndTime();
+
+        if((bestStart == null) || (oneToPrepare && bestStart.isBefore(startTime))){
+            bestStart = startTime;
+        }
+
+        if((bestEnd == null) || (oneToPrepare && bestEnd.isBefore(endTime))){
+            bestEnd = endTime;
+        }
         LocalDateTime minStartingDate;
         if(!customizableProduct) {
             if (!bigSemifreddo) {
@@ -929,10 +978,53 @@ public class CustomerService {
             minStartingDate = LocalDateTime.now().plusHours(72); //Prodotti componibili
         }
 
+        Map<LocalDate, List<LocalTime>> availableTimes = new HashMap<>();
 
-        // Ora cerchiamo i tempi disponibili per tutti gli articoli combinati
-        Map<LocalDate, List<LocalTime>> availableTimes = timeSlotAPARepository.findAll().get(0)
-                .findTimeForNumSlots(minStartingDate, numSlotRequired,new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()),bestStart, bestEnd);
+        TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
+
+        if (!oneToPrepare) {
+
+            LocalDate today = LocalDate.now();
+            LocalTime nowTime = LocalTime.now().withSecond(0).withNano(0); // pulito per confronto
+
+            for (Map.Entry<LocalDate, Map<LocalTime, Integer>> dateEntry : timeSlotAPA.getNumSlotsMap().entrySet()) {
+                LocalDate date = dateEntry.getKey();
+
+                if (date.isBefore(today)) continue;
+
+                List<LocalTime> timeList = new ArrayList<>();
+                LocalTime t = bestStart;
+
+                while (!t.isAfter(bestEnd)) {
+                    if (date.isEqual(today)) {
+                        // Solo per oggi: aggiungi solo se t > ora corrente
+                        if (t.isAfter(nowTime)) {
+                            timeList.add(t);
+                        }
+                    } else {
+                        // Per i giorni futuri: aggiungi sempre
+                        timeList.add(t);
+                    }
+                    t = t.plusHours(1);
+                }
+
+                if (!timeList.isEmpty()) {
+                    Collections.sort(timeList);
+                    availableTimes.put(date, timeList);
+                }
+            }
+
+        } else {
+            // Calcolo classico da repository (lasciato invariato)
+            availableTimes = timeSlotAPARepository.findAll().get(0)
+                    .findTimeForNumSlots(
+                            minStartingDate,
+                            numSlotRequired,
+                            new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()),
+                            bestStart,
+                            bestEnd
+                    );
+        }
 
         // Usa una TreeMap per garantire l'ordinamento
         return new TreeMap<>(availableTimes);
