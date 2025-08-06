@@ -12,6 +12,7 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +41,10 @@ public class ProductFixedService {
     private final CategoryRepository categoryRepository;
 
     private final MongoTemplate mongoTemplate;
+
+    public ProductFixedAPA findById(String id) {
+        return productFixedRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No productFixed found with this id: "+id));
+    }
 
     public Page<ProductFixedAPADTO> findByIdCategory(String idCategory, int page, int size, String sortColumn, String sortDirection, ProductFilter filters) {
         Query query = new Query();

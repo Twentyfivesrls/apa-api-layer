@@ -9,6 +9,7 @@ import com.twentyfive.apaapilayer.models.*;
 import com.twentyfive.apaapilayer.repositories.*;
 import com.twentyfive.apaapilayer.utils.FilterUtilities;
 import com.twentyfive.apaapilayer.utils.PageUtilities;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.CustomizableIngredient;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.ProductKg;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 
 import java.util.*;
@@ -38,6 +40,10 @@ public class ProductKgService {
     private final ProductMapperService productMapperService;
     private final MongoTemplate mongoTemplate;
 
+
+    public ProductKg findById(String id) {
+        return productKgRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("No productKg found with this id: "+id));
+    }
     private ProductKgAPADTO productsKgToDTO(ProductKgAPA product){
         ProductKgAPADTO dto = new ProductKgAPADTO();
         dto.setActive(product.isActive());

@@ -22,11 +22,7 @@ import twentyfive.twentyfiveadapter.dto.groypalDaemon.SimpleItem;
 import twentyfive.twentyfiveadapter.dto.stompDto.TwentyfiveMessage;
 import twentyfive.twentyfiveadapter.dto.subscriptionDto.SimpleUnitAmount;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.dinamic.*;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Category;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Coupon;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.CouponUsage;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Customer;
-import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.Product;
+import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
@@ -68,6 +64,8 @@ public class CustomerService {
     private final CouponRepository couponRepository;
     private final SettingService settingService;
     private final CategoryService categoryService;
+    private final ProductFixedService productFixedService;
+    private final ProductKgService productKgService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -104,7 +102,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService, ProductFixedService productFixedService, ProductKgService productKgService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -130,6 +128,8 @@ public class CustomerService {
         this.settingService = settingService;
         this.categoryService = categoryService;
         this.customTimeCategoryService = customTimeCategoryService;
+        this.productFixedService = productFixedService;
+        this.productKgService = productKgService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -494,21 +494,35 @@ public class CustomerService {
     private int countSlotRequired(List<ItemInPurchase>items) {
         int numSlotRequired = 0;
 
+        String categoryId;
+        boolean toPrepare;
+
 
         for (ItemInPurchase item : items) {
 
             if (item instanceof ProductInPurchase) {
                 ProductInPurchase pip = (ProductInPurchase) item;
-                //TODO BUG SUL CONTEGGIO slot required.
-                Optional<CategoryAPA> optCategory = categoryRepository.findById(pip.getId());
+
+                if (pip.isFixed()){
+                    ProductFixedAPA productFixed = productFixedService.findById(pip.getId());
+                    categoryId = productFixed.getCategoryId();
+                    toPrepare = productFixed.isToPrepare();
+                } else {
+                    ProductKg productKg = productKgService.findById(item.getId());
+                    categoryId = productKg.getCategoryId();
+                    toPrepare = productKg.isToPrepare();
+                }
+                Optional<CategoryAPA> optCategory = categoryRepository.findById(categoryId);
+
                 if(optCategory.isPresent()){
                     CategoryAPA category = optCategory.get();
-                    if (!category.getName().equals("Torte Secche") && !category.getName().equals("Dolci Festività") && !category.getName().equals("Semifreddi")) {
-                        numSlotRequired += pip.getQuantity();
-                    } else if (category.getName().equals("Torta a Piani")) {
+                    if (category.getName().equals("Torte a Piani")) {
                         numSlotRequired += pip.getQuantity()*3;
+                    } else if (toPrepare) {
+                        numSlotRequired += pip.getQuantity();
                     }
                 }
+
             }
         }
         return numSlotRequired;

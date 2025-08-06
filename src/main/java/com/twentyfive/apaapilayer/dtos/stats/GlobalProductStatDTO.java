@@ -13,8 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class GlobalProductStatDTO {
     private GeneralProductStatDTO generalStat;
-
-    //TODO traystats generiche qui
     private CustomCakeStat customCakeStat;
 
     private List<DashboardProductStatDTO> dashboardProductStats;

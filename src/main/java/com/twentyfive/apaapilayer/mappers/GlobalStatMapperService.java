@@ -125,7 +125,7 @@ public class GlobalStatMapperService {
         return globalIngredientStat;
     }
 
-    private List<CategoryIngredientStat> createIngredientCategoryStat(LocalDate date) { //FIXME
+    private List<CategoryIngredientStat> createIngredientCategoryStat(LocalDate date) {
         List<String> ingredientIds = completedOrderRepository.findDistinctIngredientIds(date, OrderStatus.COMPLETO);
         List<CategoryIngredientStat> categoryIngredientStats = new ArrayList<>();
         for (String ingredientId : ingredientIds) {
@@ -138,7 +138,7 @@ public class GlobalStatMapperService {
     }
 
     private List<GlobalCategoryStat> createGlobalCategoryStats(LocalDate date) {
-        List<String> categoryIds = completedOrderRepository.findDistinctIngredientCategoryIds(date, OrderStatus.COMPLETO); //TODO
+        List<String> categoryIds = completedOrderRepository.findDistinctIngredientCategoryIds(date, OrderStatus.COMPLETO);
         List<GlobalCategoryStat> globalCategoryStats = new ArrayList<>();
         for (String categoryId : categoryIds) {
             GlobalCategoryStat globalCategoryStat = createGlobalCategoryStat(date, categoryId);
