@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.utils;
 
 import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.twentyfive.apaapilayer.dtos.BundleInPurchaseDTO;
@@ -49,11 +50,20 @@ public class PdfUtilities {
             e.printStackTrace();
         }
 
+        BaseFont bfEmoji = BaseFont.createFont(
+                "src/main/resources/fonts/NotoSansSymbols2-Regular.ttf",
+                BaseFont.IDENTITY_H,
+                BaseFont.EMBEDDED);
+
         // Write order details
         Font smallBoldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         Font smallNormalFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
+
         Font boldFont = new Font(Font.FontFamily.HELVETICA, 15, Font.BOLD);
-        Font normalFont = new Font(Font.FontFamily.HELVETICA, 15, Font.NORMAL);
+        Font normalFont = new Font(bfEmoji, 15, Font.NORMAL);
+
+        Font numberFont = new Font(Font.FontFamily.HELVETICA, 15, Font.NORMAL);
+
         Font normalBoldFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
         Font largeBoldFont = new Font(Font.FontFamily.HELVETICA, 19, Font.BOLD);
 
@@ -76,7 +86,7 @@ public class PdfUtilities {
             for (ProductInPurchaseDTO product : orderDetails.getProducts()) {
                 document.add(new Paragraph(product.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
-                document.add(createParagraph("Quantità: ", product.getQuantity() +" pz", boldFont, normalFont));
+                document.add(createParagraph("Quantità: ", product.getQuantity() +" pz", boldFont, numberFont));
                 if(product.getIngredients() != null){
                     for(IngredientsWithCategory ingredients: product.getIngredients()){
                         document.add(createParagraph(ingredients.getCategoryName() + ": ", ingredients.getIngredientsName().stream()
@@ -84,7 +94,7 @@ public class PdfUtilities {
                     }
                 }
                 if (product.getCustomization() == null || product.getCustomization().isEmpty()) {
-                    document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
+                    document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, numberFont));
                     if(product.getShape()!=null){
                         document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
                     }
@@ -96,7 +106,7 @@ public class PdfUtilities {
                                 .collect(Collectors.joining(", ")), boldFont, normalFont));
                         if(addingWeightAndShape) {
                             addingWeightAndShape = false;
-                            document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, normalFont));
+                            document.add(createParagraph("Peso: ", product.getWeight() + " kg", boldFont, numberFont));
                             if(product.getShape()!=null){
                                 document.add(createParagraph("Forma: ", product.getShape(), boldFont, normalFont));
                             }
@@ -128,13 +138,13 @@ public class PdfUtilities {
             for (BundleInPurchaseDTO bundle : orderDetails.getBundles()) {
                 document.add(new Paragraph(bundle.getName().toUpperCase(), normalBoldFont));
                 document.add(new Paragraph("\n"));
-                document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, normalFont));
+                document.add(createParagraph("Peso: ", bundle.getMeasure().getLabel()+": "+bundle.getMeasure().getWeight() + " kg", boldFont, numberFont));
                 if (bundle.getWeightedProducts()!=null){
                     document.add(new Paragraph("Mignon: ", boldFont));
                     for (PieceInPurchaseDTO piece: bundle.getWeightedProducts()){
-                        document.add(new Paragraph("x"+piece.getQuantity()+" "+piece.getName(), normalFont));
+                        document.add(new Paragraph("x"+piece.getQuantity()+" "+piece.getName(), numberFont));
                     }
-                    document.add(createParagraph("Peso Totale Mignon scelti: ", bundle.getTotalWeight()+ " kg", boldFont, normalFont));
+                    document.add(createParagraph("Peso Totale Mignon scelti: ", bundle.getTotalWeight()+ " kg", boldFont, numberFont));
                 }
                 document.add(new Paragraph("\n"));
                 document.add(new LineSeparator());
