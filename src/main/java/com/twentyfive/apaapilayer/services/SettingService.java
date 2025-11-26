@@ -6,6 +6,7 @@ import com.twentyfive.apaapilayer.repositories.SettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.DateRange;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -78,5 +79,18 @@ public class SettingService {
 
         return consecutiveDates;
     }
+
+    public DateRange updateBusinessHours(DateRange newBusinessHours) {
+        SettingAPA currentSettingAPA = settingRepository.findById(settingId).orElse(null);
+        if (currentSettingAPA == null) {
+            return null;
+        }
+
+        currentSettingAPA.setBusinessHours(newBusinessHours);
+        settingRepository.save(currentSettingAPA);
+
+        return currentSettingAPA.getBusinessHours();
+    }
+
 
 }

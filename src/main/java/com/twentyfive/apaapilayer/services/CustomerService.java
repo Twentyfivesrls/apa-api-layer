@@ -48,6 +48,7 @@ public class CustomerService {
     private final CouponUsageService couponUsageService;
     private final PaymentClientController paymentClientController;
     private final SettingRepository settingRepository;
+    private final InactiveDayRepository inactiveDayRepository;
     private final ProductKgRepository productKgRepository;
     private final ProductWeightedRepository productWeightedRepository;
     private final IngredientRepository ingredientRepository;
@@ -102,7 +103,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService, ProductFixedService productFixedService, ProductKgService productKgService) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, InactiveDayRepository inactiveDayRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService, ProductFixedService productFixedService, ProductKgService productKgService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -114,6 +115,7 @@ public class CustomerService {
         this.couponUsageService = couponUsageService;
         this.paymentClientController = paymentClientController;
         this.settingRepository=settingRepository;
+        this.inactiveDayRepository = inactiveDayRepository;
         this.productKgRepository = productKgRepository;
         this.productWeightedRepository = productWeightedRepository;
         this.ingredientRepository = ingredientRepository;
@@ -398,7 +400,9 @@ public class CustomerService {
 
                 try {
                     if(oneToPrepare){
-                        timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd);
+                        List<InactiveDay> inactiveDays = inactiveDayRepository.findAll();
+
+                        timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd, inactiveDays);
                     }
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
@@ -1030,11 +1034,13 @@ public class CustomerService {
 
         } else {
             // Calcolo classico da repository (lasciato invariato)
+            List<InactiveDay> inactiveDays = inactiveDayRepository.findAll();
+
             availableTimes = timeSlotAPARepository.findAll().get(0)
                     .findTimeForNumSlots(
                             minStartingDate,
                             numSlotRequired,
-                            new HashSet<>(settingRepository.findAll().get(0).getInactivityDays()),
+                            inactiveDays,
                             bestStart,
                             bestEnd
                     );

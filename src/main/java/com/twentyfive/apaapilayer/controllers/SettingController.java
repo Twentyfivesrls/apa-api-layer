@@ -1,15 +1,12 @@
 package com.twentyfive.apaapilayer.controllers;
 
 import com.twentyfive.apaapilayer.models.SettingAPA;
-import com.twentyfive.apaapilayer.repositories.SettingRepository;
 import com.twentyfive.apaapilayer.services.SettingService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import twentyfive.twentyfiveadapter.generic.ecommerce.utils.DateRange;
 
 import java.util.List;
 
@@ -47,6 +44,16 @@ public class SettingController {
     @GetMapping("/getAllRoles")
     public ResponseEntity<List<String>> getAllRoles(){
         return ResponseEntity.ok().body(settingService.get().getRoles());
+    }
+
+    @GetMapping("/getBusinessHours")
+    public ResponseEntity<DateRange> getBusinessHours(){
+        return ResponseEntity.ok().body(settingService.get().getBusinessHours());
+    }
+
+    @PutMapping("/updateBusinessHours")
+    public ResponseEntity<DateRange> updateBusinessHours(@RequestBody DateRange newBusinessHours) {
+        return ResponseEntity.ok().body(settingService.updateBusinessHours(newBusinessHours));
     }
 
     @GetMapping("/isTodayAvailable")
