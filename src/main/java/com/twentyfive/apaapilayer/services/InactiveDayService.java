@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.InactiveDay;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,15 @@ public class InactiveDayService {
         return days;
     }
 
+    public List<InactiveDay> getAllByFullDay(boolean fullDay) {
+        List<InactiveDay> days = inactiveDayRepository.findAllByFullDay(fullDay);
+
+        if (days.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return days;
+    }
+    
     public List<InactiveDay> update(List<InactiveDay> newInactiveDays) {
         List<InactiveDay> existingDays = inactiveDayRepository.findAll();
 
@@ -58,5 +68,38 @@ public class InactiveDayService {
         }
 
         return inactiveDayRepository.findAll();
+    }
+
+    public List<LocalDate> obtainConsecutiveDatesIfTenDaysBefore() {
+        LocalDate today = LocalDate.now();
+        LocalDate maxDate = today.plusDays(10);
+
+        List<LocalDate> inactivityDays = getAllByFullDay(true)
+            .stream()
+            .map(InactiveDay::getDate)
+            .collect(Collectors.toList());
+
+        List<LocalDate> sortedDates = inactivityDays.stream()
+                .filter(date -> !date.isBefore(today) && !date.isAfter(maxDate))
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (sortedDates.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<LocalDate> consecutiveDates = new ArrayList<>();
+        LocalDate firstDate = sortedDates.get(0);
+        consecutiveDates.add(firstDate);
+
+        for (int i = 1; i < sortedDates.size(); i++) {
+            if (sortedDates.get(i).equals(consecutiveDates.get(consecutiveDates.size() - 1).plusDays(1))) {
+                consecutiveDates.add(sortedDates.get(i));
+            } else {
+                break; // Interruzione se le date non sono consecutive
+            }
+        }
+
+        return consecutiveDates;
     }
 }

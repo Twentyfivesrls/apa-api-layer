@@ -52,34 +52,6 @@ public class SettingService {
         return true;
     }
 
-    public List<LocalDate> obtainConsecutiveDatesIfTenDaysBefore() {
-        LocalDate today = LocalDate.now();
-        LocalDate maxDate = today.plusDays(10);
-
-        List<LocalDate> sortedDates = get().getInactivityDays().stream()
-                .filter(date -> !date.isBefore(today) && !date.isAfter(maxDate))
-                .sorted()
-                .collect(Collectors.toList());
-
-        if (sortedDates.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<LocalDate> consecutiveDates = new ArrayList<>();
-        LocalDate firstDate = sortedDates.get(0);
-        consecutiveDates.add(firstDate);
-
-        for (int i = 1; i < sortedDates.size(); i++) {
-            if (sortedDates.get(i).equals(consecutiveDates.get(consecutiveDates.size() - 1).plusDays(1))) {
-                consecutiveDates.add(sortedDates.get(i));
-            } else {
-                break; // Interruzione se le date non sono consecutive
-            }
-        }
-
-        return consecutiveDates;
-    }
-
     public DateRange updateBusinessHours(DateRange newBusinessHours) {
         SettingAPA currentSettingAPA = settingRepository.findById(settingId).orElse(null);
         if (currentSettingAPA == null) {

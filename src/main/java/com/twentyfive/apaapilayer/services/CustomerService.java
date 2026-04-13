@@ -67,6 +67,7 @@ public class CustomerService {
     private final CategoryService categoryService;
     private final ProductFixedService productFixedService;
     private final ProductKgService productKgService;
+    private final InactiveDayService inactiveDayService;
 
     public CustomerDetailsDTO getCustomerDetailsByIdKeycloak(String idKeycloak) {
         CustomerAPA customer = customerRepository.findByIdKeycloak(idKeycloak)
@@ -103,7 +104,7 @@ public class CustomerService {
 
 
     @Autowired
-    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, InactiveDayRepository inactiveDayRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService, ProductFixedService productFixedService, ProductKgService productKgService) {
+    public CustomerService(ProductStatService productStatService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository , ActiveOrderService activeOrderService, CompletedOrderRepository completedOrderRepository, StompClientController stompClientController, EmailService emailService, KeycloakService keycloakService, CouponService couponService, CouponUsageService couponUsageService, PaymentClientController paymentClientController, SettingRepository settingRepository, InactiveDayRepository inactiveDayRepository, ProductKgRepository productKgRepository, ProductWeightedRepository productWeightedRepository, IngredientRepository ingredientRepository, AllergenRepository allergenRepository, TimeSlotAPARepository timeSlotAPARepository, CategoryRepository categoryRepository, TrayRepository trayRepository, ProductFixedRepository productFixedRepository, CouponMapperService couponMapperService, CouponMapperService couponMapperService1, CouponRepository couponRepository, SettingService settingService, CategoryService categoryService, CustomTimeCategoryService customTimeCategoryService, ProductFixedService productFixedService, ProductKgService productKgService, InactiveDayService inactiveDayService) {
         this.productStatService = productStatService;
         this.customerRepository = customerRepository;
         this.orderService = activeOrderService;
@@ -132,6 +133,7 @@ public class CustomerService {
         this.customTimeCategoryService = customTimeCategoryService;
         this.productFixedService = productFixedService;
         this.productKgService = productKgService;
+        this.inactiveDayService = inactiveDayService;
     }
 
     public Page<CustomerAPA> getAllCustomers(int page, int size, String sortColumn, String sortDirection,String name) {
@@ -1247,7 +1249,7 @@ public class CustomerService {
     }
 
     public String obtainDateIfTenDaysBefore() {
-        List<LocalDate> localDates = settingService.obtainConsecutiveDatesIfTenDaysBefore();
+        List<LocalDate> localDates = inactiveDayService.obtainConsecutiveDatesIfTenDaysBefore();
         if(localDates !=null){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
             if(localDates.size()==1){
