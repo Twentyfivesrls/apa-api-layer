@@ -217,32 +217,10 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
-            // Filtra per pickupDate, OrderStatus e productId (per ProductInPurchase o BundleInPurchase)
-            "{ $match: { 'pickupDate': ?0, 'status': ?1, $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +
-                    "{ 'bundlesInPurchase._id': ?2 } " +
-                    "] } }",
-
-            // Espande la lista productsInPurchase
+            "{ $match: { 'pickupDate': ?0, 'status': ?1, 'productsInPurchase._id': ?2 } }",
             "{ $unwind: '$productsInPurchase' }",
-
-            // Espande la lista bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Filtra solo il productId specifico nelle due liste
-            "{ $match: { $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +
-                    "{ 'bundlesInPurchase._id': ?2 } " +
-                    "] } }",
-
-            // Proietta solo le quantità dei prodotti e dei bundle, garantendo che siano numeri
-            "{ $project: { " +
-                    "productQuantity: { $ifNull: ['$productsInPurchase.quantity', 0] }, " +
-                    "bundleQuantity: { $ifNull: ['$bundlesInPurchase.quantity', 0] } " +
-                    "} }",
-
-            // Raggruppa i risultati e somma le quantità
-            "{ $group: { _id: null, totalQuantity: { $sum: { $add: ['$productQuantity', '$bundleQuantity'] } } } }"
+            "{ $match: { 'productsInPurchase._id': ?2 } }",
+            "{ $group: { _id: null, totalQuantity: { $sum: { $toInt: { $ifNull: ['$productsInPurchase.quantity', 0] } } } } }"
     })
     Optional<Long> sumQuantityByProductId(
             LocalDate date,
@@ -252,32 +230,10 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
-            // Filtra per pickupDate, OrderStatus e productId (per ProductInPurchase o BundleInPurchase)
-            "{ $match: { 'pickupDate': ?0, 'status': ?1, $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +  // Filtro per productId nei productsInPurchase
-                    "{ 'bundlesInPurchase._id': ?2 } " +    // Filtro per productId nei bundlesInPurchase
-                    "] } }",
-
-            // Espande la lista productsInPurchase
+            "{ $match: { 'pickupDate': ?0, 'status': ?1, 'productsInPurchase._id': ?2 } }",
             "{ $unwind: '$productsInPurchase' }",
-
-            // Espande la lista bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Filtra solo il productId specifico nelle due liste
-            "{ $match: { $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +  // Filtro per productId nei productsInPurchase
-                    "{ 'bundlesInPurchase._id': ?2 } " +    // Filtro per productId nei bundlesInPurchase
-                    "] } }",
-
-            // Proietta solo i totalPrice dei prodotti e dei bundle, garantendo che siano numeri
-            "{ $project: { " +
-                    "productTotalPrice: { $ifNull: ['$productsInPurchase.totalPrice', 0] }, " +
-                    "bundleTotalPrice: { $ifNull: ['$bundlesInPurchase.totalPrice', 0] } " +
-                    "} }",
-
-            // Raggruppa i risultati e somma i totalPrice
-            "{ $group: { _id: null, totalQuantity: { $sum: { $add: ['$productTotalPrice', '$bundleTotalPrice'] } } } }"
+            "{ $match: { 'productsInPurchase._id': ?2 } }",
+            "{ $group: { _id: null, totalQuantity: { $sum: { $toDouble: { $ifNull: ['$productsInPurchase.totalPrice', 0] } } } } }"
     })
     Optional<Double> sumTotalPriceByProductId(
             LocalDate date,
@@ -287,32 +243,14 @@ public interface CompletedOrderRepository extends MongoRepository<CompletedOrder
 
 
     @Aggregation(pipeline = {
-            // Filtra per pickupDate, OrderStatus e productId (per ProductInPurchase o BundleInPurchase)
-            "{ $match: { 'pickupDate': ?0, 'status': ?1, $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +  // Filtro per productId nei productsInPurchase
-                    "{ 'bundlesInPurchase._id': ?2 } " +    // Filtro per productId nei bundlesInPurchase
-                    "] } }",
-
-            // Espande la lista productsInPurchase
-            "{ $unwind: { path: '$productsInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Espande la lista bundlesInPurchase
-            "{ $unwind: { path: '$bundlesInPurchase', preserveNullAndEmptyArrays: true } }",
-
-            // Filtra per productId nelle due liste, solo se presente
-            "{ $match: { $or: [" +
-                    "{ 'productsInPurchase._id': ?2 }, " +  // Filtro per productId nei productsInPurchase
-                    "{ 'bundlesInPurchase._id': ?2 } " +    // Filtro per productId nei bundlesInPurchase
-                    "] } }",
-
-            // Proietta solo il peso dei prodotti e dei bundle
-            "{ $project: { " +
-                    "productWeight: { $ifNull: ['$productsInPurchase.weight', 0] }, " +
-                    "bundleWeight: { $ifNull: ['$bundlesInPurchase.weight', 0] } " + // Assicurati che 'weight' sia il campo giusto
-                    "} }",
-
-            // Raggruppa i risultati e somma i pesi totali
-            "{ $group: { _id: null, totalWeight: { $sum: { $add: ['$productWeight', '$bundleWeight'] } } } }"
+            "{ $match: { 'pickupDate': ?0, 'status': ?1, 'productsInPurchase._id': ?2 } }",
+            "{ $unwind: '$productsInPurchase' }",
+            "{ $match: { 'productsInPurchase._id': ?2 } }",
+            "{ $project: { totalWeight: { $multiply: [" +
+                    "{ $toDouble: { $ifNull: ['$productsInPurchase.weight', 0] } }, " +
+                    "{ $toDouble: { $ifNull: ['$productsInPurchase.quantity', 1] } } " +
+                    "] } } }",
+            "{ $group: { _id: null, totalWeight: { $sum: '$totalWeight' } } }"
     })
     Optional<Double> sumTotalWeightByProductId(
             LocalDate date,

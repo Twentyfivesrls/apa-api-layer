@@ -768,6 +768,7 @@ public class CustomerService {
         if (existingItem.isPresent()) {
             ProductInPurchase existingProduct = (ProductInPurchase) existingItem.get();
             existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
+            existingProduct.setTotalPrice(0);
             existingProduct.setTotalPrice(calculateTotalPrice(existingProduct, price));
         } else {
             if(product.getCustomization() != null){
