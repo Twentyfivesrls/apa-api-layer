@@ -20,6 +20,7 @@ public class ProductKgAPADetailsDTO {
     private String description;
     private ProductStatAPA stats;
     private Set<Allergen> allergens;
+    private Set<Allergen> containAllergens;
     private List<String> ingredients;
     private List<CustomizableIngredientDTO> customizableIngredients;
     private String pricePerKg;

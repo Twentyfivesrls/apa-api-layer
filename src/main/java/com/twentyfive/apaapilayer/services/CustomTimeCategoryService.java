@@ -4,6 +4,7 @@ import com.twentyfive.apaapilayer.dtos.CategoryCustomHoursDTO;
 import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.CustomTimeCategoryAPA;
+import com.twentyfive.apaapilayer.models.CustomTimeVariantAPA;
 import com.twentyfive.apaapilayer.repositories.CustomTimeCategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,10 @@ public class CustomTimeCategoryService {
         return customTimeCategoryRepository.findByCategory_Id(categoryId).orElseThrow(() -> new EntityNotFoundException("No custom time found for this category ID: "+categoryId));
     }
 
+    public CustomTimeCategoryAPA findByCategoryIdOrNull(String categoryId) {
+        return customTimeCategoryRepository.findByCategory_Id(categoryId).orElse(null);
+    }
+
     public List<CustomTimeCategoryAPA> findAll() {
         return customTimeCategoryRepository.findAll();
     }
@@ -37,22 +42,26 @@ public class CustomTimeCategoryService {
         return customTimeCategoryRepository.existsByCategory(category);
     }
 
-    public void saveOrUpdate(CategoryAPA category, LocalTime start, LocalTime end){
+    public void saveOrUpdate(CategoryAPA category, LocalTime start, LocalTime end,
+                             Integer daysAhead, LocalTime cutoffHour, LocalTime cutoffResetHour,
+                             LocalTime firstPickupAfterCutoff, boolean sameDayAllowed,
+                             CustomTimeVariantAPA variant){
         CustomTimeCategoryAPA customTimeCategory;
 
-        //SE ESISTE è UNA PUT
         if(existsByCategory(category)){
             customTimeCategory = findByCategory(category);
-
-            customTimeCategory.setStart(start);
-            customTimeCategory.setEnd(end);
-
         } else {
             customTimeCategory = new CustomTimeCategoryAPA();
             customTimeCategory.setCategory(category);
-            customTimeCategory.setStart(start);
-            customTimeCategory.setEnd(end);
         }
+        customTimeCategory.setStart(start);
+        customTimeCategory.setEnd(end);
+        customTimeCategory.setDaysAhead(daysAhead);
+        customTimeCategory.setCutoffHour(cutoffHour);
+        customTimeCategory.setCutoffResetHour(cutoffResetHour);
+        customTimeCategory.setFirstPickupAfterCutoff(firstPickupAfterCutoff);
+        customTimeCategory.setSameDayAllowed(sameDayAllowed);
+        customTimeCategory.setVariant(variant);
         customTimeCategoryRepository.save(customTimeCategory);
     }
 

@@ -53,6 +53,15 @@ public class IngredientService {
                 realAllergeni.add(realAllergene);
         }
         dto.setAllergens(realAllergeni);
+        List<String> containNames = ingredient.getContainNames();
+        List<Allergen> realContain = new ArrayList<>();
+        if (containNames != null) {
+            for (String name : containNames) {
+                Allergen allergen = allergenRepository.findByName(name).orElse(null);
+                if (allergen != null) realContain.add(allergen);
+            }
+        }
+        dto.setContainAllergens(realContain);
         return dto;
     }
 
@@ -176,7 +185,7 @@ public class IngredientService {
     }
 
     public List<AutoCompleteRes> getIngredientsAutocomplete(String name) {
-        List<IngredientAPA> ingredients = ingredientRepository.findByNameContainsIgnoreCase(name);
+        List<IngredientAPA> ingredients = ingredientRepository.findByNameContainsIgnoreCaseAndActiveTrue(name);
         return ingredients.stream().map(ingredient -> new AutoCompleteRes(ingredient.getName())).toList();
     }
 

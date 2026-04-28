@@ -109,9 +109,13 @@ public class ProductKgService {
             List<IngredientAPA> ingredients = ingredientRepository.findByIdIn(product.getIngredientIds());
             List<String> ingredientNames = ingredientMapperService.ingredientsIdToIngredientsNameList(ingredients);
             Set<Allergen> allergens = new HashSet<>();
+            Set<Allergen> containAllergens = new HashSet<>();
             for (IngredientAPA ingredient : ingredients) {
-                List<Allergen> allergensList = allergenRepository.findByNameIn(ingredient.getAllergenNames());
-                allergens.addAll(allergensList);
+                allergens.addAll(allergenRepository.findByNameIn(ingredient.getAllergenNames()));
+                List<String> containNames = ingredient.getContainNames();
+                if (containNames != null) {
+                    containAllergens.addAll(allergenRepository.findByNameIn(containNames));
+                }
             }
             List<CustomizableIngredientDTO> customizableIngredientsWithCategory = new ArrayList<>();
             if(product.getPossibleCustomizations() != null){
@@ -129,7 +133,7 @@ public class ProductKgService {
 
                 }
             }
-            return productMapperService.kgAPAToDetailsDTO(product,ingredientNames,allergens,customizableIngredientsWithCategory, categoryName);
+            return productMapperService.kgAPAToDetailsDTO(product,ingredientNames,allergens,containAllergens,customizableIngredientsWithCategory, categoryName);
         }
         throw new InvalidItemException();
     }

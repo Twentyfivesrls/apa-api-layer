@@ -15,6 +15,7 @@ public interface IngredientRepository extends MongoRepository<IngredientAPA,Stri
     List<IngredientAPA> findAllByCategoryIdAndActiveTrueOrderByNameAsc(String idCategory);
 
     List<IngredientAPA> findByNameContainsIgnoreCase(String name);
+    List<IngredientAPA> findByNameContainsIgnoreCaseAndActiveTrue(String name);
 
     List<IngredientAPA> findByIdIn(List<String> ids);
 

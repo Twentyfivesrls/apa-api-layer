@@ -15,6 +15,7 @@ public class IngredientAPADTO {
     private String name;
     private String idCategory;
     private List<Allergen> allergens;
+    private List<Allergen> containAllergens;
     private String note;
     private boolean active;
     private boolean alcoholic;

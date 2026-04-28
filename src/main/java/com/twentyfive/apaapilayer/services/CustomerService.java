@@ -26,6 +26,7 @@ import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.*;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.Allergen;
 import twentyfive.twentyfiveadapter.generic.ecommerce.utils.OrderStatus;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -371,9 +372,9 @@ public class CustomerService {
                         }
                     }
 
-                    if(customTimeCategoryService.existsByCategory(category)) {
+                    CustomTimeCategoryAPA customTimeCategory = category != null ? customTimeCategoryService.findByCategoryIdOrNull(category.getId()) : null;
+                    if(customTimeCategory != null) {
 
-                        CustomTimeCategoryAPA customTimeCategory = customTimeCategoryService.findByCategory(category);
                         LocalTime start = customTimeCategory.getStart();
                         LocalTime end = customTimeCategory.getEnd();
 
@@ -425,6 +426,22 @@ public class CustomerService {
                 sendCustomerNotification(customer.getId());
                 SummaryEmailDTO summaryEmailDTO = mapActiveOrderToSummaryEmail(order);
                 emailService.sendEmail(email,OrderStatus.RICEVUTO, TemplateUtilities.populateEmailForNewOrder(firstName,summaryEmailDTO));
+                try {
+                    ByteArrayOutputStream pdfStream = orderService.print(order.getId());
+                    if (pdfStream != null) {
+                        emailService.sendAdminOrderEmail(
+                                order.getId(),
+                                firstName,
+                                email,
+                                order.getPickupDate() != null ? order.getPickupDate() + " " + (order.getPickupTime() != null ? order.getPickupTime().toString() : "") : "",
+                                summaryEmailDTO.getTotalPrice(),
+                                summaryEmailDTO.getPaymentID(),
+                                pdfStream.toByteArray()
+                        );
+                    }
+                } catch (Exception e) {
+                    // L'email admin non blocca il flusso principale
+                }
                 return true;
             }
         }
@@ -879,11 +896,20 @@ public class CustomerService {
 
         int numSlotRequired = 0;
 
+        // Flag legacy — mantenuti come fallback per categorie non ancora configurate con la nuova logica
         boolean bigSemifreddo = false;
         boolean customizedSemifreddo = false;
         boolean longWait = false;
         boolean customizableProduct = false;
         boolean oneToPrepare = false;
+
+        // Nuovi campi aggregati per la logica configurabile per categoria
+        Integer maxDaysAhead = null;
+        LocalTime effectiveCutoffHour = null;
+        LocalTime effectiveCutoffResetHour = null;
+        LocalTime effectiveFirstPickupAfterCutoff = null;
+        boolean overallSameDayAllowed = true;
+        boolean useNewLogic = false;
 
         CategoryAPA category = null;
 
@@ -892,6 +918,7 @@ public class CustomerService {
 
         for (ItemInPurchase item : items) {
             boolean noSlotRequired = false;
+            boolean useVariantForItem = false;
             if(item instanceof ProductInPurchase){
                 ProductInPurchase pIP = (ProductInPurchase) item;
                 if (pIP.isFixed()){
@@ -921,6 +948,7 @@ public class CustomerService {
                 if(categoryName.equals("Semifreddi")){
                     if (pIP.getWeight()>1.5){
                         bigSemifreddo = true;
+                        useVariantForItem = true;
                     } else if (!(pIP.getCustomization().isEmpty())){
                         customizedSemifreddo = true;
                     }
@@ -933,17 +961,15 @@ public class CustomerService {
                 category = categoryService.getById(tray.getCategoryId());
                 if (tray.isCustomized()){
                     longWait = true;
+                    useVariantForItem = true;
                 }
                 if (tray.isToPrepare()){
                     oneToPrepare = true;
                 }
             }
 
-            //Check se ci sono orari custom
-
-            if(customTimeCategoryService.existsByCategory(category)) {
-
-                CustomTimeCategoryAPA customTimeCategory = customTimeCategoryService.findByCategory(category);
+            CustomTimeCategoryAPA customTimeCategory = customTimeCategoryService.findByCategoryIdOrNull(category.getId());
+            if(customTimeCategory != null) {
                 LocalTime start = customTimeCategory.getStart();
                 LocalTime end = customTimeCategory.getEnd();
 
@@ -954,6 +980,40 @@ public class CustomerService {
                     bestEnd = end;
                 }
 
+                // Se l'item soddisfa la condizione di variante e la variante è configurata, usa i campi della variante
+                boolean activeVariant = useVariantForItem && customTimeCategory.getVariant() != null;
+                Integer itemDaysAhead                = activeVariant ? customTimeCategory.getVariant().getDaysAhead()               : customTimeCategory.getDaysAhead();
+                LocalTime itemCutoffHour             = activeVariant ? customTimeCategory.getVariant().getCutoffHour()              : customTimeCategory.getCutoffHour();
+                LocalTime itemCutoffResetHour        = activeVariant ? customTimeCategory.getVariant().getCutoffResetHour()         : customTimeCategory.getCutoffResetHour();
+                LocalTime itemFirstPickupAfterCutoff = activeVariant ? customTimeCategory.getVariant().getFirstPickupAfterCutoff()  : customTimeCategory.getFirstPickupAfterCutoff();
+                boolean itemSameDayAllowed           = activeVariant ? customTimeCategory.getVariant().isSameDayAllowed()           : customTimeCategory.isSameDayAllowed();
+
+                // Nuova logica attiva solo se daysAhead è stato configurato (direttamente o tramite variante)
+                if (itemDaysAhead != null) {
+                    useNewLogic = true;
+                    maxDaysAhead = (maxDaysAhead == null)
+                            ? itemDaysAhead
+                            : Math.max(maxDaysAhead, itemDaysAhead);
+                    if (!itemSameDayAllowed) overallSameDayAllowed = false;
+                    if (itemCutoffHour != null) {
+                        effectiveCutoffHour = (effectiveCutoffHour == null)
+                                ? itemCutoffHour
+                                : (itemCutoffHour.isBefore(effectiveCutoffHour)
+                                        ? itemCutoffHour : effectiveCutoffHour);
+                    }
+                    if (itemCutoffResetHour != null) {
+                        effectiveCutoffResetHour = (effectiveCutoffResetHour == null)
+                                ? itemCutoffResetHour
+                                : (itemCutoffResetHour.isAfter(effectiveCutoffResetHour)
+                                        ? itemCutoffResetHour : effectiveCutoffResetHour);
+                    }
+                    if (itemFirstPickupAfterCutoff != null) {
+                        effectiveFirstPickupAfterCutoff = (effectiveFirstPickupAfterCutoff == null)
+                                ? itemFirstPickupAfterCutoff
+                                : (itemFirstPickupAfterCutoff.isAfter(effectiveFirstPickupAfterCutoff)
+                                        ? itemFirstPickupAfterCutoff : effectiveFirstPickupAfterCutoff);
+                    }
+                }
             }
         }
 
@@ -971,32 +1031,32 @@ public class CustomerService {
             bestEnd = endTime;
         }
         LocalDateTime minStartingDate;
-        if(!customizableProduct) {
-            if (!bigSemifreddo) {
-                if (!now.isBefore(startTime) && now.isBefore(endTime)) {// richiesta fatta in orario lavorativo
-                    if (customizedSemifreddo) {
-                        if (now.isAfter(LocalTime.of(14, 0))) {
-                            minStartingDate = next(startTime.getHour());
+        if (useNewLogic) {
+            int daysAhead = (maxDaysAhead != null) ? maxDaysAhead : 1;
+            minStartingDate = calculateMinStartingDate(daysAhead, effectiveCutoffHour,
+                    effectiveCutoffResetHour, effectiveFirstPickupAfterCutoff,
+                    bestStart != null ? bestStart : startTime, minDelay);
+        } else {
+            // Logica legacy — fallback per categorie non ancora configurate con i nuovi campi
+            if(!customizableProduct) {
+                if (!bigSemifreddo) {
+                    if (!now.isBefore(startTime) && now.isBefore(endTime)) {
+                        if (customizedSemifreddo) {
+                            minStartingDate = now.isAfter(LocalTime.of(14, 0)) ? next(startTime.getHour()) : LocalDateTime.now().plusHours(minDelay);
+                        } else if (longWait) {
+                            minStartingDate = next(9);
                         } else {
                             minStartingDate = LocalDateTime.now().plusHours(minDelay);
                         }
-                    } else if (longWait) {
-                        minStartingDate = next(9);
                     } else {
-                        minStartingDate = LocalDateTime.now().plusHours(minDelay);  // fallback se customizedSemifreddo e longWait sono falsi
+                        minStartingDate = longWait ? next(12) : next(startTime.getHour());
                     }
                 } else {
-                    if (!longWait) {
-                        minStartingDate = next(startTime.getHour());
-                    } else {
-                        minStartingDate = next(12);  // Gestione orari personalizzati fuori dall'orario lavorativo
-                    }
+                    minStartingDate = LocalDateTime.now().plusHours(48);
                 }
             } else {
-                minStartingDate = LocalDateTime.now().plusHours(48); //Semifreddi superiori agli 1.5kg
+                minStartingDate = LocalDateTime.now().plusHours(72);
             }
-        } else {
-            minStartingDate = LocalDateTime.now().plusHours(72); //Prodotti componibili
         }
 
         Map<LocalDate, List<LocalTime>> availableTimes = new HashMap<>();
@@ -1005,25 +1065,20 @@ public class CustomerService {
 
         if (!oneToPrepare) {
 
-            LocalDate today = LocalDate.now();
-            LocalTime nowTime = LocalTime.now().withSecond(0).withNano(0); // pulito per confronto
+            LocalTime tStart = (bestStart != null) ? bestStart : startTime;
+            LocalTime tEnd = (bestEnd != null) ? bestEnd : endTime;
 
             for (Map.Entry<LocalDate, Map<LocalTime, Integer>> dateEntry : timeSlotAPA.getNumSlotsMap().entrySet()) {
                 LocalDate date = dateEntry.getKey();
 
-                if (date.isBefore(today)) continue;
+                if (date.isBefore(minStartingDate.toLocalDate())) continue;
 
                 List<LocalTime> timeList = new ArrayList<>();
-                LocalTime t = bestStart;
+                LocalTime t = tStart;
 
-                while (!t.isAfter(bestEnd)) {
-                    if (date.isEqual(today)) {
-                        // Solo per oggi: aggiungi solo se t > ora corrente
-                        if (t.isAfter(nowTime)) {
-                            timeList.add(t);
-                        }
-                    } else {
-                        // Per i giorni futuri: aggiungi sempre
+                while (!t.isAfter(tEnd)) {
+                    LocalDateTime slotDateTime = date.atTime(t);
+                    if (!slotDateTime.isBefore(minStartingDate)) {
                         timeList.add(t);
                     }
                     t = t.plusHours(1);
@@ -1056,16 +1111,51 @@ public class CustomerService {
 
     private LocalDateTime next(int hour){
         LocalDateTime now= LocalDateTime.now();
-        // Definisce il mezzogiorno
         LocalTime noon = LocalTime.of(hour, 0);
-
-        // Se ora è già passato il mezzogiorno, passa al giorno successivo
         if (now.toLocalTime().isAfter(noon)) {
             return now.toLocalDate().plusDays(1).atTime(noon);
         } else {
-            // Altrimenti, restituisce il mezzogiorno di oggi
             return now.toLocalDate().atTime(noon);
         }
+    }
+
+    private LocalDateTime calculateMinStartingDate(int daysAhead, LocalTime cutoffHour,
+                                                    LocalTime cutoffResetHour,
+                                                    LocalTime firstPickupAfterCutoff,
+                                                    LocalTime bestStart, int minDelay) {
+        if (daysAhead == 0) {
+            return LocalDateTime.now().plusHours(minDelay);
+        }
+        LocalTime now = LocalTime.now();
+        LocalDate orderDate = LocalDate.now();
+        boolean isLate = false;
+        if (cutoffHour != null && firstPickupAfterCutoff != null) {
+            if (cutoffResetHour != null) {
+                boolean isOvernightWindow = cutoffHour.isAfter(cutoffResetHour);
+                if (isOvernightWindow) {
+                    // Finestra notturna: es. 21:00 → 06:00 (attraversa mezzanotte)
+                    // Tardivo se now > 21:00 OPPURE now < 06:00
+                    if (now.isAfter(cutoffHour) || now.isBefore(cutoffResetHour)) {
+                        isLate = true;
+                        // Sottrai giorno solo nel tratto post-mezzanotte (before reset, NOT already after cutoff)
+                        if (now.isBefore(cutoffResetHour) && !now.isAfter(cutoffHour)) {
+                            orderDate = orderDate.minusDays(1);
+                        }
+                    }
+                } else {
+                    // Finestra stessa giornata: es. 12:08 → 13:58
+                    // Tardivo SOLO nel range; dopo cutoffResetHour si resetta alle regole normali
+                    if (now.isAfter(cutoffHour) && now.isBefore(cutoffResetHour)) {
+                        isLate = true;
+                    }
+                }
+            } else {
+                isLate = now.isAfter(cutoffHour);
+            }
+        }
+        LocalDate targetDate = orderDate.plusDays(daysAhead);
+        LocalTime firstSlot = isLate ? firstPickupAfterCutoff : bestStart;
+        return targetDate.atTime(firstSlot);
     }
 
 

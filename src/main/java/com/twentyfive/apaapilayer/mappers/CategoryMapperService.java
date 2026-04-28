@@ -48,6 +48,12 @@ public class CategoryMapperService {
             categoryCustomHoursDto.setName(customTimeCategory.getCategory().getName());
             categoryCustomHoursDto.setStart(customTimeCategory.getStart());
             categoryCustomHoursDto.setEnd(customTimeCategory.getEnd());
+            categoryCustomHoursDto.setDaysAhead(customTimeCategory.getDaysAhead());
+            categoryCustomHoursDto.setCutoffHour(customTimeCategory.getCutoffHour());
+            categoryCustomHoursDto.setFirstPickupAfterCutoff(customTimeCategory.getFirstPickupAfterCutoff());
+            categoryCustomHoursDto.setSameDayAllowed(customTimeCategory.isSameDayAllowed());
+            categoryCustomHoursDto.setCutoffResetHour(customTimeCategory.getCutoffResetHour());
+            categoryCustomHoursDto.setVariant(customTimeCategory.getVariant());
 
             if (customTimeCategory.getStart().equals(businessHours.getStartTime()) && customTimeCategory.getEnd().equals(businessHours.getEndTime())) {
                 categoryCustomHoursDto.setExactMatch(true);

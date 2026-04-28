@@ -6,8 +6,8 @@ import com.twentyfive.apaapilayer.configurations.ProducerPool;
 import com.twentyfive.apaapilayer.dtos.SendCouponReq;
 import com.twentyfive.apaapilayer.services.KeycloakService;
 import com.twentyfive.apaapilayer.utils.EmailUtilities;
-import com.twentyfive.subscription.model.DeleteUserRoleMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -26,6 +26,9 @@ public class EmailService {
     private final EmailUtilities emailUtilities;
     private final TemplateEngine templateEngine;
     private final ProducerPool producerPool;
+
+    @Value("${app.admin.email:}")
+    private String adminEmail;
 
     private final String EMAIL_COUPON_TOPIC = "send_email_topic";
 
@@ -72,6 +75,26 @@ public class EmailService {
         }
         content = generateContent(templateName, variables); //FIXME
         emailSendRequest = emailUtilities.toEmailSendRequest(content, subject, email);
+        emailClientController.sendMail(authorizationHeader, emailSendRequest);
+    }
+
+    public void sendAdminOrderEmail(String orderId, String customerName, String customerEmail,
+                                    String pickupDateTime, String totalPrice, String paymentID,
+                                    byte[] pdfBytes) throws IOException {
+        if (adminEmail == null || adminEmail.isBlank()) return;
+        String token = keycloakService.getAccessTokenTF();
+        String authorizationHeader = "Bearer " + token;
+        String subject = String.format("Nuovo ordine n.%s", orderId);
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("orderId", orderId);
+        variables.put("customerName", customerName);
+        variables.put("customerEmail", customerEmail);
+        variables.put("pickupDateTime", pickupDateTime);
+        variables.put("totalPrice", totalPrice);
+        variables.put("paymentID", paymentID);
+        String content = generateContent("adminOrderNotification", variables);
+        EmailSendRequest emailSendRequest = emailUtilities.toEmailSendRequestWithAttachment(
+                content, subject, adminEmail, pdfBytes, "ordine_" + orderId + ".pdf");
         emailClientController.sendMail(authorizationHeader, emailSendRequest);
     }
 

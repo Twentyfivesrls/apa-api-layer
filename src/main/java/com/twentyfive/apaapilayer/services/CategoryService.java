@@ -158,7 +158,10 @@ public class CategoryService {
     public boolean saveCustomTime(List<SaveCustomTimeReq> reqList) {
         for(SaveCustomTimeReq req : reqList) {
             CategoryAPA category = getById(req.getId());
-            customTimeCategoryService.saveOrUpdate(category,req.getStart(),req.getEnd());  
+            customTimeCategoryService.saveOrUpdate(category, req.getStart(), req.getEnd(),
+                    req.getDaysAhead(), req.getCutoffHour(), req.getCutoffResetHour(),
+                    req.getFirstPickupAfterCutoff(), req.isSameDayAllowed(),
+                    req.getVariant());
         }
         return true;
     }

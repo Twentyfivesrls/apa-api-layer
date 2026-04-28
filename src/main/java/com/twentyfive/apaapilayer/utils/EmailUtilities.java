@@ -26,6 +26,13 @@ public class EmailUtilities {
         return emailSendRequest;
     }
 
+    public EmailSendRequest toEmailSendRequestWithAttachment(String template, String subject, String email, byte[] attachment, String attachmentName) throws IOException {
+        EmailSendRequest emailSendRequest = toEmailSendRequest(template, subject, email);
+        emailSendRequest.setAttachment(attachment);
+        emailSendRequest.setAttachmentName(attachmentName);
+        return emailSendRequest;
+    }
+
     public String toEmailSendKafka(String template, String subject, String email) throws IOException {
         Gson gson = new Gson();
         EmailSendRequest emailSendRequest = toEmailSendRequest(template, subject, email);
