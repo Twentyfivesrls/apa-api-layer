@@ -161,6 +161,7 @@ public class CategoryService {
             customTimeCategoryService.saveOrUpdate(category, req.getStart(), req.getEnd(),
                     req.getDaysAhead(), req.getCutoffHour(), req.getCutoffResetHour(),
                     req.getFirstPickupAfterCutoff(), req.isSameDayAllowed(),
+                    req.getMaxMorningOrder(), req.getMaxAfternoonOrder(),
                     req.getVariant());
         }
         return true;

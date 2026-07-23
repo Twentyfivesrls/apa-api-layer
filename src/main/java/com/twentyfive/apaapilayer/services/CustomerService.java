@@ -303,7 +303,6 @@ public class CustomerService {
         AppliedCoupon appliedCoupon = null;
         if(optCustomer.isPresent()){
             CustomerAPA customer = optCustomer.get();
-            TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
             Cart cart = customer.getCart();
             List<Integer> positions = buyInfos.getPositions();
             List<ItemInPurchase> selectedItems = cart.getItemsAtPositions(positions);
@@ -404,15 +403,28 @@ public class CustomerService {
                 try {
                     if(oneToPrepare){
                         List<InactiveDay> inactiveDays = inactiveDayRepository.findAll();
+                        Map<String, Integer> requiredByCategory = countSlotRequired(selectedItems);
 
-                        timeSlotAPA.reserveTimeSlots(buyInfos.getSelectedPickupDateTime(),countSlotRequired(selectedItems),bestStart,bestEnd, inactiveDays);
+                        // Prenota la capacità di OGNI categoria; persiste solo se tutte hanno spazio sufficiente
+                        List<TimeSlotAPA> toSave = new ArrayList<>();
+                        for (Map.Entry<String, Integer> req : requiredByCategory.entrySet()) {
+                            if (req.getValue() == null || req.getValue() <= 0) continue;
+                            TimeSlotAPA categorySlot = timeSlotAPARepository.findByCategoryId(req.getKey()).orElse(null);
+                            if (categorySlot == null || !categorySlot.reserveTimeSlots(
+                                    buyInfos.getSelectedPickupDateTime(), req.getValue(), bestStart, bestEnd, inactiveDays)) {
+                                throw new InvalidOrderTimeException("Capacità non disponibile per la categoria selezionata");
+                            }
+                            toSave.add(categorySlot);
+                        }
+                        for (TimeSlotAPA ts : toSave) {
+                            timeSlotAPARepository.save(ts);
+                        }
                     }
                     orderService.createOrder(order);
                     cart.removeItemsAtPositions(buyInfos.getPositions()); // Rimuovi gli articoli dal carrello
                 } catch (Exception e) {
                     throw new InvalidOrderTimeException("Ci dispiace! Non è più possibile ordinare a questo orario, ricaricare il carrello e riprovare!" +buyInfos.getSelectedPickupDateTime().toString());
                 }
-                timeSlotAPARepository.save(timeSlotAPA);
                 customerRepository.save(customer);
                 if(buyInfos.getCustomInfo().getFirstName()!=null){ //Admin sta facendo l'ordine
                     email = buyInfos.getCustomInfo().getEmail();
@@ -514,8 +526,8 @@ public class CustomerService {
         }
         return null;
     }
-    private int countSlotRequired(List<ItemInPurchase>items) {
-        int numSlotRequired = 0;
+    private Map<String, Integer> countSlotRequired(List<ItemInPurchase>items) {
+        Map<String, Integer> requiredByCategory = new HashMap<>();
 
         String categoryId;
         boolean toPrepare;
@@ -540,15 +552,15 @@ public class CustomerService {
                 if(optCategory.isPresent()){
                     CategoryAPA category = optCategory.get();
                     if (category.getName().equals("Torte a Piani")) {
-                        numSlotRequired += pip.getQuantity()*3;
+                        requiredByCategory.merge(categoryId, pip.getQuantity()*3, Integer::sum);
                     } else if (toPrepare) {
-                        numSlotRequired += pip.getQuantity();
+                        requiredByCategory.merge(categoryId, pip.getQuantity(), Integer::sum);
                     }
                 }
 
             }
         }
-        return numSlotRequired;
+        return requiredByCategory;
     }
 
 
@@ -895,6 +907,8 @@ public class CustomerService {
         List<ItemInPurchase> items = cart.getItemsAtPositions(positions);
 
         int numSlotRequired = 0;
+        // Slot richiesti per categoria (capacità per categoria)
+        Map<String, Integer> requiredByCategory = new HashMap<>();
 
         // Flag legacy — mantenuti come fallback per categorie non ancora configurate con la nuova logica
         boolean bigSemifreddo = false;
@@ -942,6 +956,7 @@ public class CustomerService {
                 }
                 if(!noSlotRequired){
                     numSlotRequired += item.getQuantity();
+                    requiredByCategory.merge(category.getId(), item.getQuantity(), Integer::sum);
                 }
 
                 String categoryName = category.getName();
@@ -1061,16 +1076,20 @@ public class CustomerService {
 
         Map<LocalDate, List<LocalTime>> availableTimes = new HashMap<>();
 
-        TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
+        List<TimeSlotAPA> allTimeSlots = timeSlotAPARepository.findAll();
 
         if (!oneToPrepare) {
 
             LocalTime tStart = (bestStart != null) ? bestStart : startTime;
             LocalTime tEnd = (bestEnd != null) ? bestEnd : endTime;
 
-            for (Map.Entry<LocalDate, Map<LocalTime, Integer>> dateEntry : timeSlotAPA.getNumSlotsMap().entrySet()) {
-                LocalDate date = dateEntry.getKey();
+            // Le date candidate sono l'orizzonte comune (tutti i documenti categoria condividono le stesse date)
+            Set<LocalDate> candidateDates = new TreeSet<>();
+            for (TimeSlotAPA ts : allTimeSlots) {
+                candidateDates.addAll(ts.getNumSlotsMap().keySet());
+            }
 
+            for (LocalDate date : candidateDates) {
                 if (date.isBefore(minStartingDate.toLocalDate())) continue;
 
                 List<LocalTime> timeList = new ArrayList<>();
@@ -1091,21 +1110,53 @@ public class CustomerService {
             }
 
         } else {
-            // Calcolo classico da repository (lasciato invariato)
+            // Capacità per categoria: uno slot è disponibile solo se OGNI categoria coinvolta ha capacità sufficiente
             List<InactiveDay> inactiveDays = inactiveDayRepository.findAll();
 
-            availableTimes = timeSlotAPARepository.findAll().get(0)
-                    .findTimeForNumSlots(
-                            minStartingDate,
-                            numSlotRequired,
-                            inactiveDays,
-                            bestStart,
-                            bestEnd
-                    );
+            Map<String, Integer> effectiveRequired = new LinkedHashMap<>();
+            for (Map.Entry<String, Integer> e : requiredByCategory.entrySet()) {
+                if (e.getValue() != null && e.getValue() > 0) {
+                    effectiveRequired.put(e.getKey(), e.getValue());
+                }
+            }
+
+            if (effectiveRequired.isEmpty()) {
+                // Nessuno slot "da produrre" conteggiato (es. solo vassoi toPrepare): disponibilità piena
+                TimeSlotAPA any = allTimeSlots.isEmpty() ? null : allTimeSlots.get(0);
+                availableTimes = (any != null)
+                        ? any.findTimeForNumSlots(minStartingDate, 0, inactiveDays, bestStart, bestEnd)
+                        : new HashMap<>();
+            } else {
+                boolean first = true;
+                for (Map.Entry<String, Integer> req : effectiveRequired.entrySet()) {
+                    TimeSlotAPA ts = timeSlotAPARepository.findByCategoryId(req.getKey()).orElse(null);
+                    Map<LocalDate, List<LocalTime>> catAvail = (ts != null)
+                            ? ts.findTimeForNumSlots(minStartingDate, req.getValue(), inactiveDays, bestStart, bestEnd)
+                            : new HashMap<>();
+                    availableTimes = first ? catAvail : intersectAvailability(availableTimes, catAvail);
+                    first = false;
+                }
+            }
         }
 
         // Usa una TreeMap per garantire l'ordinamento
         return new TreeMap<>(availableTimes);
+    }
+
+    /** Intersezione di due mappe data->orari: mantiene solo (data, ora) presenti in entrambe. */
+    private Map<LocalDate, List<LocalTime>> intersectAvailability(Map<LocalDate, List<LocalTime>> a,
+                                                                  Map<LocalDate, List<LocalTime>> b) {
+        Map<LocalDate, List<LocalTime>> result = new HashMap<>();
+        for (Map.Entry<LocalDate, List<LocalTime>> entry : a.entrySet()) {
+            List<LocalTime> other = b.get(entry.getKey());
+            if (other == null) continue;
+            List<LocalTime> times = new ArrayList<>(entry.getValue());
+            times.retainAll(other);
+            if (!times.isEmpty()) {
+                result.put(entry.getKey(), times);
+            }
+        }
+        return result;
     }
 
 
@@ -1143,10 +1194,13 @@ public class CustomerService {
                         }
                     }
                 } else {
-                    // Finestra stessa giornata: es. 12:08 → 13:58
-                    // Tardivo SOLO nel range; dopo cutoffResetHour si resetta alle regole normali
+                    // Finestra stessa giornata: es. 20:00 → 22:00
                     if (now.isAfter(cutoffHour) && now.isBefore(cutoffResetHour)) {
+                        // Nel range tardivo: stesso giorno target, ma primo ritiro posticipato
                         isLate = true;
+                    } else if (!now.isBefore(cutoffResetHour)) {
+                        // Oltre il termine tardivo: giorno target perso, si slitta di un ulteriore giorno
+                        orderDate = orderDate.plusDays(1);
                     }
                 }
             } else {
@@ -1341,7 +1395,7 @@ public class CustomerService {
 
     public String obtainDateIfTenDaysBefore() {
         List<LocalDate> localDates = inactiveDayService.obtainConsecutiveDatesIfTenDaysBefore();
-        if(localDates !=null){
+        if(localDates != null && !localDates.isEmpty()){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ITALIAN);
             if(localDates.size()==1){
                 String formattedDate = localDates.get(0).format(formatter);

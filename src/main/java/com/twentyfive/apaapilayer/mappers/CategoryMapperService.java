@@ -53,6 +53,8 @@ public class CategoryMapperService {
             categoryCustomHoursDto.setFirstPickupAfterCutoff(customTimeCategory.getFirstPickupAfterCutoff());
             categoryCustomHoursDto.setSameDayAllowed(customTimeCategory.isSameDayAllowed());
             categoryCustomHoursDto.setCutoffResetHour(customTimeCategory.getCutoffResetHour());
+            categoryCustomHoursDto.setMaxMorningOrder(customTimeCategory.getMaxMorningOrder());
+            categoryCustomHoursDto.setMaxAfternoonOrder(customTimeCategory.getMaxAfternoonOrder());
             categoryCustomHoursDto.setVariant(customTimeCategory.getVariant());
 
             if (customTimeCategory.getStart().equals(businessHours.getStartTime()) && customTimeCategory.getEnd().equals(businessHours.getEndTime())) {

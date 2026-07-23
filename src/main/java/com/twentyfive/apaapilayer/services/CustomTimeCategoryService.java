@@ -1,6 +1,7 @@
 package com.twentyfive.apaapilayer.services;
 
 import com.twentyfive.apaapilayer.dtos.CategoryCustomHoursDTO;
+import com.twentyfive.apaapilayer.job.TimeSlotRefreshScheduling;
 import com.twentyfive.apaapilayer.mappers.CategoryMapperService;
 import com.twentyfive.apaapilayer.models.CategoryAPA;
 import com.twentyfive.apaapilayer.models.CustomTimeCategoryAPA;
@@ -11,15 +12,18 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CustomTimeCategoryService {
     private final CustomTimeCategoryRepository customTimeCategoryRepository;
     private final CategoryMapperService categoryMapperService;
+    private final TimeSlotRefreshScheduling timeSlotRefreshScheduling;
 
-    public CustomTimeCategoryService(CustomTimeCategoryRepository customTimeCategoryRepository, CategoryMapperService categoryMapperService) {
+    public CustomTimeCategoryService(CustomTimeCategoryRepository customTimeCategoryRepository, CategoryMapperService categoryMapperService, TimeSlotRefreshScheduling timeSlotRefreshScheduling) {
         this.customTimeCategoryRepository = customTimeCategoryRepository;
         this.categoryMapperService = categoryMapperService;
+        this.timeSlotRefreshScheduling = timeSlotRefreshScheduling;
     }
 
     public CustomTimeCategoryAPA findByCategory(CategoryAPA category) {
@@ -45,11 +49,16 @@ public class CustomTimeCategoryService {
     public void saveOrUpdate(CategoryAPA category, LocalTime start, LocalTime end,
                              Integer daysAhead, LocalTime cutoffHour, LocalTime cutoffResetHour,
                              LocalTime firstPickupAfterCutoff, boolean sameDayAllowed,
+                             Integer maxMorningOrder, Integer maxAfternoonOrder,
                              CustomTimeVariantAPA variant){
         CustomTimeCategoryAPA customTimeCategory;
+        Integer oldMaxMorning = null;
+        Integer oldMaxAfternoon = null;
 
         if(existsByCategory(category)){
             customTimeCategory = findByCategory(category);
+            oldMaxMorning = customTimeCategory.getMaxMorningOrder();
+            oldMaxAfternoon = customTimeCategory.getMaxAfternoonOrder();
         } else {
             customTimeCategory = new CustomTimeCategoryAPA();
             customTimeCategory.setCategory(category);
@@ -61,8 +70,15 @@ public class CustomTimeCategoryService {
         customTimeCategory.setCutoffResetHour(cutoffResetHour);
         customTimeCategory.setFirstPickupAfterCutoff(firstPickupAfterCutoff);
         customTimeCategory.setSameDayAllowed(sameDayAllowed);
+        customTimeCategory.setMaxMorningOrder(maxMorningOrder);
+        customTimeCategory.setMaxAfternoonOrder(maxAfternoonOrder);
         customTimeCategory.setVariant(variant);
         customTimeCategoryRepository.save(customTimeCategory);
+
+        // Se la capacità della categoria è cambiata, rigenera gli slot futuri col nuovo massimo
+        if (!Objects.equals(oldMaxMorning, maxMorningOrder) || !Objects.equals(oldMaxAfternoon, maxAfternoonOrder)) {
+            timeSlotRefreshScheduling.regenerateCategorySlots(category.getId());
+        }
     }
 
     public List<CategoryCustomHoursDTO> getAllCategoriesWithCustomHours(){

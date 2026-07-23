@@ -69,9 +69,10 @@ public class ActiveOrderService {
     private final MediaManagerClientController mediaManagerClientController;
     private final MediaManagerService mediaManagerService;
     private final CategoryService categoryService;
+    private final com.twentyfive.apaapilayer.job.TimeSlotRefreshScheduling timeSlotRefreshScheduling;
 
     @Autowired
-    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate, MediaManagerClientController mediaManagerClientController, MediaManagerService mediaManagerService, CategoryService categoryService) {
+    public ActiveOrderService(EmailService emailService, ActiveOrderRepository activeOrderRepository, CustomerRepository customerRepository, CompletedOrderRepository completedOrderRepository, ProducerPool producerPool, StompClientController stompClientController, ProductKgRepository productKgRepository, ProductFixedRepository productFixedRepository, ProductWeightedRepository productWeightedRepository, PaymentClientController paymentClientController, KeycloakService keycloakService, TrayRepository trayRepository, SettingRepository settingRepository, TimeSlotAPARepository timeSlotAPARepository, MongoTemplate mongoTemplate, MediaManagerClientController mediaManagerClientController, MediaManagerService mediaManagerService, CategoryService categoryService, com.twentyfive.apaapilayer.job.TimeSlotRefreshScheduling timeSlotRefreshScheduling) {
         this.emailService = emailService;
         this.activeOrderRepository = activeOrderRepository;
         this.customerRepository = customerRepository; // Iniezione di CustomerRepository
@@ -90,6 +91,7 @@ public class ActiveOrderService {
         this.mediaManagerClientController = mediaManagerClientController;
         this.mediaManagerService = mediaManagerService;
         this.categoryService = categoryService;
+        this.timeSlotRefreshScheduling = timeSlotRefreshScheduling;
     }
 
     public OrderAPA createOrder(OrderAPA order) {
@@ -450,7 +452,6 @@ public class ActiveOrderService {
 
         if (order != null) {
             String fullName ="";
-            TimeSlotAPA timeSlotAPA=timeSlotAPARepository.findAll().get(0);
             order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
 
             CompletedOrderAPA completedOrder = new CompletedOrderAPA();
@@ -458,9 +459,7 @@ public class ActiveOrderService {
             ArrayList<ItemInPurchase> items= new ArrayList<>();
             items.addAll(order.getBundlesInPurchase());
             items.addAll(order.getProductsInPurchase());
-            if(timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate,order.getPickupTime()),countSlotRequired(items),getStandardHourSlotMap())) {
-                timeSlotAPARepository.save(timeSlotAPA);
-            }
+            freeCategorySlots(items, LocalDateTime.of(pickupDate, order.getPickupTime()));
             if (order.getPaymentId() != null){
                 PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
                 String authorization=keycloakService.getAccessTokenTF();
@@ -488,51 +487,49 @@ public class ActiveOrderService {
         return false;
     }
 
-    private Map<LocalTime, Integer> getStandardHourSlotMap() {
-        Map<LocalTime,Integer> slotsPerH= new TreeMap<>();
-        slotsPerH.put(LocalTime.of(8,0,0),4);
-        slotsPerH.put(LocalTime.of(9,0,0),4);
-        slotsPerH.put(LocalTime.of(10,0,0),4);
-        slotsPerH.put(LocalTime.of(11,0,0),4);
-        slotsPerH.put(LocalTime.of(12,0,0),4);
-        slotsPerH.put(LocalTime.of(13,0,0),4);
-
-
-        slotsPerH.put(LocalTime.of(14,0,0),10);
-        slotsPerH.put(LocalTime.of(15,0,0),10);
-        slotsPerH.put(LocalTime.of(16,0,0),10);
-        slotsPerH.put(LocalTime.of(17,0,0),10);
-        slotsPerH.put(LocalTime.of(18,0,0),10);
-        slotsPerH.put(LocalTime.of(19,0,0),10);
-        return slotsPerH;
-
-    }
-
-    private int countSlotRequired(List<ItemInPurchase>items) {
-        int numSlotRequired = 0;
-
-
-        for (ItemInPurchase item : items) {
-
-            if (item instanceof ProductInPurchase) {
-                ProductInPurchase pip = (ProductInPurchase) item;
-                ProductKgAPA product = productKgRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                if (product.isCustomized()) {
-                    numSlotRequired += pip.getQuantity();
-
-                }
-
-
-            } else if (item instanceof BundleInPurchase) {
-                BundleInPurchase pip = (BundleInPurchase) item;
-                Tray tray = trayRepository.findById(pip.getId()).orElseThrow(InvalidItemException::new);
-                if (tray.isCustomized()) {
-                    numSlotRequired += pip.getQuantity();
-                }
-
+    /** Libera la capacità di ogni categoria coinvolta nell'ordine annullato, sul rispettivo documento slot. */
+    private void freeCategorySlots(List<ItemInPurchase> items, LocalDateTime pickupDateTime) {
+        Map<String, Integer> requiredByCategory = countSlotRequired(items);
+        for (Map.Entry<String, Integer> req : requiredByCategory.entrySet()) {
+            if (req.getValue() == null || req.getValue() <= 0) continue;
+            TimeSlotAPA categorySlot = timeSlotAPARepository.findByCategoryId(req.getKey()).orElse(null);
+            if (categorySlot != null && categorySlot.freeNumSlot(
+                    pickupDateTime, req.getValue(), timeSlotRefreshScheduling.getHourCapacityMap(req.getKey()))) {
+                timeSlotAPARepository.save(categorySlot);
             }
         }
-        return numSlotRequired;
+    }
+
+    // Conteggio slot richiesti per categoria (coerente con la prenotazione: Torte a Piani x3, altrimenti toPrepare)
+    private Map<String, Integer> countSlotRequired(List<ItemInPurchase>items) {
+        Map<String, Integer> requiredByCategory = new HashMap<>();
+
+        for (ItemInPurchase item : items) {
+            if (item instanceof ProductInPurchase) {
+                ProductInPurchase pip = (ProductInPurchase) item;
+                String categoryId;
+                boolean toPrepare;
+                if (pip.isFixed()) {
+                    ProductFixedAPA pf = productFixedRepository.findById(pip.getId()).orElse(null);
+                    if (pf == null) continue;
+                    categoryId = pf.getCategoryId();
+                    toPrepare = pf.isToPrepare();
+                } else {
+                    ProductKgAPA pk = productKgRepository.findById(pip.getId()).orElse(null);
+                    if (pk == null) continue;
+                    categoryId = pk.getCategoryId();
+                    toPrepare = pk.isToPrepare();
+                }
+                CategoryAPA category = categoryService.getById(categoryId);
+                if (category == null) continue;
+                if ("Torte a Piani".equals(category.getName())) {
+                    requiredByCategory.merge(categoryId, pip.getQuantity() * 3, Integer::sum);
+                } else if (toPrepare) {
+                    requiredByCategory.merge(categoryId, pip.getQuantity(), Integer::sum);
+                }
+            }
+        }
+        return requiredByCategory;
     }
 
     public ByteArrayOutputStream print(String id) throws DocumentException, IOException {
@@ -573,16 +570,13 @@ public class ActiveOrderService {
                 case ANNULLATO -> {
                     String fullName ="";
                     LocalDate pickupDate = order.getPickupDate();
-                    TimeSlotAPA timeSlotAPA = timeSlotAPARepository.findAll().get(0);
                     order.setStatus(ANNULLATO); // Imposta lo stato a ANNULLATO
                     CompletedOrderAPA completedOrder = new CompletedOrderAPA();
                     createCompletedOrder(order, completedOrder); // Utilizza un metodo simile a createCompletedOrder per copiare i dettagli
                     ArrayList<ItemInPurchase> items = new ArrayList<>();
                     items.addAll(optOrder.get().getBundlesInPurchase());
                     items.addAll(optOrder.get().getProductsInPurchase());
-                    if (timeSlotAPA.freeNumSlot(LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()), countSlotRequired(items), getStandardHourSlotMap())) {
-                        timeSlotAPARepository.save(timeSlotAPA);
-                    }
+                    freeCategorySlots(items, LocalDateTime.of(pickupDate, optOrder.get().getPickupTime()));
                     if (order.getPaymentId() != null){
                         PaypalCredentials paypalCredentials = settingRepository.findAll().get(0).getPaypalCredentials();
                         String authorization=keycloakService.getAccessTokenTF();

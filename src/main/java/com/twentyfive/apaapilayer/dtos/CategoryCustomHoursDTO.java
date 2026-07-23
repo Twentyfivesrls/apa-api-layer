@@ -21,5 +21,7 @@ public class CategoryCustomHoursDTO extends CategoryMinimalDTO{
     private LocalTime cutoffResetHour;
     private LocalTime firstPickupAfterCutoff;
     private boolean sameDayAllowed;
+    private Integer maxMorningOrder;
+    private Integer maxAfternoonOrder;
     private CustomTimeVariantAPA variant;
 }

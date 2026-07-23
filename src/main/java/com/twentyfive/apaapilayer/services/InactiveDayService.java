@@ -1,6 +1,8 @@
 package com.twentyfive.apaapilayer.services;
 
+import com.twentyfive.apaapilayer.models.SettingAPA;
 import com.twentyfive.apaapilayer.repositories.InactiveDayRepository;
+import com.twentyfive.apaapilayer.repositories.SettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import twentyfive.twentyfiveadapter.generic.ecommerce.models.persistent.InactiveDay;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 public class InactiveDayService {
 
     private final InactiveDayRepository inactiveDayRepository;
+    private final SettingRepository settingRepository;
 
     public List<InactiveDay> get() {
         List<InactiveDay> days = inactiveDayRepository.findAll();
@@ -74,12 +77,21 @@ public class InactiveDayService {
         LocalDate today = LocalDate.now();
         LocalDate maxDate = today.plusDays(10);
 
+        // Fonte 1: collection inactiveDay (chiusure a giornata intera, pagina orari negozio)
         List<LocalDate> inactivityDays = getAllByFullDay(true)
             .stream()
             .map(InactiveDay::getDate)
             .collect(Collectors.toList());
 
+        // Fonte 2: Setting.inactivityDays (pagina dashboard/settings)
+        List<SettingAPA> settings = settingRepository.findAll();
+        if (!settings.isEmpty() && settings.get(0).getInactivityDays() != null) {
+            inactivityDays.addAll(settings.get(0).getInactivityDays());
+        }
+
         List<LocalDate> sortedDates = inactivityDays.stream()
+                .filter(Objects::nonNull)
+                .distinct()
                 .filter(date -> !date.isBefore(today) && !date.isAfter(maxDate))
                 .sorted()
                 .collect(Collectors.toList());

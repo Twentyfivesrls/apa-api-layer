@@ -24,6 +24,11 @@ public class CustomTimeCategoryAPA extends CustomTimeCategory {
     private LocalTime firstPickupAfterCutoff;
     private boolean sameDayAllowed = false;
 
+    // Capacità massima ordini (da preparare) per ora, specifica della categoria.
+    // null = usa il default globale di Setting (maxMorningOrder / maxAfternoonOrder)
+    private Integer maxMorningOrder;
+    private Integer maxAfternoonOrder;
+
     // null = nessuna variante configurata; non-null = regola alternativa per prodotti personalizzati/grandi
     private CustomTimeVariantAPA variant;
 }
